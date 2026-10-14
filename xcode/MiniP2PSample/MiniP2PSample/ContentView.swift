@@ -19,6 +19,73 @@ import SwiftUI
 import UIKit
 #endif
 
+// MARK: - Message model matching `gnostr chat` JSON
+
+/// Mirrors the `Msg` JSON used by the Rust `gnostr chat` command.
+private struct ChatMsgPayload: Codable {
+    var from: String
+    var content: [String]
+    var kind: String
+}
+
+fileprivate enum MsgKind: String, CaseIterable, Identifiable {
+    case chat = "Chat"
+    case join = "Join"
+    case leave = "Leave"
+    case system = "System"
+    case raw = "Raw"
+    case heartbeat = "Heartbeat"
+    case command = "Command"
+    case debug = "Debug"
+    case unknown = "Unknown"
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .chat: return "Chat"
+        case .join: return "Join"
+        case .leave: return "Leave"
+        case .system: return "System"
+        case .raw: return "Raw"
+        case .heartbeat: return "Heartbeat"
+        case .command: return "Command"
+        case .debug: return "Debug"
+        case .unknown: return "Unknown"
+        }
+    }
+
+    var tint: Color {
+        switch self {
+        case .chat: return .blue
+        case .join: return .green
+        case .leave: return .orange
+        case .system: return .red
+        case .raw: return .purple
+        case .heartbeat: return .cyan
+        case .command: return .indigo
+        case .debug: return .gray
+        case .unknown: return .secondary
+        }
+    }
+
+    static func parse(_ value: String) -> MsgKind {
+        MsgKind(rawValue: value) ?? .unknown
+    }
+}
+
+fileprivate struct ChatMessage: Identifiable, Equatable {
+    let id = UUID()
+    let kind: MsgKind
+    let from: String
+    let body: String
+    let peerID: String?
+    let addresses: [String]
+    let timestamp: Date
+}
+
+// MARK: - P2P Service
+
 @MainActor
 final class P2PService: ObservableObject {
     private static let gossipTopic = "gnostr-dev"
@@ -42,6 +109,10 @@ final class P2PService: ObservableObject {
     @Published private(set) var state: State = .stopped
     @Published private(set) var lastError: String?
     @Published private(set) var activityLog: [String] = []
+    @Published fileprivate var chatMessages: [ChatMessage] = []
+    @Published var displayName: String = "" {
+        didSet { UserDefaults.standard.set(displayName, forKey: "MiniP2PSample.displayName") }
+    }
 
     private var app: Application?
     private var runTask: Task<Void, Never>?
@@ -49,18 +120,27 @@ final class P2PService: ObservableObject {
     private var diagnosticsTask: Task<Void, Never>?
     private var gossipTask: Task<Void, Never>?
     private var pingTask: Task<Void, Never>?
+    private var joinTask: Task<Void, Never>?
     private var startedAt: Date?
     private var gossipSubscription: PubSub.SubscriptionHandler?
+    private var gossipSubConfig: PubSub.SubscriptionConfig?
     private var discoveredPeersByID: [String: PeerInfo] = [:]
     private var gossipPeersByID = Set<String>()
     private var pingBackoffUntilByPeerID: [String: Date] = [:]
     private var pingCursor = 0
+    private var hasAnnouncedJoin = false
+    private var hasReannouncedSubscription = false
 
     let peerID: PeerID
     private let networkLogger = Logger(subsystem: "MiniP2PSample", category: "network")
 
     init() {
         peerID = Self.makePeerID()
+        if let saved = UserDefaults.standard.string(forKey: "MiniP2PSample.displayName"), !saved.isEmpty {
+            displayName = saved
+        } else {
+            displayName = "\(Self.platformPrefix)-\(peerID.b58String)"
+        }
     }
 
     var runtimeProfile: String {
@@ -68,7 +148,15 @@ final class P2PService: ObservableObject {
     }
 
     var listenPort: Int {
-        Self.listenPort
+        let tcpAddr = listenAddresses.first { $0.contains("/tcp/") }
+        guard let addr = tcpAddr else { return 0 }
+        let pattern = "/tcp/"
+        guard let range = addr.range(of: pattern) else { return 0 }
+        let after = addr[range.upperBound...]
+        guard let end = after.firstIndex(where: { !$0.isNumber }) else {
+            return Int(after) ?? 0
+        }
+        return Int(after[..<end]) ?? 0
     }
 
     var stateLabel: String {
@@ -87,16 +175,25 @@ final class P2PService: ObservableObject {
         activityLog.removeAll()
     }
 
+    func clearChat() {
+        chatMessages.removeAll()
+    }
+
     func start() {
-        guard runTask == nil, shutdownTask == nil else { return }
+        guard app == nil, state == .stopped else {
+            log("Start ignored: node is \(state.rawValue)")
+            return
+        }
 
         lastError = nil
         state = .starting
+        hasAnnouncedJoin = false
         log("Starting node")
         startedAt = Date()
         log("Runtime profile: \(runtimeProfile)")
-        log("Listen port: \(listenPort)")
+        log("Listen port: auto (OS-assigned)")
         log("Peer ID: \(peerIDString)")
+        log("Chat handle: \(displayName)")
 
         let app = Self.makeApplication(peerID: peerID)
         self.app = app
@@ -111,6 +208,7 @@ final class P2PService: ObservableObject {
         startDiagnosticsLoop(for: app)
         startGossipHeartbeatLoop(for: app)
         startPingLoop(for: app)
+        startJoinAnnouncementLoop(for: app)
 
         app.eventLoopGroup.next().scheduleTask(in: .milliseconds(100)) { [weak self] in
             guard let self else { return }
@@ -119,6 +217,41 @@ final class P2PService: ObservableObject {
                     self.state = .running
                     self.log("Node is running")
                 }
+                self.refreshListenAddresses(for: app)
+            }
+        }
+
+        app.eventLoopGroup.next().scheduleTask(in: .seconds(1)) { [weak self] in
+            guard let self else { return }
+            Task { @MainActor in
+                self.refreshListenAddresses(for: app)
+                if !self.listenAddresses.isEmpty {
+                    self.log("Listening on: \(self.listenAddresses.joined(separator: ", "))")
+                }
+            }
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
+            guard let self else { return }
+            if let envAddrs = ProcessInfo.processInfo.environment["P2P_DIAL_ADDRS"] {
+                self.log("P2P_DIAL_ADDRS env var: \(envAddrs)")
+                for addr in envAddrs.split(separator: ",").map({ $0.trimmingCharacters(in: .whitespaces) }) {
+                    guard !addr.isEmpty else { continue }
+                    self.log("Auto-dialing env address: \(addr)")
+                    self.dialAddress(addr)
+                }
+            } else {
+                self.log("P2P_DIAL_ADDRS env var not set")
+            }
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 6) { [weak self] in
+            guard let self else { return }
+            if let envMessage = ProcessInfo.processInfo.environment["P2P_CHAT_MESSAGE"], !envMessage.isEmpty {
+                self.log("P2P_CHAT_MESSAGE env var set, auto-sending: \(envMessage)")
+                self.sendChat(envMessage)
+            } else {
+                self.log("P2P_CHAT_MESSAGE env var not set")
             }
         }
 
@@ -143,11 +276,15 @@ final class P2PService: ObservableObject {
                 self?.gossipTask = nil
                 self?.pingTask?.cancel()
                 self?.pingTask = nil
+                self?.joinTask?.cancel()
+                self?.joinTask = nil
                 self?.gossipSubscription?.unsubscribe()
                 self?.gossipSubscription = nil
                 self?.gossipPeersByID.removeAll()
                 self?.pingBackoffUntilByPeerID.removeAll()
-                self?.state = .stopped
+                if self?.state != .stopped && self?.state != .stopping {
+                    self?.state = .stopped
+                }
                 self?.runTask = nil
                 self?.shutdownTask = nil
                 self?.app = nil
@@ -160,7 +297,7 @@ final class P2PService: ObservableObject {
 
     @discardableResult
     func stop() -> Task<Void, Never>? {
-        guard let app else { return nil }
+        guard let app, state != .stopped, state != .stopping else { return nil }
 
         state = .stopping
         log("Stopping node")
@@ -171,29 +308,32 @@ final class P2PService: ObservableObject {
         gossipTask = nil
         pingTask?.cancel()
         pingTask = nil
+        joinTask?.cancel()
+        joinTask = nil
+
+        if !gossipPeersByID.isEmpty {
+            publishLeave(app: app)
+        }
+
         gossipSubscription?.unsubscribe()
         gossipSubscription = nil
         gossipPeersByID.removeAll()
         pingBackoffUntilByPeerID.removeAll()
+
+        let capturedApp = app
         self.app = nil
         self.runTask = nil
 
         let shutdownTask = Task.detached(priority: .background) { [weak self] in
-            do {
-                try await app.asyncShutdown()
-            } catch {
-                await MainActor.run {
-                    self?.lastError = error.localizedDescription
-                    self?.log("Error: \(error.localizedDescription)")
-                }
-            }
+            // Use the synchronous shutdown path to avoid the asyncShutdown storage-clear
+            // ordering bug that triggers "ConnectionManager not initialized" in the
+            // swift-libp2p dependency.
+            capturedApp.shutdown()
 
             await MainActor.run {
                 self?.listenAddresses = []
                 self?.state = .stopped
-                self?.runTask = nil
                 self?.shutdownTask = nil
-                self?.app = nil
                 self?.discoveredPeersByID.removeAll()
                 self?.startedAt = nil
                 self?.log("Node stopped")
@@ -205,6 +345,7 @@ final class P2PService: ObservableObject {
     }
 
     func restart() {
+        guard state != .starting else { return }
         let shutdownTask = stop() ?? self.shutdownTask
         guard let shutdownTask else {
             start()
@@ -219,13 +360,56 @@ final class P2PService: ObservableObject {
         }
     }
 
+    func dialAddress(_ address: String) {
+        guard let app = app, isRunning else {
+            log("Cannot dial: node is not running")
+            return
+        }
+        let trimmed = address.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        do {
+            let ma = try Multiaddr(trimmed)
+            try app.newStream(to: ma, forProtocol: "/ipfs/id/1.0.0")
+            log("Dialed multiaddr \(ma.description)")
+        } catch {
+            lastError = error.localizedDescription
+            log("Failed to dial \(trimmed): \(error.localizedDescription)")
+        }
+    }
+
+    func sendChat(_ text: String) {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+
+        if trimmed.hasPrefix("/raw ") {
+            let body = String(trimmed.dropFirst(5))
+            publish(kind: .raw, body: body)
+            return
+        }
+        if trimmed == "/join" {
+            publish(kind: .join, body: "joined \(Self.gossipTopic)")
+            return
+        }
+        if trimmed == "/heartbeat" {
+            publishHeartbeat()
+            return
+        }
+
+        publish(kind: .chat, body: trimmed)
+    }
+
+    // MARK: - Application setup
+
     private static func makeApplication(peerID: PeerID) -> Application {
         let app = Application(.testing, peerID: peerID)
         app.logger.logLevel = .trace
+        app.security.use(.noise)
+        app.muxers.use(.yamux)
+        app.connectionManager.setIdleTimeout(.seconds(30))
         app.discovery.use(.mdns)
-        app.discovery.use(.kadDHT)
+        app.dht.use(.kadDHT(mode: .client))
         app.pubsub.use(.gossipsub(emitSelf: false))
-        app.listen(.tcp(host: "0.0.0.0", port: Self.listenPort))
+        app.listen(.tcp(host: "0.0.0.0", port: 0))
         return app
     }
 
@@ -237,6 +421,39 @@ final class P2PService: ObservableObject {
             }
         }
 
+        app.events.on(self, event: .identifiedPeer({ [weak self] identified in
+            Task { @MainActor in
+                guard let self else { return }
+                guard identified.peer.b58String != self.peerIDString else { return }
+                self.log("Peer identified", peerID: identified.peer.b58String, addresses: nil)
+            }
+        }))
+
+        app.events.on(self, event: .remotePeerProtocolChange({ [weak self] change in
+            Task { @MainActor in
+                guard let self else { return }
+                let peerID = change.peer.b58String
+                guard peerID != self.peerIDString else { return }
+                let addrs = self.peerAddressesString(for: peerID)
+                let protocols = change.protocols.map(\.stringValue).joined(separator: ", ")
+                self.log(
+                    "Remote peer protocols updated: \(protocols)",
+                    peerID: peerID,
+                    addresses: addrs
+                )
+            }
+        }))
+
+        app.events.on(self, event: .upgraded({ [weak self] connection in
+            Task { @MainActor in
+                self?.log(
+                    "Connection upgraded",
+                    peerID: connection.remotePeer?.b58String,
+                    addresses: connection.remoteAddr.map { [$0.description] }
+                )
+            }
+        }))
+
         app.events.on(self, event: .disconnected({ [weak self] connection, peer in
             Task { @MainActor in
                 self?.handleDisconnectedPeer(connection: connection, peer: peer)
@@ -244,47 +461,59 @@ final class P2PService: ObservableObject {
         }))
     }
 
+    // MARK: - Gossipsub subscription
+
     private func subscribeToGossip(_ app: Application) {
         do {
-            let subscription = try app.pubsub.gossipsub.subscribe(
-                .init(
-                    topic: Self.gossipTopic,
-                    signaturePolicy: .strictSign,
-                    validator: .acceptAll,
-                    messageIDFunc: .concatFromAndSequenceFields
-                )
+            let config = PubSub.SubscriptionConfig(
+                topic: Self.gossipTopic,
+                signaturePolicy: .strictSign,
+                validator: .acceptAll,
+                messageIDFunc: .concatFromAndSequenceFields
             )
+            self.gossipSubConfig = config
+
+            let subscription = try app.pubsub.gossipsub.subscribe(config)
 
             subscription.on = { [weak self] event in
                 switch event {
                 case .newPeer(let peer):
                     Task { @MainActor in
-                        guard peer.b58String != self?.peerIDString else { return }
-                        self?.gossipPeersByID.insert(peer.b58String)
-                        self?.log(
+                        guard let self else { return }
+                        guard peer.b58String != self.peerIDString else { return }
+                        self.gossipPeersByID.insert(peer.b58String)
+                        let addrs = self.peerAddressesString(for: peer.b58String)
+                        self.log(
                             "Peer joined gossip topic \(Self.gossipTopic)",
                             peerID: peer.b58String,
-                            addresses: self?.peerAddressesString(for: peer.b58String)
+                            addresses: addrs
                         )
+                        self.appendChat(
+                            kind: .system,
+                            from: "topic",
+                            body: "peer \(peer.b58String) joined \(Self.gossipTopic)",
+                            peerID: peer.b58String,
+                            addresses: addrs
+                        )
+
+                        if !self.hasReannouncedSubscription, let cfg = self.gossipSubConfig {
+                            self.hasReannouncedSubscription = true
+                            self.log("Re-announcing subscription to \(Self.gossipTopic) to all known peers")
+                            do {
+                                _ = try app.pubsub.gossipsub.subscribe(cfg)
+                                self.log("Re-announce subscription succeeded")
+                            } catch {
+                                self.log("Re-announce subscription failed: \(error.localizedDescription)")
+                            }
+                        }
                     }
                 case .data(let message):
-                    let text = String(data: message.data, encoding: .utf8) ?? "non-utf8 payload"
                     let author = message.from.asString(base: .base58btc)
+                    let addrs = self?.peerAddressesString(for: author)
+                    let data = Data(message.data)
                     Task { @MainActor in
                         guard author != self?.peerIDString else { return }
-                        if let heartbeat = Self.parseHeartbeatPayload(text) {
-                            self?.log(
-                                "Peer heartbeat #\(heartbeat.sequence) on \(Self.gossipTopic): \(heartbeat.payload)",
-                                peerID: author,
-                                addresses: self?.peerAddressesString(for: author)
-                            )
-                        } else {
-                            self?.log(
-                                "Gossip on \(Self.gossipTopic): \(text)",
-                                peerID: author,
-                                addresses: self?.peerAddressesString(for: author)
-                            )
-                        }
+                        self?.handleIncomingGossip(data: data, from: author, addresses: addrs)
                     }
                 case .error(let error):
                     Task { @MainActor in
@@ -303,29 +532,138 @@ final class P2PService: ObservableObject {
         }
     }
 
+    private func handleIncomingGossip(data: Data, from author: String, addresses: [String]?) {
+        if let payload = try? JSONDecoder().decode(ChatMsgPayload.self, from: data) {
+            let kind = MsgKind.parse(payload.kind)
+            let body = payload.content.first ?? ""
+            let displayBody: String
+            switch kind {
+            case .heartbeat:
+                displayBody = "[heartbeat] \(body)"
+            case .join:
+                displayBody = "[join] \(body)"
+            case .leave:
+                displayBody = "[leave] \(body)"
+            default:
+                displayBody = body
+            }
+            log(
+                "\(kind.label) on \(Self.gossipTopic) from \(payload.from): \(displayBody)",
+                peerID: author,
+                addresses: addresses
+            )
+            appendChat(kind: kind, from: payload.from, body: body, peerID: author, addresses: addresses)
+        } else {
+            let text = String(data: data, encoding: .utf8) ?? "non-utf8 payload"
+            log(
+                "Raw gossip on \(Self.gossipTopic): \(text)",
+                peerID: author,
+                addresses: addresses
+            )
+            appendChat(kind: .raw, from: author, body: text, peerID: author, addresses: addresses)
+        }
+    }
+
+    private func appendChat(kind: MsgKind, from: String, body: String, peerID: String?, addresses: [String]?) {
+        let message = ChatMessage(
+            kind: kind,
+            from: from,
+            body: body,
+            peerID: peerID,
+            addresses: addresses ?? [],
+            timestamp: Date()
+        )
+        chatMessages.append(message)
+    }
+
+    // MARK: - Publishing
+
+    private func publish(kind: MsgKind, body: String) {
+        guard let app = app, isRunning else {
+            log("Cannot publish \(kind.label): node is not running")
+            return
+        }
+
+        let payload = ChatMsgPayload(from: displayName, content: [body, ""], kind: kind.rawValue)
+        guard let data = try? JSONEncoder().encode(payload) else {
+            log("Failed to encode \(kind.label) payload")
+            return
+        }
+
+        let bytes = Array(data)
+        let result = app.pubsub.gossipsub.publish(
+            topic: Self.gossipTopic,
+            bytes: bytes,
+            on: app.eventLoopGroup.next()
+        )
+
+        let local = ChatMessage(
+            kind: kind,
+            from: displayName,
+            body: body,
+            peerID: peerIDString,
+            addresses: listenAddresses,
+            timestamp: Date()
+        )
+        chatMessages.append(local)
+        log("Published \(kind.label) to \(Self.gossipTopic): \(body)", peerID: peerIDString, addresses: listenAddresses)
+
+        _ = result
+    }
+
+    private func publishJoin(app: Application) {
+        guard let selfApp = self.app, selfApp === app else { return }
+        publish(kind: .join, body: "joined \(Self.gossipTopic) on \(listenAddresses.joined(separator: ", "))")
+        hasAnnouncedJoin = true
+    }
+
+    private func publishLeave(app: Application) {
+        guard let selfApp = self.app, selfApp === app else { return }
+        publish(kind: .leave, body: "left \(Self.gossipTopic)")
+    }
+
+    private func publishHeartbeat() {
+        let body = "heartbeat #\(heartbeatCounter) from \(displayName) addrs=\(listenAddresses.joined(separator: ", "))"
+        heartbeatCounter += 1
+        publish(kind: .heartbeat, body: body)
+    }
+
+    private var heartbeatCounter = 0
+
+    // MARK: - Background loops
+
     private func startGossipHeartbeatLoop(for app: Application) {
         gossipTask?.cancel()
         gossipTask = Task.detached(priority: .background) { [weak self] in
-            var counter = 0
             while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                try? await Task.sleep(nanoseconds: 10_000_000_000)
                 guard !Task.isCancelled else { break }
-                let hasPeerToTalkTo = await MainActor.run { [weak self] in
+                let hasPeers = await MainActor.run {
                     guard let self else { return false }
-                    return !self.gossipPeersByID.isEmpty
+                    return !self.gossipPeersByID.isEmpty && self.state == .running
                 }
-                guard hasPeerToTalkTo else { continue }
-                counter += 1
-                let payload = "gnostr-dev heartbeat #\(counter) from \(app.peerID.b58String)"
-                let result = app.pubsub.gossipsub.publish(
-                    topic: Self.gossipTopic,
-                    bytes: payload.data(using: .utf8)!.byteArray,
-                    on: app.eventLoopGroup.next()
-                )
+                guard hasPeers else { continue }
                 await MainActor.run {
-                    self?.log("Published gossip heartbeat #\(counter) to \(Self.gossipTopic)")
+                    self?.publishHeartbeat()
                 }
-                _ = result
+            }
+        }
+    }
+
+    private func startJoinAnnouncementLoop(for app: Application) {
+        joinTask?.cancel()
+        joinTask = Task.detached(priority: .background) { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 500_000_000)
+                guard !Task.isCancelled else { break }
+                let shouldAnnounce = await MainActor.run {
+                    guard let self else { return false }
+                    return self.state == .running && !self.hasAnnouncedJoin && !self.gossipPeersByID.isEmpty
+                }
+                guard shouldAnnounce else { continue }
+                await MainActor.run {
+                    self?.publishJoin(app: app)
+                }
             }
         }
     }
@@ -352,13 +690,23 @@ final class P2PService: ObservableObject {
         guard peer.b58String != peerIDString else { return }
         let peerID = peer.b58String
         let wasInGossipMesh = gossipPeersByID.remove(peerID) != nil
+        let addrs = peerAddressesString(for: peerID)
         log(
             wasInGossipMesh
                 ? "Peer left gossip topic \(Self.gossipTopic)"
                 : "Peer disconnected",
             peerID: peerID,
-            addresses: peerAddressesString(for: peerID)
+            addresses: addrs
         )
+        if wasInGossipMesh {
+            appendChat(
+                kind: .system,
+                from: "topic",
+                body: "peer \(peerID) left \(Self.gossipTopic)",
+                peerID: peerID,
+                addresses: addrs
+            )
+        }
     }
 
     private func pingKnownPeers(using app: Application) {
@@ -367,12 +715,9 @@ final class P2PService: ObservableObject {
         }
 
         let candidates = discoveredPeersByID.keys.filter { gossipPeersByID.contains($0) }
-        guard !candidates.isEmpty else {
-            return
-        }
+        guard !candidates.isEmpty else { return }
 
         let orderedCandidates = candidates.sorted()
-        guard !orderedCandidates.isEmpty else { return }
         let index = pingCursor % orderedCandidates.count
         pingCursor = (pingCursor + 1) % orderedCandidates.count
         let peerID = orderedCandidates[index]
@@ -408,8 +753,8 @@ final class P2PService: ObservableObject {
         let peerID = peer.peer.b58String
         guard discoveredPeersByID[peerID] == nil else { return }
         discoveredPeersByID[peerID] = peer
-        let addresses = peer.addresses.map(\.description).joined(separator: ", ")
-        log("Discovered peer", peerID: peerID, addresses: peer.addresses.map(\.description))
+        let addresses = peer.addresses.map(\.description)
+        log("Discovered peer", peerID: peerID, addresses: addresses)
     }
 
     private func dialDiscoveredPeer(_ peer: PeerInfo) {
@@ -417,7 +762,7 @@ final class P2PService: ObservableObject {
         do {
             try app?.newStream(to: peer, forProtocol: "/ipfs/id/1.0.0")
             log(
-                "Dialed discovered peer",
+                "Dialed discovered peer for identify",
                 peerID: peer.peer.b58String,
                 addresses: peer.addresses.map(\.description)
             )
@@ -437,9 +782,18 @@ final class P2PService: ObservableObject {
                 try? await Task.sleep(nanoseconds: 5_000_000_000)
                 guard !Task.isCancelled else { break }
                 await MainActor.run {
+                    self?.refreshListenAddresses(for: app)
                     self?.logNetworkSnapshot(reason: "periodic")
                 }
             }
+        }
+    }
+
+    private func refreshListenAddresses(for app: Application?) {
+        guard let app, self.app === app else { return }
+        let addresses = captureListenAddressStrings(for: app)
+        if addresses != listenAddresses {
+            listenAddresses = addresses
         }
     }
 
@@ -465,6 +819,8 @@ final class P2PService: ObservableObject {
         log(snapshot)
     }
 
+    // MARK: - Utility
+
     private static var runtimeProfile: RuntimeProfile {
         #if targetEnvironment(macCatalyst)
         return .macCatalyst
@@ -487,25 +843,28 @@ final class P2PService: ObservableObject {
         #endif
     }
 
+    private static var platformPrefix: String {
+        switch runtimeProfile {
+        case .macOS:
+            return "macos"
+        case .macCatalyst:
+            return "maccatalyst"
+        case .iPad:
+            return "ipad"
+        case .iPhone:
+            return "ios"
+        case .madeForiPad:
+            return "ios-mac"
+        }
+    }
+
     private static var listenPort: Int {
         if let value = ProcessInfo.processInfo.environment["P2P_LISTEN_PORT"],
            let port = Int(value),
            port > 0 {
             return port
         }
-
-        switch runtimeProfile {
-        case .macOS:
-            return 10000
-        case .iPhone:
-            return 10001
-        case .iPad:
-            return 10002
-        case .macCatalyst:
-            return 10003
-        case .madeForiPad:
-            return 10004
-        }
+        return 0
     }
 
     private static func makePeerID() -> PeerID {
@@ -529,9 +888,11 @@ final class P2PService: ObservableObject {
 
     private func log(_ message: String, peerID: String? = nil, addresses: [String]? = nil) {
         let formatter = Self.timestampFormatter
-        let formatted = "[\(formatter.string(from: Date()))] \(message)\(peerContext(peerID: peerID ?? peerIDString, addresses: addresses))"
+        let targetPeerID = peerID ?? peerIDString
+        let formatted = "[\(formatter.string(from: Date()))] \(message)\(peerContext(peerID: targetPeerID, addresses: addresses))"
         activityLog.append(formatted)
         networkLogger.info("\(formatted, privacy: .public)")
+        print(formatted)
     }
 
     private func peerContext(peerID: String?, addresses: [String]?) -> String {
@@ -550,19 +911,6 @@ final class P2PService: ObservableObject {
         discoveredPeersByID[peerID]?.addresses.map(\.description)
     }
 
-    private static func parseHeartbeatPayload(_ payload: String) -> (sequence: Int, payload: String)? {
-        let prefix = "gnostr-dev heartbeat #"
-        guard payload.hasPrefix(prefix) else { return nil }
-
-        let remainder = payload.dropFirst(prefix.count)
-        guard let separator = remainder.firstIndex(of: " "),
-              let sequence = Int(remainder[..<separator]) else {
-            return nil
-        }
-
-        return (sequence, String(remainder))
-    }
-
     private static let timestampFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm:ss"
@@ -570,14 +918,22 @@ final class P2PService: ObservableObject {
     }()
 }
 
+// MARK: - UI
+
 struct ContentView: View {
     @StateObject private var service = P2PService()
+    @State private var draft: String = ""
+    @State private var dialAddress: String = ""
+    @State private var isNicknameFocused: Bool = false
+    @FocusState private var messageFieldFocused: Bool
 
     var body: some View {
         NavigationStack {
             GeometryReader { proxy in
-                VStack(spacing: 16) {
+                VStack(spacing: 12) {
                     stickyHeader
+
+                    chatCard
 
                     sectionCard(title: "Network activity", subtitle: "Recent network lifecycle events") {
                         ScrollView {
@@ -615,10 +971,16 @@ struct ContentView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
-                    Button("Clear Log") {
-                        service.clearActivityLog()
+                    Menu {
+                        Button("Clear activity log") {
+                            service.clearActivityLog()
+                        }
+                        Button("Clear chat") {
+                            service.clearChat()
+                        }
+                    } label: {
+                        Label("Clear", systemImage: "ellipsis.circle")
                     }
-                    .disabled(service.activityLog.isEmpty)
                 }
             }
         }
@@ -631,7 +993,7 @@ struct ContentView: View {
     }
 
     private var stickyHeader: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             headerCard
             actionBar
 
@@ -658,11 +1020,12 @@ struct ContentView: View {
             }
 
             LazyVGrid(columns: [
-                GridItem(.adaptive(minimum: 160), spacing: 12, alignment: .leading)
+                GridItem(.adaptive(minimum: 140), spacing: 12, alignment: .leading)
             ], alignment: .leading, spacing: 12) {
                 statChip(title: "Runtime", value: service.runtimeProfile)
                 statChip(title: "Listen port", value: "\(service.listenPort)")
                 statChip(title: "State", value: service.stateLabel)
+                statChip(title: "Topic", value: "gnostr-dev")
             }
 
             VStack(alignment: .leading, spacing: 6) {
@@ -673,6 +1036,41 @@ struct ContentView: View {
                     .font(.caption.monospaced())
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(12)
+            .background(Color.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Chat handle")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                TextField("ios-12D3KooW...", text: $service.displayName)
+                    .font(.caption.monospaced())
+                    .textFieldStyle(.roundedBorder)
+                    .textSelection(.enabled)
+            }
+            .padding(12)
+            .background(Color.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Dial multiaddr")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                HStack(spacing: 8) {
+                    TextField("/ip4/.../tcp/.../p2p/...", text: $dialAddress)
+                        .font(.caption.monospaced())
+                        .textFieldStyle(.roundedBorder)
+                        .textSelection(.enabled)
+                        .onSubmit {
+                            service.dialAddress(dialAddress)
+                        }
+
+                    Button("Dial") {
+                        service.dialAddress(dialAddress)
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(service.state != .running || dialAddress.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
             }
             .padding(12)
             .background(Color.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
@@ -687,12 +1085,13 @@ struct ContentView: View {
                 service.start()
             }
             .buttonStyle(.borderedProminent)
+            .disabled(service.state != .stopped)
 
             Button("Stop node") {
                 service.stop()
             }
             .buttonStyle(.bordered)
-            .disabled(!service.isRunning)
+            .disabled(service.state == .stopped || service.state == .stopping)
 
             Spacer(minLength: 12)
 
@@ -700,10 +1099,59 @@ struct ContentView: View {
                 service.restart()
             }
             .buttonStyle(.bordered)
-            .disabled(service.state == .stopped)
+            .disabled(service.state == .stopped || service.state == .starting || service.state == .stopping)
         }
         .padding(16)
         .background(Color.secondary.opacity(0.06), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+    }
+
+    private var chatCard: some View {
+        sectionCard(title: "gnostr-dev chat", subtitle: "Messages on the topic") {
+            VStack(spacing: 8) {
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        LazyVStack(alignment: .leading, spacing: 8) {
+                            ForEach(service.chatMessages) { message in
+                                chatRow(message)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    .onChange(of: service.chatMessages.count) { _ in
+                        if let last = service.chatMessages.last {
+                            withAnimation {
+                                proxy.scrollTo(last.id, anchor: .bottom)
+                            }
+                        }
+                    }
+                }
+
+                HStack(spacing: 8) {
+                    TextField("Message... (/raw, /join, /heartbeat)", text: $draft)
+                        .textFieldStyle(.roundedBorder)
+                        .focused($messageFieldFocused)
+                        .onSubmit {
+                            submitDraft()
+                        }
+
+                    Button {
+                        submitDraft()
+                    } label: {
+                        Image(systemName: "arrow.up.circle.fill")
+                            .font(.title2)
+                    }
+                    .disabled(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+        }
+        .padding(.horizontal, 16)
+    }
+
+    private func submitDraft() {
+        let text = draft
+        draft = ""
+        service.sendChat(text)
+        messageFieldFocused = false
     }
 
     private func sectionCard<Content: View>(
@@ -779,6 +1227,7 @@ struct ContentView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(12)
             .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .textSelection(.enabled)
     }
 
     private func addressRow(_ address: String) -> some View {
@@ -787,6 +1236,53 @@ struct ContentView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(12)
             .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .textSelection(.enabled)
+    }
+
+    private func chatRow(_ message: ChatMessage) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                Text(message.kind.label)
+                    .font(.caption2.weight(.bold))
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(message.kind.tint.opacity(0.15), in: Capsule())
+                    .foregroundStyle(message.kind.tint)
+
+                Text(message.from)
+                    .font(.caption.weight(.semibold))
+                    .textSelection(.enabled)
+
+                Spacer()
+
+                Text(timeString(message.timestamp))
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+
+            Text(message.body)
+                .font(.subheadline)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .textSelection(.enabled)
+
+            if let peerID = message.peerID, !peerID.isEmpty {
+                Text("peer: \(peerID)")
+                    .font(.caption2.monospaced())
+                    .foregroundStyle(.secondary)
+                    .textSelection(.enabled)
+            }
+
+            if !message.addresses.isEmpty {
+                Text("addrs: \(message.addresses.joined(separator: ", "))")
+                    .font(.caption2.monospaced())
+                    .foregroundStyle(.secondary)
+                    .textSelection(.enabled)
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(message.kind.tint.opacity(0.06), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .id(message.id)
     }
 
     private var statusTint: Color {
@@ -798,6 +1294,12 @@ struct ContentView: View {
         case .stopped:
             return .secondary
         }
+    }
+
+    private func timeString(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss"
+        return formatter.string(from: date)
     }
 }
 
