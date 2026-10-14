@@ -25,7 +25,7 @@ struct LibP2PWebSocketTests {
     @Test func testInternalWebSocketStartThenStop() throws {
         let host = Application(.testing)
         host.environment.arguments = ["libp2p"]
-        host.servers.use(.ws(host: "127.0.0.1", port: 10000))
+        host.servers.use(.ws(host: "127.0.0.1", port: 0))
         host.security.use(.noise)
         host.muxers.use(.mplex)
 
@@ -34,7 +34,9 @@ struct LibP2PWebSocketTests {
         print(host.listenAddresses)
         sleep(1)
 
-        #expect(try host.listenAddresses.first == Multiaddr("/ip4/127.0.0.1/tcp/10000/ws"))
+        let address = try #require(host.listenAddresses.first?.description)
+        #expect(address.hasPrefix("/ip4/127.0.0.1/tcp/"))
+        #expect(address.hasSuffix("/ws"))
 
         host.shutdown()
     }
@@ -42,14 +44,14 @@ struct LibP2PWebSocketTests {
     @Test func testInternalWebSocketEcho() async throws {
         let host = try await Application.make(.testing, peerID: .ephemeral())
         host.environment.arguments = ["libp2p"]
-        host.servers.use(.ws(host: "127.0.0.1", port: 10000))
+        host.servers.use(.ws(host: "127.0.0.1", port: 0))
         host.security.use(.noise)
         host.muxers.use(.mplex)
         host.logger.logLevel = .trace
 
         let client = try await Application.make(.testing, peerID: .ephemeral())
         client.environment.arguments = ["libp2p"]
-        client.servers.use(.ws(host: "127.0.0.1", port: 10001))
+        client.servers.use(.ws(host: "127.0.0.1", port: 0))
         client.security.use(.noise)
         client.muxers.use(.mplex)
         client.transports.use(.ws)
@@ -69,8 +71,12 @@ struct LibP2PWebSocketTests {
         let hostAddress = host.listenAddresses.first
 
         #expect(hostAddress != nil)
-        #expect(try hostAddress == Multiaddr("/ip4/127.0.0.1/tcp/10000/ws"))
-        #expect(try client.listenAddresses.first == Multiaddr("/ip4/127.0.0.1/tcp/10001/ws"))
+        let hostAddressString = try #require(hostAddress?.description)
+        #expect(hostAddressString.hasPrefix("/ip4/127.0.0.1/tcp/"))
+        #expect(hostAddressString.hasSuffix("/ws"))
+        let clientAddressString = try #require(client.listenAddresses.first?.description)
+        #expect(clientAddressString.hasPrefix("/ip4/127.0.0.1/tcp/"))
+        #expect(clientAddressString.hasSuffix("/ws"))
 
         let echoMessage = "Hello from swift libp2p!"
         let response = try await client.newRequest(
