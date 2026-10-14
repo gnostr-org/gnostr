@@ -29,7 +29,7 @@ struct LibP2PPubSubTests {
         app.environment.arguments = [app.environment.arguments.first ?? "xctest"]
 
         /// Configure our networking stack!
-        app.servers.use(.tcp(host: "127.0.0.1", port: 10000))
+        app.servers.use(.tcp(host: "127.0.0.1", port: 0))
         app.security.use(.noise)
         app.muxers.use(.yamux)
         app.pubsub.use(.floodsub)
@@ -51,7 +51,7 @@ struct LibP2PPubSubTests {
         app.environment.arguments = [app.environment.arguments.first ?? "xctest"]
 
         /// Configure our networking stack!
-        app.servers.use(.tcp(host: "127.0.0.1", port: 10000))
+        app.servers.use(.tcp(host: "127.0.0.1", port: 0))
         app.security.use(.noise)
         app.muxers.use(.yamux)
         app.pubsub.use(.gossipsub)

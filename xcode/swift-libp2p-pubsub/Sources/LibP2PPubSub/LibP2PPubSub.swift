@@ -164,7 +164,7 @@ open class BasePubSub: @unchecked Sendable {
         guard self.multicodecs.count > 0 else { throw Errors.invalidMulticodecLength }
 
         self.logger = Logger(label: "\(debugName)[\(libp2p.peerID.shortDescription)][\(UUID().uuidString.prefix(5))]")
-        self.logger.logLevel = .info  //libp2p.logger.logLevel  //LOG_LEVEL
+        self.logger.logLevel = libp2p.logger.logLevel  //LOG_LEVEL
 
         self.libp2p = libp2p
         self.elg = group
@@ -305,11 +305,21 @@ open class BasePubSub: @unchecked Sendable {
         guard let codec = self.multicodecs.first?.stringValue else { return }
 
         // -TODO: Maybe we take this opportunity to open a PubSub stream if one doesn't already exist...
+        print("BasePubSub::onPeerConnected peer=\(peer.b58String) conn=\(type(of: connection)) muxed=\(connection.isMuxed)")
+        self.logger.debug(
+            "PubSub::Attempting to auto-dial \(connection.remotePeer?.description ?? "nil") for outbound `\(codec)` stream"
+        )
         if let conn = connection as? BasicConnectionLight {
-            self.logger.debug(
-                "PubSub::Attempting to auto-dial \(connection.remotePeer?.description ?? "nil") for outbound `\(codec)` stream"
-            )
+            print("BasePubSub::opening outbound stream on BasicConnectionLight")
             conn.newStream(forProtocol: codec, mode: .ifOutboundDoesntAlreadyExist)
+        } else if let conn = connection as? ARCConnection {
+            print("BasePubSub::opening outbound stream on ARCConnection")
+            conn.newStream(forProtocol: codec, mode: .ifOutboundDoesntAlreadyExist)
+        } else {
+            print("BasePubSub::unknown connection type \(type(of: connection))")
+            self.logger.warning(
+                "PubSub::Unable to auto-dial outbound `\(codec)` stream for connection type \(type(of: connection))"
+            )
         }
     }
 
@@ -377,7 +387,8 @@ open class BasePubSub: @unchecked Sendable {
     }
 
     func handleNewInboundStream(_ req: Request, stream: LibP2PCore.Stream) -> EventLoopFuture<Response<ByteBuffer>> {
-        //self.logger.info("TODO::HandleNewInboundStream")
+        print("BasePubSub::handleNewInboundStream peer=\(req.remotePeer?.b58String ?? "unknown") proto=\(stream.protocolCodec) conn=\(type(of: req.connection)) muxed=\(req.connection.isMuxed)")
+        self.logger.notice("PubSub inbound stream ready for peer \(req.remotePeer?.b58String ?? "unknown") on \(stream.protocolCodec)")
         guard let remotePeer = req.remotePeer else {
             self.logger.warning(
                 "Received new inbound stream without an authenticated remote peer attached! Closing stream!"
@@ -386,19 +397,32 @@ open class BasePubSub: @unchecked Sendable {
         }
         // Alert our peerstore of the new peer and associated stream
         return peerState.attachInboundStream(remotePeer, inboundStream: stream, on: req.eventLoop).flatMap {
-            // Check to see if we have an outbound stream to this peer for /floodsub/1.0.0
-            //            if req.connection.hasStream(forProtocol: self.multicodecs.first!.stringValue, direction: .outbound) == nil {
-            //                // If not, then open one...
-            //                req.logger.info("PubSub::Attempting to auto-dial \(req.remotePeer?.description ?? "nil") for outbound \(self.multicodecs.first!.stringValue) stream")
-            //                (req.connection as? BasicConnectionLight)?.newStream(forProtocol: self.multicodecs.first!.stringValue, mode: .ifOutboundDoesntAlreadyExist)
-            //            }
+            // If the remote peer opened a PubSub stream to us, make sure we have an outbound
+            // stream back to them so we can publish messages and announce our subscriptions.
+            let codec = self.multicodecs.first!.stringValue
+            let existingOutbound = req.connection.hasStream(forProtocol: codec, direction: .outbound)
+            let existingAny = req.connection.hasStream(forProtocol: codec, direction: nil)
+            print("BasePubSub::handleNewInboundStream afterAttach peer=\(remotePeer.b58String) existingOutbound=\(String(describing: existingOutbound?.id)) existingAnyDirection=\(String(describing: existingAny?.id)) allStreams=\(req.connection.streams.map { "[\($0.id)][\($0.protocolCodec)][\($0.direction)]" })")
+            if existingOutbound == nil {
+                print("BasePubSub::handleNewInboundStream opening outbound stream to \(remotePeer.b58String) conn=\(type(of: req.connection)) muxed=\(req.connection.isMuxed)")
+                if let conn = req.connection as? BasicConnectionLight {
+                    conn.newStream(forProtocol: codec, mode: .openStream)
+                } else if let conn = req.connection as? ARCConnection {
+                    conn.newStream(forProtocol: codec, mode: .openStream)
+                } else {
+                    print("BasePubSub::handleNewInboundStream unsupported connection type \(type(of: req.connection))")
+                }
+            } else {
+                print("BasePubSub::handleNewInboundStream outbound already exists for \(remotePeer.b58String)")
+            }
 
-            req.eventLoop.makeSucceededFuture(.stayOpen)
+            return req.eventLoop.makeSucceededFuture(.stayOpen)
         }
     }
 
     func handleNewOutboundStream(_ req: Request, stream: LibP2PCore.Stream) -> EventLoopFuture<Response<ByteBuffer>> {
-        self.logger.debug("TODO::HandleNewOutboundStream")
+        print("BasePubSub::handleNewOutboundStream peer=\(req.remotePeer?.b58String ?? "unknown") proto=\(stream.protocolCodec) conn=\(type(of: req.connection)) muxed=\(req.connection.isMuxed)")
+        self.logger.notice("PubSub outbound stream ready for peer \(req.remotePeer?.b58String ?? "unknown") on \(stream.protocolCodec)")
         guard let remotePeer = req.remotePeer else {
             self.logger.warning(
                 "Received new outbound stream without an authenticated remote peer attached! Closing stream!"
@@ -412,7 +436,7 @@ open class BasePubSub: @unchecked Sendable {
                 self.logger.warning("Failed to generate subscription payload for new \(remotePeer)")
                 return .stayOpen
             }  // Or should we close here??
-            self.logger.trace("Sharing our subscriptions with our new \(remotePeer)")
+            self.logger.notice("Sharing our subscriptions with \(remotePeer) (\(subs.count) bytes)")
             return .respond(req.allocator.buffer(bytes: subs))
         }
     }
@@ -880,8 +904,9 @@ open class BasePubSub: @unchecked Sendable {
         guard let topic = msg.topicIds.first else { return self.eventLoop.makeFailedFuture(Errors.invalidTopic) }
 
         return self.getPeersSubscribed(to: topic).flatMap { subscribers -> EventLoopFuture<Void> in
+            self.logger.notice("Publishing message on topic '\(topic)' to \(subscribers.count) subscriber(s)")
             if subscribers.isEmpty {
-                self.logger.trace(
+                self.logger.warning(
                     "No known peers subscribed to topic: \(topic). Proceeding with message signing and local storage."
                 )
             }
@@ -930,9 +955,14 @@ open class BasePubSub: @unchecked Sendable {
 
                 /// For each peer subscribed to the topic, send the message their way...
                 for subscriber in subscribers {
-                    self.logger.debug("Attempting to send message to \(subscriber.id)")
+                    self.logger.notice("Sending \(payload.count) byte message to \(subscriber.id) on topic '\(topic)'")
                     self._eventHandler?(.outbound(.message(subscriber.id, [msg])))
-                    try? subscriber.write(payload.byteArray)
+                    do {
+                        try subscriber.write(payload.byteArray)
+                        self.logger.notice("Wrote message to \(subscriber.id)")
+                    } catch {
+                        self.logger.error("Failed to write message to \(subscriber.id): \(error)")
+                    }
                 }
 
                 /// This is gossipsub related... we should move this into the gsub logic

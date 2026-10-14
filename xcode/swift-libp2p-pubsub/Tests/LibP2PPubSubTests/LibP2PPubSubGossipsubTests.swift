@@ -152,7 +152,7 @@ final class LibP2PPubSubGossipsubTests {
         let app = try await Application.make(.testing, peerID: PeerID(.Ed25519))
         app.logger.logLevel = .trace
         app.environment.arguments = [app.environment.arguments.first ?? "xctest"]
-        app.servers.use(.tcp(host: "127.0.0.1", port: 10000))
+        app.servers.use(.tcp(host: "127.0.0.1", port: 0))
         app.security.use(.noise)
         app.muxers.use(.yamux)
         app.pubsub.use(.gossipsub(emitSelf: true))
@@ -623,7 +623,7 @@ final class LibP2PPubSubGossipsubTests {
         app.logger.logLevel = .trace
 
         /// Configure our networking stack!
-        app.servers.use(.tcp(host: "127.0.0.1", port: 10000))
+        app.servers.use(.tcp(host: "127.0.0.1", port: 0))
         app.security.use(.noise)
         app.muxers.use(.yamux)
         app.pubsub.use(.gossipsub)
@@ -683,7 +683,6 @@ final class LibP2PPubSubGossipsubTests {
         try await app.asyncShutdown()
     }
 
-    var nextPort: Int = 10100
     private func makeHost() throws -> Application {
         let lib = try Application(.testing, peerID: PeerID(.Ed25519))
         lib.environment.arguments = [lib.environment.arguments.first ?? "xctest"]
@@ -692,9 +691,7 @@ final class LibP2PPubSubGossipsubTests {
         lib.security.use(.noise)
         lib.muxers.use(.yamux)
         lib.pubsub.use(.gossipsub)
-        lib.servers.use(.tcp(host: "127.0.0.1", port: nextPort))
-
-        nextPort += 1
+        lib.servers.use(.tcp(host: "127.0.0.1", port: 0))
 
         return lib
     }

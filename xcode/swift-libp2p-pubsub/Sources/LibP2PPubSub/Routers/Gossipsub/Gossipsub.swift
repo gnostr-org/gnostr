@@ -29,7 +29,7 @@ import NIOConcurrencyHelpers
 /// - Note: [Gossipsub v1.0.0 Spec](https://github.com/libp2p/specs/blob/master/pubsub/gossipsub/gossipsub-v1.0.md)
 /// - Note: The methods that we must implement will be enforced by the compiler when we conform to PubSub
 public class GossipSub: BasePubSub, PubSubCore, LifecycleHandler, @unchecked Sendable {
-    public static let multicodec: String = "/meshsub/1.0.0"
+    public static let multicodec: String = "/meshsub/1.1.0"
 
     public let lowerOutboundDegree = 4
     public let targetOutboundDegree = 6
@@ -319,7 +319,7 @@ public class GossipSub: BasePubSub, PubSubCore, LifecycleHandler, @unchecked Sen
 
     /// Publish arbitrary data, bundled as an RPC message under the specified topic
     public override func publish(topic: String, data: Data, on: EventLoop?) -> EventLoopFuture<Void> {
-        self.logger.debug("Attempting to publish data as RPC Message")
+        self.logger.notice("Gossipsub attempting to publish \(data.count) bytes on topic '\(topic)'")
 
         var msg = RPC.Message()
         msg.data = data

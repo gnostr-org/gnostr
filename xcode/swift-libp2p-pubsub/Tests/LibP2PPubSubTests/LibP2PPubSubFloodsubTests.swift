@@ -559,7 +559,7 @@ final class LibP2PPubSubFloodsubTests {
         app.environment.arguments = [app.environment.arguments.first ?? "xctest"]
 
         /// Configure our networking stack!
-        app.servers.use(.tcp(host: "127.0.0.1", port: 10000))
+        app.servers.use(.tcp(host: "127.0.0.1", port: 0))
         app.security.use(.noise)
         app.muxers.use(.yamux)
         app.pubsub.use(.floodsub)
@@ -620,7 +620,7 @@ final class LibP2PPubSubFloodsubTests {
         app.environment.arguments = [app.environment.arguments.first ?? "xctest"]
 
         /// Configure our networking stack!
-        app.servers.use(.tcp(host: "127.0.0.1", port: 10000))
+        app.servers.use(.tcp(host: "127.0.0.1", port: 0))
         app.security.use(.noise)
         app.muxers.use(.yamux)
 
@@ -646,7 +646,7 @@ final class LibP2PPubSubFloodsubTests {
         app.environment.arguments = [app.environment.arguments.first ?? "xctest"]
 
         /// Configure our networking stack!
-        app.servers.use(.tcp(host: "127.0.0.1", port: 10000))
+        app.servers.use(.tcp(host: "127.0.0.1", port: 0))
         app.security.use(.noise)
         app.muxers.use(.yamux)
         app.pubsub.use(.floodsub)
@@ -711,7 +711,6 @@ final class LibP2PPubSubFloodsubTests {
         try await app.asyncShutdown()
     }
 
-    var nextPort: Int = 10200
     private func makeHost() throws -> Application {
         let lib = try Application(.testing, peerID: PeerID(.Ed25519))
         lib.environment.arguments = [lib.environment.arguments.first ?? "xctest"]
@@ -720,9 +719,7 @@ final class LibP2PPubSubFloodsubTests {
         lib.security.use(.noise)
         lib.muxers.use(.yamux)
         lib.pubsub.use(.floodsub)
-        lib.servers.use(.tcp(host: "127.0.0.1", port: nextPort))
-
-        nextPort += 1
+        lib.servers.use(.tcp(host: "127.0.0.1", port: 0))
 
         return lib
     }

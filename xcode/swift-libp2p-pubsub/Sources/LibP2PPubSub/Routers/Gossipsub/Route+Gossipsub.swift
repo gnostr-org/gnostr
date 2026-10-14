@@ -17,6 +17,16 @@ import LibP2P
 func registerGossipsubRoute(_ app: Application) throws {
     app.group("meshsub") { msub in
 
+        msub.on("1.1.0", handlers: [.varIntFrameDecoder]) { req -> EventLoopFuture<Response<ByteBuffer>> in
+
+            guard req.application.isRunning else {
+                req.logger.error("Gossipsub::Recieved Request After App Shutdown")
+                return req.eventLoop.makeFailedFuture(BasePubSub.Errors.alreadyStopped)
+            }
+            return req.application.pubsub.gossipsub.processRequest(req)
+
+        }
+
         msub.on("1.0.0", handlers: [.varIntFrameDecoder]) { req -> EventLoopFuture<Response<ByteBuffer>> in
 
             guard req.application.isRunning else {
