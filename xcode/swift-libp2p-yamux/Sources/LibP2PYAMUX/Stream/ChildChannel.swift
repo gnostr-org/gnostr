@@ -472,6 +472,7 @@ extension ChildChannel: Channel, ChannelCore {
                 initialWindowSize: self.windowManager.targetWindowSize,
                 maximumPacketSize: self.windowManager.targetWindowSize  // 1 << 24
             )
+            print("YAMUXChild::initializerComplete sending ChannelOpen localID=\(self.state.localChannelIdentifier)")
             self.processOutboundMessage(.channelOpen(message), promise: nil)
             self.writePendingToMultiplexer()
         } else {

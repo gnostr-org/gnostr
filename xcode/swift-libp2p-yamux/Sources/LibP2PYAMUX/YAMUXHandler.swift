@@ -207,6 +207,20 @@ extension YAMUXHandler: ChannelDuplexHandler {
 
         do {
             for message in frame.messages {
+                switch message {
+                case .channelOpen(let m):
+                    print("YAMUXHandler::channelRead ChannelOpen senderChannel=\(m.senderChannel) mode=\(self.mode)")
+                case .channelOpenConfirmation(let m):
+                    print("YAMUXHandler::channelRead ChannelOpenConfirmation recipientChannel=\(m.recipientChannel) senderChannel=\(m.senderChannel) mode=\(self.mode)")
+                case .channelOpenFailure(let m):
+                    print("YAMUXHandler::channelRead ChannelOpenFailure recipientChannel=\(m.recipientChannel) reason=\(m.reasonCode) mode=\(self.mode)")
+                case .channelClose(let m):
+                    print("YAMUXHandler::channelRead ChannelClose recipientChannel=\(m.recipientChannel) mode=\(self.mode)")
+                case .channelReset(let m):
+                    print("YAMUXHandler::channelRead ChannelReset recipientChannel=\(m.recipientChannel) reason=\(m.reasonCode) mode=\(self.mode)")
+                default:
+                    break
+                }
                 try self.processInboundMessage(message, context: context)
             }
         } catch {
@@ -315,6 +329,7 @@ extension YAMUXHandler {
         _ promise: EventLoopPromise<YAMUXStream>? = nil,
         _ channelInitializer: ((Channel) -> EventLoopFuture<Void>)?
     ) {
+        print("YAMUXHandler::createChannel pendingCount=\(self.pendingChannelInitializations.count) active=\(self.sessionState.isActiveOnNetwork)")
         self.pendingChannelInitializations.append(
             (promise: promise, initializer: channelInitializer)
         )
@@ -322,6 +337,7 @@ extension YAMUXHandler {
     }
 
     private func createPendingChannelsIfPossible() {
+        print("YAMUXHandler::createPendingChannelsIfPossible active=\(self.sessionState.isActiveOnNetwork) pending=\(self.pendingChannelInitializations.count)")
         guard self.sessionState.isActiveOnNetwork, self.pendingChannelInitializations.count > 0 else {
             // No work to do
             return
@@ -329,6 +345,7 @@ extension YAMUXHandler {
 
         if let multiplexer = self.multiplexer {
             while let next = self.pendingChannelInitializations.popFirst() {
+                print("YAMUXHandler::creatingOutboundChildChannel")
                 multiplexer.createOutboundChildChannel(next.promise, next.initializer)
             }
         } else {
@@ -356,6 +373,7 @@ extension YAMUXHandler {
 
 extension YAMUXHandler: MultiplexerDelegate {
     func writeFromChildChannel(_ message: Frame, _ promise: EventLoopPromise<Void>?) {
+        print("YAMUXHandler::writeFromChildChannel streamID=\(message.header.streamID) type=\(message.header.messageType) flags=\(message.header.flags) mode=\(self.mode)")
         guard let context = self.context else {
             promise?.fail(ChannelError.ioOnClosedChannel)
             return
@@ -396,6 +414,7 @@ extension YAMUXHandler {
         // Ask our multiplexer to open a new channel
         //self.multiplexer!.createOutboundChildChannel(promise) { channel -> EventLoopFuture<Void> in
         self.createChannel(promise) { channel -> EventLoopFuture<Void> in
+            print("YAMUXHandler::newStream initializer closure running proto=\(proto)")
             self.logger.trace("NewStream::Initializing outbound child channel")
             // Pass the new channel into libp2p to be configured
             return self._connection!.outboundMuxedChildChannelInitializer(channel, protocol: proto)
@@ -475,8 +494,15 @@ extension ChildChannelStateMachine {
     fileprivate mutating func initialize(mode: LibP2P.Mode) -> Frame? {
         switch mode {
         case .initiator:
-            // wait for ChannelOpen ID == 0 message
-            return nil
+            // Proactively open the session control stream, the same way a listener does.
+            // Standard libp2p yamux implementations (e.g. rust-libp2p's yamux) do not send
+            // a dedicated sessionOpen ping, so a dialer that waits forever never becomes
+            // active on the network and cannot open outbound streams. By sending our own
+            // sessionOpen we activate immediately and remain interoperable with peers that
+            // do send one.
+            self.sendChannelOpen(.init(senderChannel: 0, initialWindowSize: 0, maximumPacketSize: 0))
+            // return the frame to send
+            return .init(header: .init(version: .v0, messageType: .ping, flags: [.syn], streamID: 0, length: 0))
         case .listener:
             // Spin the state machine
             self.sendChannelOpen(.init(senderChannel: 0, initialWindowSize: 0, maximumPacketSize: 0))
@@ -488,6 +514,12 @@ extension ChildChannelStateMachine {
     fileprivate mutating func receivedSessionOpen(mode: LibP2P.Mode) throws -> Frame {
         switch mode {
         case .initiator:
+            // If we already sent our own sessionOpen (e.g. to a Swift listener that also
+            // sends one), we are already active on the network. Just acknowledge the
+            // redundant sessionOpen without touching the state machine.
+            if self.isActiveOnNetwork {
+                return .init(header: .init(version: .v0, messageType: .ping, flags: [.ack], streamID: 0, length: 0))
+            }
             // Receive the channel open message
             self.receiveChannelOpen(.init(senderChannel: 0, initialWindowSize: 0, maximumPacketSize: 0))
             // Send the channel open confirmation message
