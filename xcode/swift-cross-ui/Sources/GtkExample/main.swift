@@ -68,7 +68,7 @@ app.run { window in
         newWindow.title = "Just a window"
         newWindow.defaultSize = Size(width: 200, height: 200)
 
-        let calendar = Calendar()
+        let calendar = Gtk.Calendar()
         calendar.year = 2000
         calendar.showHeading = true
 
