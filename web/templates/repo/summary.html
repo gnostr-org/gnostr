@@ -1,10 +1,10 @@
 {% import "macros/refs.html" as refs %}
 {% extends "repo/base.html" %}
 
-{% block title %}gnostr.org{{ repo.href_base() }}{% if let Some(path) = child_path %}{{ path.display() }}{% endif %}{% endblock %}
+{% block title %}{{ repo.title() }}{% if let Some(path) = child_path %}/{{ path.display() }}{% endif %}{% endblock %}
 
 {% block header -%}
-    <a href="/" class="no-style">gnostr.org{{ repo.href_base() }}{% if let Some(path) = child_path %}{{ path.display() }}{% endif %}</a>
+    <a href="/" class="no-style">{{ repo.title() }}{% if let Some(path) = child_path %}/{{ path.display() }}{% endif %}</a>
 {%- endblock %}
 
 {% block repo_nav_handler %}<span class="repo-nav-sep">/</span><span>summary</span>{% endblock %}

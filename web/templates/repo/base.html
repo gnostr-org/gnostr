@@ -1,10 +1,10 @@
 {% import "macros/link.html" as link %}
 {% extends "../base.html" %}
 
-{% block title %}gnostr.org{{ repo.href_base() }}{% endblock %}
+{% block title %}{{ repo.title() }}{% endblock %}
 
 {%- block header -%}
-    <a href="/" class="no-style">gnostr.org{{ repo.href_base() }}</a>
+    <a href="/" class="no-style">{{ repo.title() }}</a>
 {%- endblock -%}
 
 {% block nav %}

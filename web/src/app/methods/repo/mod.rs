@@ -240,6 +240,14 @@ impl Repository {
         }
     }
 
+    pub fn title(&self) -> String {
+        if self.0.as_os_str().is_empty() || self.0 == Path::new(".") {
+            "gnostr.org".to_string()
+        } else {
+            format!("gnostr.org/{}", self.0.display())
+        }
+    }
+
     pub fn display_name(&self) -> String {
         if self.0.as_os_str().is_empty() || self.0 == Path::new(".") {
             "root repo".to_string()
