@@ -57,7 +57,8 @@ pub async fn service(mut request: Request<Body>) -> Response {
     let scan_path = request
         .extensions()
         .get::<Arc<PathBuf>>()
-        .expect("scan_path missing");
+        .expect("scan_path missing")
+        .clone();
 
     let uri_segments: Vec<&str> = request
         .uri()
@@ -189,7 +190,7 @@ pub async fn service(mut request: Request<Body>) -> Response {
 
     debug!("Final Child Path: {:?}", child_path);
 
-    let repository_abs_path = repository_abs_path(scan_path, &repository_name);
+    let repository_abs_path = repository_abs_path(scan_path.as_path(), &repository_name);
 
     debug!("Repository Name: {}", repository_name.display());
     debug!("Repository Path: {}", repository_abs_path.display());
@@ -199,6 +200,7 @@ pub async fn service(mut request: Request<Body>) -> Response {
     request
         .extensions_mut()
         .insert(RepositoryPath(repository_abs_path));
+    request.extensions_mut().insert(ScanPath(scan_path.to_path_buf()));
 
     service
         .call(request)
@@ -254,6 +256,9 @@ mod tests {
 
 #[derive(Clone)]
 pub struct RepositoryPath(pub PathBuf);
+
+#[derive(Clone)]
+pub struct ScanPath(pub PathBuf);
 
 #[derive(Clone)]
 pub struct ChildPath(pub Option<PathBuf>);

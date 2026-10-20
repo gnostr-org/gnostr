@@ -1,4 +1,4 @@
-use std::{io, io::ErrorKind, path::Path, process::Stdio, str::FromStr};
+use std::{io, io::ErrorKind, process::Stdio, str::FromStr};
 
 use anyhow::{anyhow, Context};
 use axum::{
@@ -22,20 +22,23 @@ use tokio_stream::wrappers::ReceiverStream;
 use tokio_util::io::StreamReader;
 use tracing::{debug, error, info_span, warn, Instrument};
 
-use crate::app::methods::repo::{Repository, RepositoryPath, Result};
+use crate::app::methods::repo::{Result, ScanPath};
 
 use axum::http::StatusCode;
 
 #[allow(clippy::unused_async)]
 pub async fn handle(
-    Extension(RepositoryPath(repository_path)): Extension<RepositoryPath>,
-    Extension(Repository(repository)): Extension<Repository>,
+    Extension(ScanPath(scan_path)): Extension<ScanPath>,
     method: Method,
     uri: Uri,
     headers: HeaderMap,
     body: Body,
 ) -> Result<impl IntoResponse> {
-    let path = extract_path(&uri, &repository)?;
+    // Serve both bare and non-bare repositories from the scan directory.
+    // git http-backend treats GIT_PROJECT_ROOT as the parent directory that
+    // contains repositories and resolves PATH_INFO relative to it. Non-bare
+    // repos are resolved by looking for <project>/.git.
+    let path = uri.path();
 
     let mut command = Command::new("git");
 
@@ -52,7 +55,8 @@ pub async fn handle(
         .arg("http-backend")
         .env("REQUEST_METHOD", method.as_str())
         .env("PATH_INFO", path)
-        .env("GIT_PROJECT_ROOT", repository_path)
+        .env("GIT_PROJECT_ROOT", scan_path)
+        .env("GIT_HTTP_EXPORT_ALL", "1")
         .env("QUERY_STRING", uri.query().unwrap_or(""))
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
@@ -164,18 +168,6 @@ fn extract_header(input: &HeaderMap, output: &mut Command, header: &str, env: &s
     }
 
     Ok(())
-}
-
-/// Extract the path from the URL to determine the repository path.
-fn extract_path<'a>(uri: &'a Uri, repository: &Path) -> Result<&'a str> {
-    let path = uri.path();
-    let path = path.strip_prefix('/').unwrap_or(path);
-
-    if let Some(prefix) = repository.as_os_str().to_str() {
-        Ok(path.strip_prefix(prefix).unwrap_or(path))
-    } else {
-        Err(anyhow::Error::msg("Repository name contains invalid bytes").into())
-    }
 }
 
 // Intercept headers from the spawned `git http-backend` CGI and rewrite them to
