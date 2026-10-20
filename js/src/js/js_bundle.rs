@@ -15,6 +15,12 @@ pub fn get_js_assets() -> HashMap<String, &'static [u8]> {
     assets.insert("bip39@3.0.4.js".to_string(), include_bytes!("bip39@3.0.4.js") as &'static [u8]);
     assets.insert("bitcoinjs-lib.js".to_string(), include_bytes!("bitcoinjs-lib.js") as &'static [u8]);
     assets.insert("browser-nostr.js".to_string(), include_bytes!("browser-nostr.js") as &'static [u8]);
+    assets.insert("helia-json.min.js".to_string(), include_bytes!("helia-json.min.js") as &'static [u8]);
+    assets.insert("helia-unixfs.min.js".to_string(), include_bytes!("helia-unixfs.min.js") as &'static [u8]);
+    assets.insert("helia-verified-fetch.min.js".to_string(), include_bytes!("helia-verified-fetch.min.js") as &'static [u8]);
+    assets.insert("helia.min.js".to_string(), include_bytes!("helia.min.js") as &'static [u8]);
+    assets.insert("isomorphic-git.js".to_string(), include_bytes!("isomorphic-git.js") as &'static [u8]);
+    assets.insert("multiformats.min.js".to_string(), include_bytes!("multiformats.min.js") as &'static [u8]);
     assets.insert("contacts.js".to_string(), include_bytes!("contacts.js") as &'static [u8]);
     assets.insert("core.js".to_string(), include_bytes!("core.js") as &'static [u8]);
     assets.insert("postbox.js".to_string(), include_bytes!("postbox.js") as &'static [u8]);
