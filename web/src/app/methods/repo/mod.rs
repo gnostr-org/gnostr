@@ -157,7 +157,14 @@ pub async fn service(mut request: Request<Body>) -> Response {
     debug!("Child Path Segments: {:?}", child_path_segments);
 
     if repository_name.as_os_str().is_empty() {
-        return RepositoryNotFound.into_response();
+        let prefix = uri_segments.join("/");
+        if prefix.is_empty() {
+            return RepositoryNotFound.into_response();
+        }
+        return match super::index::render_prefix(db.clone(), &prefix).await {
+            Ok(response) => response,
+            Err(error) => error.into_response(),
+        };
     }
 
     let mut child_path = None;
@@ -246,6 +253,27 @@ impl Repository {
         } else {
             format!("gnostr.org/{}", self.0.display())
         }
+    }
+
+    pub fn path_segments(&self) -> Vec<(String, String)> {
+        if self.0.as_os_str().is_empty() || self.0 == Path::new(".") {
+            return Vec::new();
+        }
+        let components: Vec<_> = self
+            .0
+            .components()
+            .map(|c| c.as_os_str().to_string_lossy().to_string())
+            .collect();
+        let mut segments = Vec::new();
+        let mut href = String::new();
+        for component in components {
+            if !href.is_empty() {
+                href.push('/');
+            }
+            href.push_str(&component);
+            segments.push((component.clone(), format!("/{href}")));
+        }
+        segments
     }
 
     pub fn display_name(&self) -> String {

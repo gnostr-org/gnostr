@@ -14,6 +14,7 @@ use crate::app::{
 #[template(path = "index.html")]
 pub struct View {
     pub repositories: BTreeMap<Option<String>, Vec<YokedRepository>>,
+    pub base_href: String,
 }
 
 pub async fn handle(
@@ -40,7 +41,52 @@ pub async fn handle(
         k.push(v);
     }
 
-    Ok(into_response(View { repositories }))
+    Ok(into_response(View {
+        repositories,
+        base_href: "/".to_string(),
+    }))
+}
+
+/// Render a repo listing scoped to a directory prefix (e.g. `/xcode`).
+pub async fn render_prefix(
+    db: Arc<rocksdb::DB>,
+    prefix: &str,
+) -> Result<axum::response::Response, super::repo::Error> {
+    let prefix = prefix.trim_matches('/');
+    if prefix.is_empty() {
+        return handle(Extension(db)).await.map(|r| r.into_response());
+    }
+
+    let mut repositories: BTreeMap<Option<String>, Vec<YokedRepository>> = BTreeMap::new();
+    let fetched = tokio::task::spawn_blocking(move || Repository::fetch_all(&db))
+        .await
+        .context("Failed to join Tokio task")??;
+
+    let prefix_with_slash = format!("{prefix}/");
+
+    for (k, v) in fetched {
+        if k == "." {
+            continue;
+        }
+        let Some(relative) = k.strip_prefix(&prefix_with_slash) else {
+            continue;
+        };
+        let mut split: Vec<_> = relative.split('/').collect();
+        split.pop();
+        let key = Some(split.join("/")).filter(|v| !v.is_empty());
+
+        repositories.entry(key).or_default().push(v);
+    }
+
+    if repositories.is_empty() {
+        return Ok(super::repo::RepositoryNotFound.into_response());
+    }
+
+    Ok(into_response(View {
+        repositories,
+        base_href: format!("/{prefix}/"),
+    })
+    .into_response())
 }
 
 // SPA handler - serves the main template for client-side routing
@@ -53,5 +99,6 @@ pub async fn handle_spa() -> impl IntoResponse {
     > = BTreeMap::new();
     into_response(View {
         repositories: empty_repositories,
+        base_href: "/".to_string(),
     })
 }

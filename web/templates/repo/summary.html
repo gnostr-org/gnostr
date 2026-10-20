@@ -4,7 +4,11 @@
 {% block title %}{{ repo.title() }}{% if let Some(path) = child_path %}/{{ path.display() }}{% endif %}{% endblock %}
 
 {% block header -%}
-    <a href="/" class="no-style">{{ repo.title() }}{% if let Some(path) = child_path %}/{{ path.display() }}{% endif %}</a>
+    <a href="/" class="no-style">gnostr.org</a>
+    {%- for segment in repo.path_segments() -%}
+        <span class="repo-nav-sep">/</span><a href="{{ segment.1 }}" class="no-style">{{ segment.0 }}</a>
+    {%- endfor -%}
+    {% if let Some(path) = child_path %}<span class="repo-nav-sep">/</span>{{ path.display() }}{% endif %}
 {%- endblock %}
 
 {% block repo_nav_handler %}<span class="repo-nav-sep">/</span><span>summary</span>{% endblock %}

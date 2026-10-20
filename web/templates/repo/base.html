@@ -4,15 +4,19 @@
 {% block title %}{{ repo.title() }}{% endblock %}
 
 {%- block header -%}
-    <a href="/" class="no-style">{{ repo.title() }}</a>
+    <a href="/" class="no-style">gnostr.org</a>
+    {%- for segment in repo.path_segments() -%}
+        <span class="repo-nav-sep">/</span><a href="{{ segment.1 }}" class="no-style">{{ segment.0 }}</a>
+    {%- endfor -%}
 {%- endblock -%}
 
 {% block nav %}
 <nav>
     <div class="repo-nav-path">
         <a href="/" class="no-style repo-nav-root">gnostr.org</a>
-        <span class="repo-nav-sep">/</span>
-        <a href="{{ repo.href_base() }}" class="no-style">{%- if repo.display_name() == "root repo" -%}root repo{%- else -%}{{ repo.display() }}{%- endif -%}</a>
+        {%- for segment in repo.path_segments() -%}
+            <span class="repo-nav-sep">/</span><a href="{{ segment.1 }}" class="no-style">{{ segment.0 }}</a>
+        {%- endfor -%}
         {% block repo_nav_handler %}{% endblock %}
         {% block repo_nav_path_extra %}{% endblock %}
     </div>
