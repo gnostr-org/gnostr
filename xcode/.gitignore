@@ -8,7 +8,7 @@ libp2p-app-template/libp2p-app-template.xcodeproj.bak2/
 .DS_Store
 /.build
 .build
-.build/
+.build/**
 /Packages
 xcuserdata/
 .swiftpm/
