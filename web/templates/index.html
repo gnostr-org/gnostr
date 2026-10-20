@@ -1,4 +1,15 @@
-{% extends "base.html" %} {% block head %}
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{%- block header -%}
+    <a href="/" class="no-style">gnostr.org</a>
+    {%- for segment in segments -%}
+        <span class="repo-nav-sep">/</span><a href="{{ segment.1 }}" class="no-style">{{ segment.0 }}</a>
+    {%- endfor -%}
+{%- endblock -%}
+
+{% block head %}
 <style>
   .repo-jump {
     display: flex;

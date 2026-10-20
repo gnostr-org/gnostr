@@ -36,6 +36,12 @@ fn run() -> anyhow::Result<()> {
     build_js(paths).context("Failed to build JS bundle")?;
 
     println!("cargo:rerun-if-changed=build.rs");
+    for entry in walkdir::WalkDir::new(manifest_dir.join("templates")) {
+        let entry = entry.context("Failed to walk templates directory")?;
+        if entry.file_type().is_file() {
+            println!("cargo:rerun-if-changed={}", entry.path().display());
+        }
+    }
     Ok(())
 }
 

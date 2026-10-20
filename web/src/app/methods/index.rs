@@ -15,6 +15,8 @@ use crate::app::{
 pub struct View {
     pub repositories: BTreeMap<Option<String>, Vec<YokedRepository>>,
     pub base_href: String,
+    pub title: String,
+    pub segments: Vec<(String, String)>,
 }
 
 pub async fn handle(
@@ -44,6 +46,8 @@ pub async fn handle(
     Ok(into_response(View {
         repositories,
         base_href: "/".to_string(),
+        title: "gnostr.org".to_string(),
+        segments: Vec::new(),
     }))
 }
 
@@ -82,11 +86,31 @@ pub async fn render_prefix(
         return Ok(super::repo::RepositoryNotFound.into_response());
     }
 
+    let segments = path_segments(prefix);
+
     Ok(into_response(View {
         repositories,
         base_href: format!("/{prefix}/"),
+        title: format!("gnostr.org/{prefix}"),
+        segments,
     })
     .into_response())
+}
+
+fn path_segments(prefix: &str) -> Vec<(String, String)> {
+    let mut segments = Vec::new();
+    let mut href = String::new();
+    for component in prefix.split('/') {
+        if component.is_empty() {
+            continue;
+        }
+        if !href.is_empty() {
+            href.push('/');
+        }
+        href.push_str(component);
+        segments.push((component.to_string(), format!("/{href}")));
+    }
+    segments
 }
 
 // SPA handler - serves the main template for client-side routing
@@ -100,5 +124,7 @@ pub async fn handle_spa() -> impl IntoResponse {
     into_response(View {
         repositories: empty_repositories,
         base_href: "/".to_string(),
+        title: "gnostr.org".to_string(),
+        segments: Vec::new(),
     })
 }
