@@ -34,9 +34,13 @@ exclude = [
     "wix/**",
     "xcode/**",
     ## TODO "vendor/**",
+    ## archive for reference
     "vendor/ngit-cli",
+    ## archive for reference
     "vendor/nostui",
+    ## archive for reference
     "vendor/rexpect",
+    ## archive for reference
     "vendor/simple-websockets",
     "CHANGELOG.md",
     "CODECOV.md",
