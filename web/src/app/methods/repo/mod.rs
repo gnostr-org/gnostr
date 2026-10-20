@@ -161,7 +161,17 @@ pub async fn service(mut request: Request<Body>) -> Response {
         if prefix.is_empty() {
             return RepositoryNotFound.into_response();
         }
-        return match super::index::render_prefix(db.clone(), &prefix).await {
+        let prefix_response = super::index::render_prefix(db.clone(), &prefix).await;
+        if let Ok(response) = &prefix_response {
+            if response.status() == StatusCode::NOT_FOUND {
+                if let Some(tree_response) =
+                    super::file_tree::render(scan_path.as_path(), &PathBuf::from(&prefix))
+                {
+                    return tree_response;
+                }
+            }
+        }
+        return match prefix_response {
             Ok(response) => response,
             Err(error) => error.into_response(),
         };
@@ -212,6 +222,13 @@ pub async fn service(mut request: Request<Body>) -> Response {
 
     debug!("Repository Name: {}", repository_name.display());
     debug!("Repository Path: {}", repository_abs_path.display());
+
+    // If the selected repository path is not a valid git repo but is a directory,
+    // render a file tree landing page instead of letting the handler fail.
+    if gix::open(&repository_abs_path).is_err() && repository_abs_path.is_dir() {
+        return super::file_tree::render(scan_path.as_path(), &repository_name)
+            .unwrap_or_else(|| RepositoryNotFound.into_response());
+    }
 
     request.extensions_mut().insert(ChildPath(child_path));
     request.extensions_mut().insert(Repository(repository_name));

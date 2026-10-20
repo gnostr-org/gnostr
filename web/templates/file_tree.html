@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{%- block header -%}
+    <a href="/" class="no-style">gnostr.org</a>
+    {%- for segment in segments -%}
+        <span class="repo-nav-sep">/</span><a href="{{ segment.1 }}" class="no-style">{{ segment.0 }}</a>
+    {%- endfor -%}
+{%- endblock -%}
+
+{% block nav %}
+<nav>
+    <div class="repo-nav-path">
+        <a href="/" class="no-style repo-nav-root">gnostr.org</a>
+        {%- for segment in segments -%}
+            <span class="repo-nav-sep">/</span><a href="{{ segment.1 }}" class="no-style">{{ segment.0 }}</a>
+        {%- endfor -%}
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="table-responsive">
+    <table class="repositories">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+            </tr>
+        </thead>
+        <tbody>
+            {%- for entry in entries %}
+            <tr>
+                <td>
+                    {%- if entry.is_dir -%}
+                    <a href="{{ entry.href }}/" class="no-style">{{ entry.name }}/</a>
+                    {%- else -%}
+                    <a href="{{ entry.href }}" class="no-style">{{ entry.name }}</a>
+                    {%- endif -%}
+                </td>
+                <td>
+                    {%- if entry.is_dir -%}directory{%- else -%}file{%- endif -%}
+                </td>
+            </tr>
+            {%- endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
