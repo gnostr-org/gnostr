@@ -220,16 +220,25 @@ fn update_repository_metadata(scan_path: &Path, db: &rocksdb::DB) {
     let mut discovered = Vec::new();
 
     // discover_repositories
-    discover_repositories(scan_path, &mut discovered);
+    let mut gitignore_files = Vec::new();
+    let root_gitignore = scan_path.join(".gitignore");
+    if root_gitignore.exists() {
+        gitignore_files.push(root_gitignore);
+    }
+    discover_repositories(scan_path, scan_path, &gitignore_files, &mut discovered);
 
     for repository in discovered {
         // get_relative_path
         let Some(relative) = get_relative_path(scan_path, &repository) else {
             continue;
         };
-        println!(
+        debug!(
             "Processing repository: relative={}, repository={}",
             relative.display(),
+            repository.display()
+        );
+        println!(
+            "Processing repository: repository={}",
             repository.display()
         );
 
@@ -664,7 +673,37 @@ fn get_relative_path<'a>(relative_to: &Path, full_path: &'a Path) -> Option<&'a 
     }
 }
 
-fn discover_repositories(current: &Path, discovered_repos: &mut Vec<PathBuf>) {
+fn discover_repositories(
+    scan_path: &Path,
+    current: &Path,
+    gitignore_files: &[PathBuf],
+    discovered_repos: &mut Vec<PathBuf>,
+) {
+    // Build a gitignore matcher from all .gitignore files collected so far.
+    let mut builder = ignore::gitignore::GitignoreBuilder::new(scan_path);
+    for gitignore_path in gitignore_files {
+        if let Some(error) = builder.add(gitignore_path) {
+            warn!(%error, "Failed to add gitignore {}", gitignore_path.display());
+        }
+    }
+    let gitignore = match builder.build() {
+        Ok(v) => v,
+        Err(error) => {
+            warn!(%error, "Failed to build gitignore matcher");
+            return;
+        }
+    };
+
+    // Skip the scan root itself; otherwise respect .gitignore before treating
+    // the path as a repository.
+    if current != scan_path {
+        let matched = gitignore.matched(current, true);
+        if matched.is_ignore() {
+            println!("Ignoring gitignored directory: {}", current.display());
+            return;
+        }
+    }
+
     // First check if current path is itself a bare repository
     // is_bare_repository
     if is_bare_repository(current) {
@@ -700,6 +739,7 @@ fn discover_repositories(current: &Path, discovered_repos: &mut Vec<PathBuf>) {
         }
     } else {
         debug!("current.is_file()={}", current.is_file());
+        return;
     }
 
     // If it's not a repository, and it's a directory, then we can recurse.
@@ -717,6 +757,13 @@ fn discover_repositories(current: &Path, discovered_repos: &mut Vec<PathBuf>) {
         }
     };
 
+    // Add current directory's .gitignore (if any) for child matching.
+    let current_gitignore = current.join(".gitignore");
+    let mut child_gitignore_files = gitignore_files.to_vec();
+    if current_gitignore.exists() {
+        child_gitignore_files.push(current_gitignore);
+    }
+
     for entry in current_dir_entries.filter_map(Result::ok) {
         let path = entry.path();
 
@@ -729,7 +776,12 @@ fn discover_repositories(current: &Path, discovered_repos: &mut Vec<PathBuf>) {
                 debug!("Skipping target directory: {}", path.display());
                 continue;
             }
-            discover_repositories(&path, discovered_repos);
+            let matched = gitignore.matched(&path, true);
+            if matched.is_ignore() {
+                println!("Ignoring gitignored directory: {}", path.display());
+                continue;
+            }
+            discover_repositories(scan_path, &path, &child_gitignore_files, discovered_repos);
         }
     }
 }
