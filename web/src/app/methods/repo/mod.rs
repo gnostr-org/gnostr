@@ -115,25 +115,29 @@ pub async fn service(mut request: Request<Body>) -> Response {
             is_bare_repo, is_working_tree, is_working_tree_repo, exists_in_db
         );
 
-        // Only consider it a repository if it exists on disk *and* is in the database
+        // Only consider it a repository if it exists on disk *and* is in the database.
+        // We keep scanning so that a nested repository (e.g. a SwiftPM checkout inside
+        // another repo) is chosen over its parent.
         if (is_bare_repo || is_working_tree || is_working_tree_repo) && exists_in_db {
             repository_name = potential_repo_name;
 
-            // If it's a working tree repo, but the URL *includes* .git (e.g., /repo/.git/tree)
-            // we should treat the part before .git as the repository_name
+            // If it's a working tree repo, but the URL *includes* .git (e.g. /repo/.git/tree)
+            // we should treat the part before .git as the repository_name.
+            let mut next_index = current_segment_index + 1;
             if (is_working_tree || is_working_tree_repo)
-                && current_segment_index + 1 < uri_segments.len()
-                && uri_segments[current_segment_index + 1] == ".git"
+                && next_index < uri_segments.len()
+                && uri_segments[next_index] == ".git"
             {
                 // Adjust segments to skip ".git"
-                current_segment_index += 1; // Skip the .git segment
+                next_index += 1;
             }
 
-            if current_segment_index + 1 < uri_segments.len() {
-                handler_segment = Some(uri_segments[current_segment_index + 1]);
-                child_path_segments = uri_segments[current_segment_index + 2..].to_vec();
+            handler_segment = None;
+            child_path_segments = Vec::new();
+            if next_index < uri_segments.len() {
+                handler_segment = Some(uri_segments[next_index]);
+                child_path_segments = uri_segments[next_index + 1..].to_vec();
             }
-            break;
         }
         current_segment_index += 1;
     }
