@@ -7475,6 +7475,7 @@ dependencies = [
  "gnostr-crawler",
  "gnostr-relay",
  "handlebars",
+ "ignore",
  "lazy_static",
  "libc",
  "log",
