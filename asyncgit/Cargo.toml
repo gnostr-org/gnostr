@@ -142,7 +142,7 @@ rustls = { version = "0.23", default-features = false, features = [
     "std",
     "tls12",
 ] }
-scopetime = { workspace = true } #{ package = "gnostr-scopetime", path = "../scopetime", version = "1878.945649.607219" }
+scopetime = { workspace = true }
 scrypt = { workspace = true }
 secp256k1 = { workspace = true }
 serde = { version = "1.0.203", features = ["derive", "rc"] }
