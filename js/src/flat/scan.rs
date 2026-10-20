@@ -3,7 +3,7 @@ use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use walkdir::WalkDir;
+use ignore::WalkBuilder;
 
 pub(crate) struct ClonedRepo {
     pub(crate) path: PathBuf,
@@ -182,7 +182,13 @@ fn git_short_hash(repo_path: &Path) -> Result<String> {
 pub(crate) fn collect_files(repo_path: &Path, max_bytes: u64) -> Result<Vec<FileInfo>> {
     let mut files = Vec::new();
 
-    for entry in WalkDir::new(repo_path).sort_by_file_name() {
+    for entry in WalkBuilder::new(repo_path)
+        .git_ignore(true)
+        .git_global(false)
+        .git_exclude(false)
+        .sort_by_file_name(|a, b| a.cmp(b))
+        .build()
+    {
         let entry = entry?;
         let path = entry.path();
 
