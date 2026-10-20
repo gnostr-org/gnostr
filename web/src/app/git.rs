@@ -79,9 +79,14 @@ impl Git {
             .open_repositories
             .try_get_with_by_ref(&repo_path, async move {
                 tokio::task::spawn_blocking(move || {
+                    // First try the strict open (does not walk up to parent repos).
+                    // Some nested submodule / Carthage / SwiftPM checkout layouts
+                    // fail with open_path_as_is, so fall back to a normal isolated
+                    // open that resolves .git gitlinks.
                     gix::open::Options::isolated()
                         .open_path_as_is(true)
                         .open(&repo)
+                        .or_else(|_| gix::open::Options::isolated().open(&repo))
                 })
                 .await
                 .context("Failed to join Tokio task")
