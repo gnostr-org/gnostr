@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>
     {% block title %}
-    gnostr.org/
+    gnostr.org
     {% endblock %}
     </title>
     <aside>
@@ -15,6 +15,36 @@
     {%- block head -%}{%- endblock %}
   </head>
   <body>
+        <!-- Notice type="module" is mandatory for modern CDN usage -->
+  <script type="module">
+    // 1. Import Helia core and UnixFS file system helpers directly from jsDelivr ESM builds
+    import { createHelia } from "https://cdn.jsdelivr.net/npm/helia@latest/+esm";
+    import { unixfs } from "https://cdn.jsdelivr.net/npm/@helia/unixfs@latest/+esm";
+    import { CID } from "https://cdn.jsdelivr.net/npm/multiformats@latest/+esm";
+
+    async function startIpfs() {
+      try {
+        // 2. Instantiate the core Helia engine
+        const helia = await createHelia();
+        
+        // 3. Attach UnixFS capabilities to handle data streams and files
+        const fs = unixfs(helia);
+
+        // 4. Test adding some data to your in-browser node
+        const encoder = new TextEncoder();
+        const bytes = encoder.encode("Hello IPFS from Helia CDN!");
+        const cid = await fs.addBytes(bytes);
+
+        document.getElementById("status").innerText = `Helia is running! Created CID: ${cid.toString()}`;
+        console.log("Helia Node:", helia);
+      } catch (error) {
+        console.error("Failed to start Helia:", error);
+        document.getElementById("status").innerText = "Failed to load Helia.";
+      }
+    }
+
+    startIpfs();
+  </script>
     <header>
       <h1>
         <a href="/" class="no-hover" style="text-decoration: none">

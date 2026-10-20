@@ -12,6 +12,8 @@ nav {
   margin-top: 2rem;
   border-bottom: solid 3px var(--clrBorder);
   display: flex;
+  align-items: baseline;
+  gap: 1rem;
 
   .grow {
     flex-grow: 1;
@@ -26,6 +28,20 @@ nav {
     &.active {
       color: var(--clrText);
       todo_background-color: var(--clrBg);
+    }
+  }
+
+  .repo-nav-path {
+    font-size: 110%;
+    color: var(--clrTextLight);
+
+    a {
+      padding: 0;
+      color: var(--clrLink);
+    }
+
+    .repo-nav-sep {
+      margin: 0 0.25em;
     }
   }
 }

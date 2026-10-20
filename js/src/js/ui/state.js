@@ -231,8 +231,8 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 		break;
         case VM_NIP34_DETAIL:
 		el.dataset.repoId = opts.repo_id;
-		//finger print
-		name = "gnostr://" + (opts.repo_name || opts.repo_id.slice(5 + 1, 5+1+8) + '/' + opts.repo_id.slice(5+1+64+1,100));
+		// reflect the current URL path in the header
+		name = "gnostr.org" + window.location.pathname;
 		break;
 	}
 
@@ -243,6 +243,7 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 		name = name.charAt(0).toUpperCase() + name.slice(1);
 	}
 		find_node("#global-header #app-title").innerText = name;
+		document.title = "gnostr.org" + window.location.pathname;
 		view_update_navs(mode);
 		find_node("#view [role='profile-info']").classList.toggle("hide", mode != VM_USER);
 		const timeline_el = find_node("#timeline");

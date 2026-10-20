@@ -1,14 +1,21 @@
 {% import "macros/link.html" as link %}
 {% extends "../base.html" %}
 
-{% block title %}{{ repo.display() }}{% endblock %}
+{% block title %}gnostr.org{{ repo.href_base() }}{% endblock %}
 
 {%- block header -%}
-    <a href="/" class="no-style">{{ repo.display() }}</a>
+    <a href="/" class="no-style">gnostr.org{{ repo.href_base() }}</a>
 {%- endblock -%}
 
 {% block nav %}
 <nav>
+    <div class="repo-nav-path">
+        <a href="/" class="no-style repo-nav-root">gnostr.org</a>
+        <span class="repo-nav-sep">/</span>
+        <a href="{{ repo.href_base() }}" class="no-style">{%- if repo.display_name() == "root repo" -%}root repo{%- else -%}{{ repo.display() }}{%- endif -%}</a>
+        {% block repo_nav_handler %}{% endblock %}
+        {% block repo_nav_path_extra %}{% endblock %}
+    </div>
     <div>
         <a href="{{ repo.href_base() }}about{% call link::maybe_branch(branch) %}" class="{% block about_nav_class %}{% endblock %}">about</a>
         <a href="{{ repo.href_base() }}" class="{% block summary_nav_class %}{% endblock %}">summary</a>

@@ -146,7 +146,7 @@ function update_notifications(model) {
 	}
 	
 	const { count } = model.notifications;
-	const suffix = "gnostr.org";
+	const suffix = "gnostr.org" + window.location.pathname;
 	const total = count + dm_count;
 	document.title = total ? `(${total}) ${suffix}` : suffix;
 	update_favicon(total ? IMG_FAVICON_NOTIF : IMG_FAVICON);

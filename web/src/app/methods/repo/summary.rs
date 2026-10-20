@@ -11,7 +11,8 @@ use crate::app::methods::repo::Refs;
 use crate::app::methods::repo::Repository;
 use crate::app::methods::repo::YokedCommit;
 use crate::app::methods::repo::YokedRepository;
-use crate::app::methods::repo::{Error, DEFAULT_BRANCHES};
+use crate::app::methods::repo::{ChildPath, Error, DEFAULT_BRANCHES};
+use std::path::PathBuf;
 
 #[derive(Template)]
 #[template(path = "repo/summary.html")]
@@ -20,10 +21,12 @@ pub struct View {
     refs: Refs,
     commit_list: Vec<YokedCommit>,
     branch: Option<Arc<str>>,
+    child_path: Option<PathBuf>,
 }
 
 pub async fn handle(
     Extension(repo): Extension<Repository>,
+    Extension(ChildPath(child_path)): Extension<ChildPath>,
     Extension(db): Extension<Arc<rocksdb::DB>>,
 ) -> Result<impl IntoResponse, Error> {
     tokio::task::spawn_blocking(move || {
@@ -56,6 +59,7 @@ pub async fn handle(
             refs: Refs { heads, tags },
             commit_list: commits,
             branch: None,
+            child_path,
         }))
     })
     .await

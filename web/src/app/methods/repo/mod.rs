@@ -185,7 +185,14 @@ pub async fn service(mut request: Request<Body>) -> Response {
         Some("tag") => h!(handle_tag),
         Some("snapshot") => h!(handle_snapshot),
         Some("thread") => h!(handle_thread), // GEMINI: Add thread handler
-        _ => h!(handle_summary),             // Default to summary if no specific handler is found
+        _ => {
+            // Default to summary; preserve any trailing path segments so the
+            // page title/header can reflect the requested path.
+            if !child_path_segments.is_empty() {
+                child_path = Some(child_path_segments.into_iter().collect::<PathBuf>().clean());
+            }
+            h!(handle_summary)
+        } // Default to summary if no specific handler is found
     };
 
     debug!("Final Child Path: {:?}", child_path);
@@ -226,6 +233,14 @@ impl Repository {
             "/".to_string()
         } else {
             format!("/{}/", self.0.display())
+        }
+    }
+
+    pub fn display_name(&self) -> String {
+        if self.0.as_os_str().is_empty() || self.0 == Path::new(".") {
+            "root repo".to_string()
+        } else {
+            self.0.display().to_string()
         }
     }
 }
