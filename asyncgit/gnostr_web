@@ -9,7 +9,7 @@ BLOCKHASH=$(gnostr --blockhash)
 WOBBLE=$(gnostr --wobble)
 WOBBLE=${WOBBLE:-"0"}
 # setup test repo
-GNOSTR_GIT_BARE_REPO="$WEEBLE/$BLOCKHEIGHT"
+GNOSTR_GIT_BARE_REPO="$BLOCKHASH"
 GNOSTR_GIT_REMOTE=$(git remote get-url $GNOSTR_GIT_BARE_REPO)
 #git remote remove $GNOSTR_GIT_BARE_REPO >/dev/null || true
 
@@ -45,13 +45,13 @@ echo ok
 }
 clone_to_gnostr_git(){
 echo clone_to_gnostr_git
-    A_NEW_REPO=$WEEBLE/$GNOSTR_GIT_BARE_REPO/$(gnostr --wobble)
+    A_NEW_REPO=$GNOSTR_GIT_BARE_REPO-gnostr-git-bare-repo/$BLOCKHEIGHT-blockheight/$WEEBLE-weeble/$(gnostr --wobble)-wobble
     git clone  ../  $A_NEW_REPO --bare  && sleep 1
     pushd $A_NEW_REPO && git remote add local-gnostr.git ../../ && echo $A_NEW_REPO > description;popd;
-    A_NEW_REPO=$WEEBLE/$GNOSTR_GIT_BARE_REPO/$(gnostr --wobble)
+    A_NEW_REPO=$GNOSTR_GIT_BARE_REPO/$BLOCKHEIGHT/$WEEBLE/$(gnostr --wobble)
     git clone  ../  $A_NEW_REPO --bare  && sleep 1
     pushd $A_NEW_REPO && git remote add local-gnostr.git ../../ && echo $A_NEW_REPO > description;popd;
-    A_NEW_REPO=$WEEBLE/$GNOSTR_GIT_BARE_REPO/$(gnostr --weeble)
+    A_NEW_REPO=$GNOSTR_GIT_BARE_REPO/$BLOCKHEIGHT/$WEEBLE/$(gnostr --weeble)
     git clone  ../  $A_NEW_REPO --bare  && sleep 1
     pushd $A_NEW_REPO && git remote add local-gnostr.git ../../ && echo $A_NEW_REPO > description;popd;
     A_NEW_REPO=$GNOSTR_GIT_BARE_REPO/$WOBBLE
@@ -71,7 +71,7 @@ CRLF_GIT_BARE_REPO="crlf"
 export CRLF_GIT_BARE_REPO;
 CRLF_REMOTE_REPO="tests/resources/$CRLF_GIT_BARE_REPO".git
 export CRLF_REMOTE_REPO;
-CRLF_GIT_REMOTE=$(git remote get-url gnostr.git)
+CRLF_GIT_REMOTE=$(git remote get-url local-gnostr.git)
 export CRLF_GIT_REMOTE;
 #git remote remove $CRLF_GIT_BARE_REPO >/dev/null || true
 
@@ -107,7 +107,7 @@ clone_to_crlf_git(){
     A_NEW_REPO=$CRLF_GIT_BARE_REPO/$WOBBLE
     git clone  $CRLF_REMOTE_REPO  $A_NEW_REPO --bare  && sleep 1
     pushd $A_NEW_REPO && git remote add local-gnostr.git ../../ && echo $A_NEW_REPO > description;popd;
-    A_NEW_REPO=$WEEBLE/$WOBBLE/$CRLF_GIT_BARE_REPO/$WOBBLE
+    A_NEW_REPO=$BLOCKHEIGHT/$WEEBLE/$WOBBLE/$CRLF_GIT_BARE_REPO/$WOBBLE
     git clone  $CRLF_REMOTE_REPO  $A_NEW_REPO --bare  && sleep 1
     pushd $A_NEW_REPO && git remote add local-gnostr.git ../../ && echo $A_NEW_REPO > description;popd;
 	echo ok
@@ -204,9 +204,9 @@ if [ ! $(uname -s) = 'Darwin' ]; then
 fi
 
 echo "Starting gnostr-gnit server..."
-cargo run --bin gnostr-gnit -- \
+cargo run --manifest-path ../bins/Cargo.toml --features web --bin gnostr-gnit -- \
 $LOG_LEVEL \
--d .gnostr/web/$WEEBLE/$BLOCKHEIGHT/$(gnostr --wobble)/$PORT \
+-d .gnostr/web/$BLOCKHEIGHT/$WEEBLE/$(gnostr --wobble)/$PORT \
 -b $PORT \
 -s $SCAN_PATH &
 SERVER_PID=$!
