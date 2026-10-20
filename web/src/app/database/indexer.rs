@@ -296,8 +296,8 @@ fn update_repository_metadata(scan_path: &Path, db: &rocksdb::DB) {
             }
         }
 
-        let mut git_repository = match gix::open(repository_path.clone()) {
-            Ok(v) => v,
+        let mut git_repository: gix::Repository = match gix::open::Options::isolated().open(&repository_path) {
+            Ok(v) => v.into(),
             Err(error) => {
                 warn!(%error, "Failed to open repository {} to update metadata, skipping", relative.display());
                 continue;
@@ -634,22 +634,19 @@ fn open_repo<P: AsRef<Path> + Debug>(
         full_path.display(),
         relative_path
     );
-    match gix::open(&full_path) {
-        Ok(mut v) => {
+    match gix::open::Options::isolated().open(&full_path) {
+        Ok(v) => {
+            let mut v: gix::Repository = v.into();
             v.object_cache_size(10 * 1024 * 1024);
             Some(v)
         }
-        Err(gix::open::Error::Io(e)) if e.kind() == std::io::ErrorKind::NotFound => {
-            warn!("Repository gone from disk, removing from db");
+        Err(error) => {
+            warn!(%error, "Failed to open repository {}, removing from db", full_path.display());
 
             if let Err(error) = db_repository.delete(db, relative_path) {
                 warn!(%error, "Failed to delete dangling index");
             }
 
-            None
-        }
-        Err(error) => {
-            warn!(%error, "Failed to reindex, skipping");
             None
         }
     }
@@ -679,9 +676,17 @@ fn discover_repositories(
     gitignore_files: &[PathBuf],
     discovered_repos: &mut Vec<PathBuf>,
 ) {
+    // Include the current directory's .gitignore (if any) before building the
+    // matcher so patterns apply to this directory's immediate children.
+    let current_gitignore = current.join(".gitignore");
+    let mut effective_gitignore_files = gitignore_files.to_vec();
+    if current_gitignore.exists() {
+        effective_gitignore_files.push(current_gitignore);
+    }
+
     // Build a gitignore matcher from all .gitignore files collected so far.
     let mut builder = ignore::gitignore::GitignoreBuilder::new(scan_path);
-    for gitignore_path in gitignore_files {
+    for gitignore_path in &effective_gitignore_files {
         if let Some(error) = builder.add(gitignore_path) {
             warn!(%error, "Failed to add gitignore {}", gitignore_path.display());
         }
@@ -712,21 +717,13 @@ fn discover_repositories(
         return; // Stop recursion for this path
     }
 
-    // Existing check for working tree or normal repository
-    let is_repo = gix::open(current).is_ok();
-    if is_repo {
-        debug!("Discovered Git repository at: {}", current.display());
-        discovered_repos.push(current.to_path_buf());
-    }
-
-    // Check if current is a directory that contains .git
-    if current.is_dir() && !is_repo {
+    // Check if current is a directory that contains .git (file or directory).
+    // Use isolated open so subdirectories of a git repository are not mistaken
+    // for repositories themselves.
+    if current.is_dir() {
         let git_path = current.join(".git");
-
-        // Check if .git exists as either file or directory
         if git_path.exists() {
-            // Try to open as repository (handles both .git file (worktree) and .git directory)
-            if gix::open(current).is_ok() {
+            if gix::open::Options::isolated().open(current).is_ok() {
                 debug!("Discovered Git repository at: {}", current.display());
                 discovered_repos.push(current.to_path_buf());
                 return; // Stop recursion for this path
@@ -757,13 +754,6 @@ fn discover_repositories(
         }
     };
 
-    // Add current directory's .gitignore (if any) for child matching.
-    let current_gitignore = current.join(".gitignore");
-    let mut child_gitignore_files = gitignore_files.to_vec();
-    if current_gitignore.exists() {
-        child_gitignore_files.push(current_gitignore);
-    }
-
     for entry in current_dir_entries.filter_map(Result::ok) {
         let path = entry.path();
 
@@ -781,7 +771,7 @@ fn discover_repositories(
                 println!("Ignoring gitignored directory: {}", path.display());
                 continue;
             }
-            discover_repositories(scan_path, &path, &child_gitignore_files, discovered_repos);
+            discover_repositories(scan_path, &path, &effective_gitignore_files, discovered_repos);
         }
     }
 }
