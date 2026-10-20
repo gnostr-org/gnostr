@@ -647,11 +647,11 @@ fn open_repo<P: AsRef<Path> + Debug>(
 }
 
 fn get_relative_path<'a>(relative_to: &Path, full_path: &'a Path) -> Option<&'a Path> {
-    println!(
+    debug!(
         "get_relative_path:relative_to:{} (scan_path)",
         &relative_to.display()
     ); //scan_path
-    println!(
+    debug!(
         "get_relative_path:full_path:{} (repository)",
         &full_path.display()
     ); //repository
@@ -699,7 +699,7 @@ fn discover_repositories(current: &Path, discovered_repos: &mut Vec<PathBuf>) {
             }
         }
     } else {
-        println!("current.is_file()={}", current.is_file());
+        debug!("current.is_file()={}", current.is_file());
     }
 
     // If it's not a repository, and it's a directory, then we can recurse.
