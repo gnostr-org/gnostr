@@ -98,6 +98,7 @@ relays.yaml**
 **/target
 .idea
 *.json
+!js/src/*.json
 !xcode/icons/Assets.xcassets/**/Contents.json
 !xcode/swift-universal/Universal App/Shared/Support/Assets.xcassets/**/Contents.json
 

@@ -15,8 +15,20 @@ pub mod template_html;
 pub mod websock_index_html;
 pub mod web_app;
 
+#[macro_export]
+macro_rules! get_file_hash {
+    ($file_path:expr) => {{
+        use ::sha2::{Digest, Sha256};
+        let bytes = include_bytes!($file_path);
+        let mut hasher = Sha256::new();
+        hasher.update(bytes);
+        let result = hasher.finalize();
+        result.iter().map(|b| format!("{:02x}", b)).collect::<String>()
+    }};
+}
+
 pub use embedded::{
-    asset_content_type, get_css_assets, get_images_assets, get_js_assets, get_pwa_assets,
+    asset_content_type, get_css_assets, get_images_assets, get_js_assets, get_js_hashes, get_pwa_assets,
     get_template_assets, shell_html, TemplateHtml,
 };
 

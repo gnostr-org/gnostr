@@ -39,6 +39,7 @@ fn main() {
     println!("cargo:rustc-env=GITUI_APP_NAME=gnostr");
     println!("cargo:rustc-env=GITUI_APP_METADATA_JSON={}", app_metadata.to_string());
     write_nip89_app_asset(&build_name);
+    write_js_hashes_asset();
     watch_sources(Path::new("src/js"), &["js"]);
     watch_sources(Path::new("src/css"), &["css"]);
     watch_sources(Path::new("src"), &["html"]);
@@ -92,6 +93,74 @@ fn write_nip89_app_asset(build_name: &str) {
         println!("cargo:warning=failed to write NIP-89 app asset: {error}");
     } else {
         println!("cargo:rerun-if-changed={}", path.display());
+    }
+}
+
+fn write_js_hashes_asset() {
+    let mut entries: Vec<(String, String)> = Vec::new();
+    collect_js_files(Path::new("src/js"), Path::new("src/js"), &mut entries);
+
+    let mut map = serde_json::Map::new();
+    for (rel, hash) in entries {
+        map.insert(rel, serde_json::Value::String(hash));
+    }
+    let data = match serde_json::to_vec_pretty(&map) {
+        Ok(data) => data,
+        Err(error) => {
+            println!("cargo:warning=failed to serialize JS hashes: {error}");
+            return;
+        }
+    };
+
+    let src_path = Path::new("src/js/hashes.json");
+    if let Err(error) = fs::write(&src_path, &data) {
+        println!("cargo:warning=failed to write JS hashes asset: {error}");
+    } else {
+        println!("cargo:rerun-if-changed={}", src_path.display());
+    }
+
+    if let Ok(out_dir) = std::env::var("OUT_DIR") {
+        let out_path = Path::new(&out_dir).join("hashes.json");
+        if let Err(error) = fs::write(&out_path, &data) {
+            println!("cargo:warning=failed to write JS hashes asset (out): {error}");
+        } else {
+            println!("cargo:rerun-if-changed={}", out_path.display());
+        }
+    }
+}
+
+fn collect_js_files(base: &Path, dir: &Path, out: &mut Vec<(String, String)>) {
+    use sha2::{Digest, Sha256};
+
+    let Ok(entries) = fs::read_dir(dir) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_dir() {
+            collect_js_files(base, &path, out);
+            continue;
+        }
+        if path.extension().and_then(|e| e.to_str()) != Some("js") {
+            continue;
+        }
+        let Ok(bytes) = fs::read(&path) else {
+            continue;
+        };
+        let mut hasher = Sha256::new();
+        hasher.update(&bytes);
+        let hash = hasher
+            .finalize()
+            .iter()
+            .map(|b| format!("{:02x}", b))
+            .collect::<String>();
+
+        let rel = path
+            .strip_prefix(base)
+            .unwrap_or(&path)
+            .to_string_lossy()
+            .replace('\\', "/");
+        out.push((rel, hash));
     }
 }
 
