@@ -517,6 +517,13 @@ pub async fn evt_loop(
         })
         .build();
 
+    // Bootstrap to the hardcoded libp2p/IPFS relays so remote peers can discover us.
+    for (addr, peer) in gnostr_p2p::network_config::Network::Ipfs.bootnodes() {
+        let mut a = addr.clone();
+        a.push(libp2p::multiaddr::Protocol::P2p(peer));
+        let _ = swarm.dial(a);
+    }
+
     // subscribes to our topic
     swarm.behaviour_mut().gossipsub.subscribe(&topic)?;
 
