@@ -21,6 +21,7 @@ macro_rules! chat_oneshot {
             workdir: None,
             gitdir: None,
             oneshot: Some($message.into()),
+            relay: None,
         }
     };
 }

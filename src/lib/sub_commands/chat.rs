@@ -29,6 +29,7 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
         workdir: sub_command_args.workdir.clone(),
         gitdir: sub_command_args.gitdir.clone(),
         oneshot: sub_command_args.oneshot.clone(),
+        relay: sub_command_args.relay.clone(),
     };
     chat_impl(&args).await?;
     Ok(())
@@ -58,6 +59,7 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Error
         workdir: sub_command_args.workdir.clone(),
         gitdir: sub_command_args.gitdir.clone(),
         oneshot: sub_command_args.oneshot.clone(),
+        relay: sub_command_args.relay.clone(),
     };
     chat_run(&args).await?;
     Ok(())
