@@ -177,6 +177,7 @@ mod tests {
         assert_eq!(pl, "{\"kind\":1}");
     }
 
+    #[test]
     fn resolve_protocol_name_replaces_last_segment() {
         assert_eq!(
             resolve_protocol_name(
