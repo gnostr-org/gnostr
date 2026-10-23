@@ -94,6 +94,7 @@ jobs:
         with:
           fetch-depth: 50
           ref: ${{ inputs.ref || github.event.workflow_run.head_sha || github.sha }}
+          submodules: recursive
 
       - name: Set build name
         uses: ./.github/actions/set-build-name
