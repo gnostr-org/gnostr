@@ -82,7 +82,7 @@ cancel_status() {
   local ids
   local list_args=(-s "$status" -L "$DEPTH")
   if [[ "$INTERACTIVE" == true ]]; then
-    list_args+=(--json databaseId,status,workflowName,headBranch --jq '.[] | [.databaseId,.status,.workflowName,.headBranch] | @tsv')
+    list_args+=(--json "databaseId,status,workflowName,headBranch" --jq '.[] | [.databaseId,.status,.workflowName,.headBranch] | @tsv')
   else
     list_args+=(--json databaseId --jq '.[] | .databaseId')
   fi
@@ -128,8 +128,10 @@ if [[ "$INTERACTIVE" == true ]]; then
   ui_select "Workflow runs: ID / status / workflow / branch" ${run_rows[@]+"${run_rows[@]}"}
   ui_confirm "Cancel these ${#UI_SELECTED[@]} selected runs?"
   failed=0
+  cancel_args=()
+  [[ -z "$REPO" ]] || cancel_args+=(--repo "$REPO")
   for row in "${UI_SELECTED[@]}"; do
-    if ! gh run cancel "${row%%$'\t'*}" ${REPO:+--repo "$REPO"}; then
+    if ! gh run cancel "${row%%$'\t'*}" ${cancel_args[@]+"${cancel_args[@]}"}; then
       printf 'Error: could not cancel run %s.\n' "${row%%$'\t'*}" >&2
       failed=1
     fi

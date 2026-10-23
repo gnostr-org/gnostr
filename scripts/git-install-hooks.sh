@@ -183,6 +183,7 @@ fi
 
 if [[ "$INTERACTIVE" == true ]]; then
   ui_choose "Hook operation" install uninstall
+  UNINSTALL=false
   [[ "$UI_VALUE" != uninstall ]] || UNINSTALL=true
   ui_select "Git hooks" "${HOOK_NAMES[@]}"
   HOOK_NAMES=("${UI_SELECTED[@]}")

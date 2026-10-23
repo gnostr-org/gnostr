@@ -15,6 +15,10 @@ FEATURES=()
 RUN_ALLOW_ALL=true
 RUN_NO_DEFAULT_FEATURES=true
 NO_DEFAULT_FEATURES_EXTRA=(--features regex-fancy)
+RUN_DEFAULT=true
+INTERACTIVE=false
+# shellcheck source=scripts/lib/script-ui.sh
+source "$ROOT_DIR/scripts/lib/script-ui.sh"
 
 usage() {
   cat <<'EOF'
@@ -31,6 +35,7 @@ Options:
   --allow-all            Keep the --all-features install variant enabled
   --all-features         Alias for --allow-all
   --no-default-features  Keep the --no-default-features install variant enabled
+  --interactive         Select install variants and confirm binary replacement
   --help                 Show this help
 
 Examples:
@@ -58,6 +63,9 @@ run_install() {
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --interactive|-i)
+      INTERACTIVE=true
+      ;;
     --features)
       shift
       [[ $# -gt 0 ]] || { echo "--features requires a value" >&2; exit 1; }
@@ -84,15 +92,35 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
+if [[ "$INTERACTIVE" == true ]]; then
+  ui_select "Install variants" default all-features no-default-features
+  RUN_DEFAULT=false
+  RUN_ALLOW_ALL=false
+  RUN_NO_DEFAULT_FEATURES=false
+  for variant in "${UI_SELECTED[@]}"; do
+    case "$variant" in
+      default) RUN_DEFAULT=true ;;
+      all-features) RUN_ALLOW_ALL=true ;;
+      no-default-features) RUN_NO_DEFAULT_FEATURES=true ;;
+    esac
+  done
+  ui_prompt "Extra features (comma-separated)" "$(join_features)"
+  FEATURES=()
+  [[ -z "$UI_VALUE" ]] || FEATURES+=("$UI_VALUE")
+  ui_confirm "Install the selected variants with --force, replacing installed binaries?"
+fi
+
 declare -a FEATURE_ARGS=()
 if [[ ${#FEATURES[@]} -gt 0 ]]; then
   FEATURE_ARGS=(--features "$(join_features)")
 fi
 
-if [[ ${#FEATURE_ARGS[@]} -gt 0 ]]; then
-  run_install "default install" "${FEATURE_ARGS[@]}"
-else
-  run_install "default install"
+if [[ "$RUN_DEFAULT" == true ]]; then
+  if [[ ${#FEATURE_ARGS[@]} -gt 0 ]]; then
+    run_install "default install" "${FEATURE_ARGS[@]}"
+  else
+    run_install "default install"
+  fi
 fi
 
 if [[ "$RUN_ALLOW_ALL" == true ]]; then

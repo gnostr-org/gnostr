@@ -5,7 +5,6 @@ if ! bash -n "${BASH_SOURCE[0]}"; then
   exit 1
 fi
 
-WHOAMI="$(whoami)"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
@@ -14,6 +13,10 @@ PROJECT_FILTER="all"
 CONFIGURATION="${XCODE_CONFIGURATION:-Debug}"
 DERIVED_DATA_ROOT="${XCODE_DERIVED_DATA_ROOT:-$ROOT_DIR/.xcodebuild}"
 CLEAN=false
+INTERACTIVE=false
+INTERACTIVE_PROJECTS=()
+# shellcheck source=scripts/lib/script-ui.sh
+source "$ROOT_DIR/scripts/lib/script-ui.sh"
 
 usage() {
   cat <<'EOF'
@@ -29,6 +32,7 @@ Options:
   --project NAME        Select relay, p2p, appwithtool, universal, git-mac-ios-mac, git-mac-ios-ios, or all (default)
   --configuration NAME  Xcode build configuration (default: Debug)
   --clean               Remove per-project derived data before running
+  --interactive         Select projects, mode, and configuration; confirm cleanup
   --help                Show this help
 EOF
 }
@@ -40,10 +44,6 @@ clean_project_artifacts() {
   if [[ "$CLEAN" == true && -d "$project_root" ]]; then
     rm -rf "$project_root"
   fi
-  if [[ "$MODE" == "all" ]]; then
-    rm -rf /Users/$WHOAMI/Library/Developer/Xcode/DerivedData/**
-  fi
-
 }
 
 project_path() {
@@ -222,6 +222,10 @@ project_build_destination() {
 }
 
 selected_projects() {
+  if [[ "${#INTERACTIVE_PROJECTS[@]}" -gt 0 ]]; then
+    printf '%s\n' "${INTERACTIVE_PROJECTS[@]}"
+    return
+  fi
   case "$PROJECT_FILTER" in
     all)
       printf '%s\n' relay p2p appwithtool universal git-mac-ios-mac git-mac-ios-ios
@@ -321,6 +325,9 @@ run_test_projects() {
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --interactive|-i)
+      INTERACTIVE=true
+      ;;
     --mode)
       shift
       [[ $# -gt 0 ]] || { echo "--mode requires a value" >&2; exit 1; }
@@ -351,9 +358,24 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
+if [[ "$INTERACTIVE" == true ]]; then
+  ui_choose "Xcode mode" build test all list
+  MODE="$UI_VALUE"
+  projects="$(selected_projects)"
+  choices=()
+  while IFS= read -r project; do choices+=("$project"); done <<<"$projects"
+  ui_select "Xcode projects" "${choices[@]}"
+  INTERACTIVE_PROJECTS=("${UI_SELECTED[@]}")
+  ui_prompt "Configuration" "$CONFIGURATION"
+  CONFIGURATION="$UI_VALUE"
+  if [[ "$MODE" != list ]]; then
+    ui_confirm "Run $MODE for ${#INTERACTIVE_PROJECTS[@]} projects (clean=$CLEAN, data=$DERIVED_DATA_ROOT)?"
+  fi
+fi
+
 case "$MODE" in
   list)
-  for project in relay p2p appwithtool universal git-mac-ios-mac git-mac-ios-ios; do
+  for project in $(selected_projects); do
       printf '%s\t%s\t%s\t%s\n' \
         "$project" \
       "$(project_build_scheme "$project")" \
@@ -386,4 +408,3 @@ esac
 ##    -only-testing:Tests-MacOS/TestUnpack \
 ##    -only-testing:Tests-MacOS/TestUser \
 ##    test
-

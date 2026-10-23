@@ -22,6 +22,9 @@ DRY_RUN=false
 LIST_ONLY=false
 VERBOSE=false
 FORCE_BROKEN_CROSS=${GNOSTR_CROSS_FORCE:-false}
+INTERACTIVE=false
+# shellcheck source=scripts/lib/script-ui.sh
+source "$SCRIPT_DIR/lib/script-ui.sh"
 
 HOST_TRIPLE=$(rustc -vV | awk '/^host: / { print $2 }')
 HOST_OS=$(uname -s)
@@ -78,6 +81,7 @@ Options:
   --verbose              Pass --verbose to cargo/cross.
   --force-broken-cross   Attempt known-broken Apple Silicon cross targets anyway.
   --list                 List the targets this host can attempt, then exit.
+  --interactive          Select available targets, package, and profile.
   --dry-run              Print commands without executing them.
   --help                 Show this help.
 
@@ -244,6 +248,10 @@ run_build() {
 parse_args() {
   while [[ $# -gt 0 ]]; do
     case "$1" in
+      --interactive|-i)
+        INTERACTIVE=true
+        shift
+        ;;
       --target)
         [[ $# -ge 2 ]] || die "--target requires a value"
         REQUESTED_TARGETS+=("$2")
@@ -348,6 +356,29 @@ collect_targets() {
 
 main() {
   parse_args "$@"
+
+  if [[ "$INTERACTIVE" == true && "$LIST_ONLY" != true ]]; then
+    local choices=() candidate name triple tool
+    while IFS= read -r candidate; do
+      IFS='|' read -r name triple tool <<<"$candidate"
+      if ! should_skip "$name" "$triple" && host_can_attempt "$triple" "$tool" &&
+        ! cross_known_broken_for_host "$triple" "$tool"; then
+        choices+=("$candidate")
+      fi
+    done < <(collect_targets)
+    ui_select "Build targets: name / triple / tool" ${choices[@]+"${choices[@]}"}
+    REQUESTED_TARGETS=()
+    for candidate in "${UI_SELECTED[@]}"; do
+      REQUESTED_TARGETS+=("${candidate%%|*}")
+    done
+    ui_prompt "Package (__workspace__ builds all workspace members)" "$PACKAGE"
+    PACKAGE="$UI_VALUE"
+    ui_prompt "Cargo profile" "$PROFILE"
+    PROFILE="$UI_VALUE"
+    ui_prompt "Features (comma-separated)" "$FEATURES"
+    FEATURES="$UI_VALUE"
+    ui_confirm "Build ${#REQUESTED_TARGETS[@]} targets for $PACKAGE with profile $PROFILE (dry-run=$DRY_RUN)?"
+  fi
 
   log "host: $HOST_TRIPLE ($HOST_OS/$HOST_ARCH)"
   if [[ -n "$CROSS_VERSION" ]]; then
