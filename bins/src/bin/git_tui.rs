@@ -1,7 +1,7 @@
 use clap::Parser;
-use gnostr_asyncgit::tui::git::{cli::Args, gitui_error::Error, term, Res};
-use log::LevelFilter;
 use gnostr_asyncgit::git2::Repository;
+use gnostr_asyncgit::tui::git::{Res, cli::Args, gitui_error::Error, term};
+use log::LevelFilter;
 use ratatui::Terminal;
 use simple_logger::SimpleLogger;
 use std::{backtrace::Backtrace, panic};
@@ -67,7 +67,9 @@ fn inspect_notes() -> Res<()> {
     let repo = Repository::open_from_env().map_err(Error::OpenRepo)?;
     let mut found = false;
 
-    let notes_refs = repo.references_glob("refs/notes/*").map_err(Error::ListGitReferences)?;
+    let notes_refs = repo
+        .references_glob("refs/notes/*")
+        .map_err(Error::ListGitReferences)?;
     for reference in notes_refs {
         let reference = reference.map_err(Error::ListGitReferences)?;
         let ref_name = reference.name().map_err(Error::ListGitReferences)?;
@@ -78,7 +80,9 @@ fn inspect_notes() -> Res<()> {
         let notes = repo.notes(Some(ref_name)).map_err(Error::ReadGitConfig)?;
         for note in notes {
             let (_note_oid, object_oid) = note.map_err(Error::ReadOid)?;
-            let note = repo.find_note(Some(ref_name), object_oid).map_err(Error::ReadOid)?;
+            let note = repo
+                .find_note(Some(ref_name), object_oid)
+                .map_err(Error::ReadOid)?;
 
             println!("-- object: {object_oid}");
             if let Ok(message) = note.message() {

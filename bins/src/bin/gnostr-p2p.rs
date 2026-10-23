@@ -43,7 +43,10 @@ async fn main() -> anyhow::Result<()> {
     let mut swarm = build_swarm(keypair)
         .await
         .map_err(|e| anyhow::anyhow!(e.to_string()))?;
-    swarm.behaviour_mut().kademlia.set_mode(Some(kad::Mode::Server));
+    swarm
+        .behaviour_mut()
+        .kademlia
+        .set_mode(Some(kad::Mode::Server));
 
     if let Some(network) = opt.network.network {
         for (addr, peer_id) in network.bootnodes() {

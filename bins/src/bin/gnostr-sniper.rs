@@ -1,5 +1,5 @@
 use clap::Parser;
-use gnostr::sub_commands::sniper::{run_sniper, SniperArgs};
+use gnostr::sub_commands::sniper::{SniperArgs, run_sniper};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about = "gnostr: a git+nostr workflow utility", long_about = None)]

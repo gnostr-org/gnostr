@@ -5,30 +5,32 @@ use std::{
     time::Duration,
 };
 
-use anyhow::{anyhow, Context, Result};
-use gnostr_crawler::{
-    build_gnostr_query, fetch_relay_texts, load_relays_or_bootstrap, parse_relay_metadata, send,
-    Relay,
-};
+use anyhow::{Context, Result, anyhow};
 use gnostr_crawler::tui::{
-    centered_rect, clamp_index, preview_text, title_case, MasterDetailLayout, PaneFocus,
+    MasterDetailLayout, PaneFocus, centered_rect, clamp_index, preview_text, title_case,
 };
-use ratatui::{
-    backend::CrosstermBackend,
-    style::{Color, Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
-    Frame, Terminal,
+use gnostr_crawler::{
+    Relay, build_gnostr_query, fetch_relay_texts, load_relays_or_bootstrap, parse_relay_metadata,
+    send,
 };
 use ratatui::crossterm::{
     event::{self, Event, KeyCode, KeyEvent, KeyModifiers},
     execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
+};
+use ratatui::{
+    Frame, Terminal,
+    backend::CrosstermBackend,
+    style::{Color, Modifier, Style},
+    text::{Line, Span},
+    widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
 };
 use serde_json::Value;
 
 const CORE_KINDS: &[u32] = &[0, 1, 2, 3, 4, 5, 6, 7, 8, 16, 25];
-const CHAT_KINDS: &[u32] = &[4, 9, 10, 11, 12, 13, 14, 16, 40, 41, 42, 43, 44, 1311, 22242, 24133];
+const CHAT_KINDS: &[u32] = &[
+    4, 9, 10, 11, 12, 13, 14, 16, 40, 41, 42, 43, 44, 1311, 22242, 24133,
+];
 const LIST_KINDS: &[u32] = &[
     10000, 10001, 10002, 10003, 10004, 10005, 10006, 10007, 10009, 10015, 10030, 10050, 10096,
     30000, 30001, 30002, 30003, 30004, 30008, 30009, 30015, 30017, 30018, 30019, 30020, 30023,
@@ -96,7 +98,10 @@ impl Drop for TerminalGuard {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum FeedKind {
     RelayMetadata,
-    Query { label: &'static str, kinds: &'static [u32] },
+    Query {
+        label: &'static str,
+        kinds: &'static [u32],
+    },
 }
 
 impl FeedKind {
@@ -345,7 +350,9 @@ impl App {
             }
             PaneFocus::Detail => {
                 if delta < 0 {
-                    self.detail_scroll = self.detail_scroll.saturating_sub(delta.unsigned_abs() as u16);
+                    self.detail_scroll = self
+                        .detail_scroll
+                        .saturating_sub(delta.unsigned_abs() as u16);
                 } else {
                     self.detail_scroll = self.detail_scroll.saturating_add(delta as u16);
                 }
@@ -375,7 +382,12 @@ impl App {
             PaneFocus::Detail => "detail",
         };
         let mut title = vec![
-            Span::styled("master-detail", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "master-detail",
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
+            ),
             Span::raw("  "),
             Span::raw(self.current_type().name.clone()),
             Span::raw("  "),
@@ -392,7 +404,8 @@ impl App {
         if self.loading {
             title.push(Span::raw("  loading..."));
         }
-        Paragraph::new(Line::from(title)).block(Block::default().borders(Borders::ALL).title("gnostr"))
+        Paragraph::new(Line::from(title))
+            .block(Block::default().borders(Borders::ALL).title("gnostr"))
     }
 
     fn types_list(&self) -> List<'_> {
@@ -405,14 +418,20 @@ impl App {
                     Span::raw("  "),
                     Span::styled(
                         item.summary.clone(),
-                        Style::default().fg(Color::DarkGray).add_modifier(Modifier::ITALIC),
+                        Style::default()
+                            .fg(Color::DarkGray)
+                            .add_modifier(Modifier::ITALIC),
                     ),
                 ]))
             })
             .collect::<Vec<_>>();
 
         List::new(items)
-            .block(Block::default().borders(Borders::ALL).title("asyncgit types"))
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title("asyncgit types"),
+            )
             .highlight_style(
                 Style::default()
                     .fg(Color::Black)
@@ -430,16 +449,17 @@ impl App {
                 ListItem::new(Line::from(vec![
                     Span::styled(item.title.clone(), Style::default().fg(Color::White)),
                     Span::raw("  "),
-                    Span::styled(
-                        item.subtitle.clone(),
-                        Style::default().fg(Color::DarkGray),
-                    ),
+                    Span::styled(item.subtitle.clone(), Style::default().fg(Color::DarkGray)),
                 ]))
             })
             .collect::<Vec<_>>();
 
         List::new(items)
-            .block(Block::default().borders(Borders::ALL).title("real crawler events"))
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title("real crawler events"),
+            )
             .highlight_style(
                 Style::default()
                     .fg(Color::Black)
@@ -496,7 +516,11 @@ impl App {
         }
 
         Paragraph::new(lines)
-            .block(Block::default().borders(Borders::ALL).title("selection detail"))
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title("selection detail"),
+            )
             .wrap(Wrap { trim: false })
     }
 
@@ -523,7 +547,9 @@ impl App {
                 Line::from(""),
                 Line::from(Span::styled(
                     "raw event data",
-                    Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
                 )),
                 Line::from(event.raw.clone()),
             ];
@@ -533,9 +559,11 @@ impl App {
                 .scroll((self.detail_scroll, 0));
         }
 
-        Paragraph::new(Line::from("select an event summary to reveal raw crawler data"))
-            .block(Block::default().borders(Borders::ALL).title("event data"))
-            .wrap(Wrap { trim: false })
+        Paragraph::new(Line::from(
+            "select an event summary to reveal raw crawler data",
+        ))
+        .block(Block::default().borders(Borders::ALL).title("event data"))
+        .wrap(Wrap { trim: false })
     }
 
     fn status_bar(&self) -> Paragraph<'_> {
@@ -627,7 +655,11 @@ fn collect_asyncgit_exports() -> Vec<String> {
 fn parse_pub_use_statement(rest: &str) -> Vec<String> {
     let mut names = Vec::new();
     if rest.ends_with("::*") {
-        let module = rest.trim_end_matches("::*").rsplit("::").next().unwrap_or(rest);
+        let module = rest
+            .trim_end_matches("::*")
+            .rsplit("::")
+            .next()
+            .unwrap_or(rest);
         let label = title_case(module);
         names.push(format!("{}::*", label));
         return names;
@@ -741,12 +773,14 @@ async fn load_feed(feed: FeedKind) -> Result<Vec<EventItem>> {
 }
 
 async fn load_query_events(label: &'static str, kinds: &'static [u32]) -> Result<Vec<EventItem>> {
-    let relays = load_relays_or_bootstrap().into_iter().take(6).collect::<Vec<_>>();
+    let relays = load_relays_or_bootstrap()
+        .into_iter()
+        .take(6)
+        .collect::<Vec<_>>();
     let urls = relays
         .into_iter()
         .map(|relay| {
-            reqwest::Url::parse(&relay)
-                .with_context(|| format!("invalid relay url: {}", relay))
+            reqwest::Url::parse(&relay).with_context(|| format!("invalid relay url: {}", relay))
         })
         .collect::<Result<Vec<_>>>()?;
     if urls.is_empty() {
@@ -790,7 +824,10 @@ async fn load_query_events(label: &'static str, kinds: &'static [u32]) -> Result
 }
 
 async fn load_relay_metadata() -> Result<Vec<EventItem>> {
-    let relays = load_relays_or_bootstrap().into_iter().take(12).collect::<Vec<_>>();
+    let relays = load_relays_or_bootstrap()
+        .into_iter()
+        .take(12)
+        .collect::<Vec<_>>();
     if relays.is_empty() {
         return Err(anyhow!("no bootstrap relays available"));
     }
@@ -828,7 +865,10 @@ fn parse_event_message(message: &str, label: &str) -> Option<EventItem> {
     }
     let event = array.get(2)?.as_object()?;
     let id = event.get("id")?.as_str()?.to_string();
-    let kind = event.get("kind").and_then(|value| value.as_u64()).unwrap_or_default();
+    let kind = event
+        .get("kind")
+        .and_then(|value| value.as_u64())
+        .unwrap_or_default();
     let content = event
         .get("content")
         .and_then(|value| value.as_str())

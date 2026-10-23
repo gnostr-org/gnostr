@@ -88,11 +88,7 @@ pub async fn relay(args: RelaySubCommand) -> Result<()> {
     }
 
     let current_dir = std::env::current_dir().context("Failed to get current directory")?;
-    run_local_relay(
-        resolve_setting_path(&args, &current_dir),
-        args.data.clone(),
-    )
-    .await
+    run_local_relay(resolve_setting_path(&args, &current_dir), args.data.clone()).await
 }
 
 async fn run_detached(args: RelaySubCommand) -> Result<()> {
@@ -122,10 +118,7 @@ async fn run_detached(args: RelaySubCommand) -> Result<()> {
     Ok(())
 }
 
-async fn run_local_relay(
-    setting_path: Option<PathBuf>,
-    data_path: Option<PathBuf>,
-) -> Result<()> {
+async fn run_local_relay(setting_path: Option<PathBuf>, data_path: Option<PathBuf>) -> Result<()> {
     tokio::task::spawn_blocking(move || {
         let system = actix_web::rt::System::new();
         system.block_on(async move {
@@ -151,7 +144,9 @@ async fn create_relay_app(
     match gnostr_relay::App::create(setting_path, true, Some("NOSTR".to_owned()), data_path) {
         Ok(app) => Ok(app),
         Err(err) if is_lmdb_version_mismatch(&err) => {
-            warn!("relay database version mismatch detected; backing up stale LMDB and recreating it");
+            warn!(
+                "relay database version mismatch detected; backing up stale LMDB and recreating it"
+            );
             backup_relay_events_dir(setting_path, data_path)?;
             gnostr_relay::App::create(setting_path, true, Some("NOSTR".to_owned()), data_path)
                 .map_err(anyhow::Error::from)
@@ -286,12 +281,16 @@ mod tests {
         assert!(!events_dir.exists());
         let entries = std::fs::read_dir(&relay_data)
             .expect("read relay dir")
-            .map(|entry| entry.expect("entry").file_name().to_string_lossy().into_owned())
+            .map(|entry| {
+                entry
+                    .expect("entry")
+                    .file_name()
+                    .to_string_lossy()
+                    .into_owned()
+            })
             .collect::<Vec<_>>();
-        assert!(
-            entries
-                .iter()
-                .any(|entry| entry.starts_with("events.mdb-version-mismatch-"))
-        );
+        assert!(entries
+            .iter()
+            .any(|entry| entry.starts_with("events.mdb-version-mismatch-")));
     }
 }

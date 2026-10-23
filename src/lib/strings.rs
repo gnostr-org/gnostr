@@ -465,7 +465,10 @@ pub mod commands {
     }
     pub fn nip34_popup(key_config: &SharedKeyConfig) -> CommandText {
         CommandText::new(
-            format!("NIP-34 [{}]", key_config.get_hint(key_config.keys.open_nip34)),
+            format!(
+                "NIP-34 [{}]",
+                key_config.get_hint(key_config.keys.open_nip34)
+            ),
             "open NIP-34 popup",
             CMD_GROUP_NIP34,
         )
@@ -767,14 +770,21 @@ pub mod commands {
 
     pub fn list_notes(key_config: &SharedKeyConfig) -> CommandText {
         CommandText::new(
-            format!("List Notes [{}]", key_config.get_hint(key_config.keys.list_notes)),
+            format!(
+                "List Notes [{}]",
+                key_config.get_hint(key_config.keys.list_notes)
+            ),
             "list git notes",
             CMD_GROUP_NOTES,
         )
     }
 
     pub fn amend_note() -> CommandText {
-        CommandText::new("Amend Note [a]".to_string(), "amend selected note", CMD_GROUP_NOTES)
+        CommandText::new(
+            "Amend Note [a]".to_string(),
+            "amend selected note",
+            CMD_GROUP_NOTES,
+        )
     }
 
     pub fn delete_note_popup() -> CommandText {
@@ -794,11 +804,19 @@ pub mod commands {
     }
 
     pub fn note_save() -> CommandText {
-        CommandText::new("Save note: [Enter]".to_string(), "save note", CMD_GROUP_NOTES)
+        CommandText::new(
+            "Save note: [Enter]".to_string(),
+            "save note",
+            CMD_GROUP_NOTES,
+        )
     }
 
     pub fn note_cancel() -> CommandText {
-        CommandText::new("Cancel: [Esc]".to_string(), "cancel note editing", CMD_GROUP_NOTES)
+        CommandText::new(
+            "Cancel: [Esc]".to_string(),
+            "cancel note editing",
+            CMD_GROUP_NOTES,
+        )
     }
 
     pub fn open_submodule(key_config: &SharedKeyConfig) -> CommandText {

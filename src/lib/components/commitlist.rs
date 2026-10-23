@@ -480,11 +480,8 @@ impl CommitList {
         now: DateTime<Local>,
         marked: Option<bool>,
     ) -> Line<'a> {
-        let mut txt: Vec<Span> = Vec::with_capacity(
-            ELEMENTS_PER_LINE
-                + if marked.is_some() { 2 } else { 0 }
-                + 2,
-        );
+        let mut txt: Vec<Span> =
+            Vec::with_capacity(ELEMENTS_PER_LINE + if marked.is_some() { 2 } else { 0 } + 2);
 
         let normal = !self.items.highlighting() || (self.items.highlighting() && e.highlighted);
 

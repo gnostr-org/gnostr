@@ -37,7 +37,10 @@ fn main() {
         "kind": 31990,
     });
     println!("cargo:rustc-env=GITUI_APP_NAME=gnostr");
-    println!("cargo:rustc-env=GITUI_APP_METADATA_JSON={}", app_metadata.to_string());
+    println!(
+        "cargo:rustc-env=GITUI_APP_METADATA_JSON={}",
+        app_metadata.to_string()
+    );
     write_nip89_app_asset(&build_name);
     write_js_hashes_asset();
     watch_sources(Path::new("src/js"), &["js"]);

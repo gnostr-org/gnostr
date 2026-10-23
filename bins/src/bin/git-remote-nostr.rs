@@ -27,7 +27,7 @@
 //! - `NOSTR_NSEC`   — signing key for push auth (nsec1… or hex)
 //! - `GRASP_SERVER` — skip relay lookup, use this HTTP server base URL
 
-use gnostr_git_helpers::nostr_backend::{parse_nostr_url, NostrRemote};
+use gnostr_git_helpers::nostr_backend::{NostrRemote, parse_nostr_url};
 use gnostr_git_helpers::protocol::run_helper;
 
 fn main() {

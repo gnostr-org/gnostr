@@ -1,12 +1,12 @@
 use std::{
     collections::BTreeMap,
     io::Write,
-    process::Command,
     path::{Path, PathBuf},
+    process::Command,
 };
 
-use chrono::TimeZone;
 use anyhow::Context;
+use chrono::TimeZone;
 
 #[derive(Copy, Clone)]
 struct Paths<'a> {
@@ -16,7 +16,10 @@ struct Paths<'a> {
 
 fn main() {
     if let Err(e) = run() {
-        eprintln!("An error occurred within the gnostr-web build script:\n\n{:?}", e);
+        eprintln!(
+            "An error occurred within the gnostr-web build script:\n\n{:?}",
+            e
+        );
         std::process::exit(1);
     }
 }
@@ -37,7 +40,11 @@ fn run() -> anyhow::Result<()> {
 
     println!("cargo:rerun-if-changed=build.rs");
     // Rebuild when the Kubo FFI crate changes (only relevant with the `ipfs` feature).
-    let ffi_dir = manifest_dir.join("..").join("ipfs").join("ffi").join("rust");
+    let ffi_dir = manifest_dir
+        .join("..")
+        .join("ipfs")
+        .join("ffi")
+        .join("rust");
     if ffi_dir.exists() {
         for entry in walkdir::WalkDir::new(&ffi_dir) {
             let entry = entry.context("Failed to walk ipfs ffi directory")?;
@@ -106,7 +113,10 @@ fn build_scss(paths: Paths) -> anyhow::Result<()> {
 
     println!("cargo:rerun-if-changed={}", in_dir.display());
 
-    for (input_name, output_name) in [("style.scss", "style.css"), ("nostr-styles.scss", "styles.css")] {
+    for (input_name, output_name) in [
+        ("style.scss", "style.css"),
+        ("nostr-styles.scss", "styles.css"),
+    ] {
         let input_file = in_dir.join(input_name);
         let output_file = out_dir.join(output_name);
         let format = rsass::output::Format {
@@ -153,7 +163,8 @@ fn build_js(paths: Paths) -> anyhow::Result<()> {
             .get(&name)
             .copied()
             .with_context(|| format!("Missing JS asset: {name}"))?;
-        let content = std::str::from_utf8(content).with_context(|| format!("JS asset {name} is not UTF-8"))?;
+        let content = std::str::from_utf8(content)
+            .with_context(|| format!("JS asset {name} is not UTF-8"))?;
         all_js_content.push_str(content);
         all_js_content.push('\n');
     }
@@ -169,7 +180,8 @@ fn build_js(paths: Paths) -> anyhow::Result<()> {
             .get(&name)
             .copied()
             .with_context(|| format!("Missing JS asset: {name}"))?;
-        let content = std::str::from_utf8(content).with_context(|| format!("JS asset {name} is not UTF-8"))?;
+        let content = std::str::from_utf8(content)
+            .with_context(|| format!("JS asset {name} is not UTF-8"))?;
         all_js_content.push_str(content);
         all_js_content.push('\n');
     }

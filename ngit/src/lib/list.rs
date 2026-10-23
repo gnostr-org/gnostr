@@ -10,8 +10,8 @@ use std::{
 };
 
 use anyhow::{Result, anyhow};
-use gnostr_asyncgit::git2::{Cred, CredentialType};
 use futures::stream::{self, StreamExt};
+use gnostr_asyncgit::git2::{Cred, CredentialType};
 use indicatif::{MultiProgress, ProgressBar, ProgressState, ProgressStyle};
 use nostr::hashes::sha1::Hash as Sha1Hash;
 

@@ -1,5 +1,5 @@
 use std::env;
-use std::process::{exit, Command};
+use std::process::{Command, exit};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Orchestrates unescaping in the established sequence

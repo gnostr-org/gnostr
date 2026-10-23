@@ -8,7 +8,8 @@ async fn main() -> anyhow::Result<()> {
     cli::init_tracing();
 
     let args = cli::LookupOpts::parse();
-    let client = LookupClient::new_with_protocol(args.network, args.protocol, args.protocol_version);
+    let client =
+        LookupClient::new_with_protocol(args.network, args.protocol, args.protocol_version);
 
     let peer = match (args.multiaddr, args.peer) {
         (Some(addr), _) => client.lookup_directly(addr).await?,

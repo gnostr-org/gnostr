@@ -97,10 +97,7 @@ fn build_filter_map(
 
     if let Some(authors) = &args.authors {
         debug!("Applying authors filter: {}", authors);
-        filt.insert(
-            "authors".to_string(),
-            json!(normalize_key_list(authors)?),
-        );
+        filt.insert("authors".to_string(), json!(normalize_key_list(authors)?));
     }
 
     if let Some(ids) = &args.ids {
@@ -189,7 +186,9 @@ fn normalize_key_list(values: &str) -> anyhow::Result<Vec<String>> {
         .collect()
 }
 
-fn parse_private_key(private_key: Option<String>) -> anyhow::Result<Option<crate::types::PrivateKey>> {
+fn parse_private_key(
+    private_key: Option<String>,
+) -> anyhow::Result<Option<crate::types::PrivateKey>> {
     match private_key {
         Some(value) if !value.trim().is_empty() => {
             let hex_or_bech32 = parse_key_or_id_to_hex_string(value.clone())?;
@@ -254,7 +253,11 @@ fn decrypt_result_frame(
             Ok(serde_json::to_string(&frame)?)
         }
         Err(err) => {
-            debug!("Failed to decrypt event content for kind {}: {}", kind.unwrap_or_default(), err);
+            debug!(
+                "Failed to decrypt event content for kind {}: {}",
+                kind.unwrap_or_default(),
+                err
+            );
             Ok(result)
         }
     }
@@ -291,7 +294,11 @@ fn parse_relay_urls(raw: &str) -> anyhow::Result<Vec<Url>> {
     match value {
         Value::Array(items) => items.into_iter().map(parse_relay_url_value).collect(),
         Value::Object(mut obj) => {
-            if let Some(items) = obj.remove("relays").or_else(|| obj.remove("data")).or_else(|| obj.remove("items")) {
+            if let Some(items) = obj
+                .remove("relays")
+                .or_else(|| obj.remove("data"))
+                .or_else(|| obj.remove("items"))
+            {
                 match items {
                     Value::Array(items) => items.into_iter().map(parse_relay_url_value).collect(),
                     other => parse_relay_url_value(other).map(|url| vec![url]),
@@ -323,7 +330,11 @@ fn parse_relay_url_value(value: Value) -> anyhow::Result<Url> {
 fn parse_relays(relay_args: &[String]) -> anyhow::Result<Vec<Url>> {
     let mut relays = Vec::new();
     for relay_arg in relay_args {
-        for relay in relay_arg.split(',').map(str::trim).filter(|relay| !relay.is_empty()) {
+        for relay in relay_arg
+            .split(',')
+            .map(str::trim)
+            .filter(|relay| !relay.is_empty())
+        {
             relays.push(Url::parse(relay)?);
         }
     }
@@ -334,9 +345,9 @@ fn parse_relays(relay_args: &[String]) -> anyhow::Result<Vec<Url>> {
 mod tests {
     use clap::{Parser, Subcommand};
     use serde_json::json;
-    use std::time::Duration;
-    use std::sync::Once;
     use serial_test::serial;
+    use std::sync::Once;
+    use std::time::Duration;
 
     use super::*;
 
@@ -390,8 +401,8 @@ mod tests {
     fn real_network_relays() -> Vec<Url> {
         crate::crawler::load_relays_or_bootstrap()
             .iter()
-        .filter_map(|relay| Url::parse(relay).ok())
-        .collect()
+            .filter_map(|relay| Url::parse(relay).ok())
+            .collect()
     }
 
     fn live_test_message(prefix: &str) -> anyhow::Result<String> {
@@ -758,7 +769,10 @@ mod tests {
         {
             debug!("Testing launch with relay: {}", relay_url);
             if let Err(err) = launch_with_relay(&base_args, relay_url).await {
-                debug!("Launch returned an error for relay {}: {:?}", relay_url, err);
+                debug!(
+                    "Launch returned an error for relay {}: {:?}",
+                    relay_url, err
+                );
             }
         }
     }
@@ -884,7 +898,9 @@ mod tests {
         )
         .await?
         else {
-            return Err(anyhow::anyhow!("no available relay accepted nip4_test_message"));
+            return Err(anyhow::anyhow!(
+                "no available relay accepted nip4_test_message"
+            ));
         };
         let Some(frame) = wait_for_event_frame(&event_id, &[relay]).await? else {
             debug!("nip4_test_message was accepted but not observed back on the network");
@@ -915,7 +931,9 @@ mod tests {
         )
         .await?
         else {
-            return Err(anyhow::anyhow!("no available relay accepted nip44_test_message"));
+            return Err(anyhow::anyhow!(
+                "no available relay accepted nip44_test_message"
+            ));
         };
         let Some(frame) = wait_for_event_frame(&event_id, &[relay]).await? else {
             debug!("nip44_test_message was accepted but not observed back on the network");

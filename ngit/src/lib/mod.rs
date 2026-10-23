@@ -1,5 +1,5 @@
-extern crate self as ngit;
 extern crate gnostr_asyncgit as git2;
+extern crate self as ngit;
 
 pub mod accept_maintainership;
 #[path = "../bin/ngit/cli.rs"]

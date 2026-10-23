@@ -48,10 +48,8 @@ pub fn start_crawler(port: u16) -> anyhow::Result<CrawlerProcessState> {
     }
 
     let port = port.to_string();
-    let pid = spawn_detached_current_exe_named(
-        Some("gnostr-js"),
-        ["crawler", "--port", port.as_str()],
-    )?;
+    let pid =
+        spawn_detached_current_exe_named(Some("gnostr-js"), ["crawler", "--port", port.as_str()])?;
     let _ = capture_detached_pid(CRAWLER_PID_NAME, pid)?;
 
     Ok(CrawlerProcessState {

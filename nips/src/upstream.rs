@@ -1,6 +1,5 @@
 use std::{
-    env, fs,
-    io,
+    env, fs, io,
     path::{Path, PathBuf},
     process::Command,
 };
@@ -17,7 +16,10 @@ pub fn checkout_dir() -> PathBuf {
     }
 
     if let Ok(home) = env::var("HOME") {
-        return PathBuf::from(home).join(".cache").join("gnostr").join("nips");
+        return PathBuf::from(home)
+            .join(".cache")
+            .join("gnostr")
+            .join("nips");
     }
 
     env::current_dir()
@@ -70,7 +72,11 @@ fn clone_checkout(dir: &Path) -> io::Result<()> {
         fs::create_dir_all(parent)?;
     }
 
-    run_git(&["clone", "--quiet", "--depth", "1", UPSTREAM_URL], Some(dir.parent().unwrap_or(dir)), Some(dir))
+    run_git(
+        &["clone", "--quiet", "--depth", "1", UPSTREAM_URL],
+        Some(dir.parent().unwrap_or(dir)),
+        Some(dir),
+    )
 }
 
 fn sync_checkout(dir: &Path) -> io::Result<()> {
@@ -87,7 +93,11 @@ fn sync_checkout(dir: &Path) -> io::Result<()> {
     run_git(&["pull", "--ff-only", "--prune"], Some(dir), None)
 }
 
-fn run_git(args: &[&str], current_dir: Option<&Path>, clone_target: Option<&Path>) -> io::Result<()> {
+fn run_git(
+    args: &[&str],
+    current_dir: Option<&Path>,
+    clone_target: Option<&Path>,
+) -> io::Result<()> {
     let mut command = Command::new("git");
     command.args(args);
 

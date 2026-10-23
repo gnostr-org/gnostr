@@ -17,7 +17,7 @@
 
 use anyhow::{Context, Result};
 
-use gnostr_git_helpers::pkarr_backend::{parse_pkarr_url, PkarrRemote};
+use gnostr_git_helpers::pkarr_backend::{PkarrRemote, parse_pkarr_url};
 use gnostr_git_helpers::protocol::run_helper;
 
 fn main() -> Result<()> {

@@ -7,10 +7,7 @@ fn main() {
         .expect("failed to list git notes refs");
 
     if !output.status.success() {
-        eprintln!(
-            "{}",
-            String::from_utf8_lossy(&output.stderr).trim_end()
-        );
+        eprintln!("{}", String::from_utf8_lossy(&output.stderr).trim_end());
         std::process::exit(output.status.code().unwrap_or(1));
     }
 

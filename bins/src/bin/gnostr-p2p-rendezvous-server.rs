@@ -1,11 +1,11 @@
 use clap::Parser;
 use futures::StreamExt;
+use gnostr_p2p::cli;
 use libp2p::{
     identify, noise, ping, rendezvous,
     swarm::{NetworkBehaviour, SwarmEvent},
     tcp, yamux,
 };
-use gnostr_p2p::cli;
 
 #[derive(Debug, Parser)]
 #[command(
@@ -51,17 +51,11 @@ async fn main() -> anyhow::Result<()> {
                 "/ipfs/id/1.0.0".to_string(),
                 key.public(),
             )),
-            rendezvous: rendezvous::server::Behaviour::new(
-                rendezvous::server::Config::default(),
-            ),
+            rendezvous: rendezvous::server::Behaviour::new(rendezvous::server::Config::default()),
         })?
         .build();
 
-    cli::listen_default_addresses_relay(
-        &mut swarm,
-        opt.node.port,
-        opt.node.use_ipv6,
-    )?;
+    cli::listen_default_addresses_relay(&mut swarm, opt.node.port, opt.node.use_ipv6)?;
 
     while let Some(event) = swarm.next().await {
         match event {

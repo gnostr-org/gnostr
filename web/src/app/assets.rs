@@ -133,10 +133,8 @@ pub const HOME_ACTIVE_SVG: &[u8] = include_bytes!(concat!(
 ));
 pub static HOME_ACTIVE_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
 
-pub const HOME_SVG: &[u8] = include_bytes!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/src/images/home.svg"
-));
+pub const HOME_SVG: &[u8] =
+    include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/images/home.svg"));
 pub static HOME_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
 
 pub const ICON_MASKABLE_SVG: &[u8] = include_bytes!(concat!(
@@ -145,22 +143,16 @@ pub const ICON_MASKABLE_SVG: &[u8] = include_bytes!(concat!(
 ));
 pub static ICON_MASKABLE_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
 
-pub const ICON_ICNS: &[u8] = include_bytes!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/src/images/icon.icns"
-));
+pub const ICON_ICNS: &[u8] =
+    include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/images/icon.icns"));
 pub static ICON_ICNS_HASH: OnceLock<&'static str> = OnceLock::new();
 
-pub const ICON_SVG: &[u8] = include_bytes!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/src/images/icon.svg"
-));
+pub const ICON_SVG: &[u8] =
+    include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/images/icon.svg"));
 pub static ICON_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
 
-pub const KEY_SVG: &[u8] = include_bytes!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/src/images/key.svg"
-));
+pub const KEY_SVG: &[u8] =
+    include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/images/key.svg"));
 pub static KEY_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
 
 pub const LOADER_FRAGMENT_SVG: &[u8] = include_bytes!(concat!(
@@ -175,10 +167,8 @@ pub const LOGO_INVERTED_SVG: &[u8] = include_bytes!(concat!(
 ));
 pub static LOGO_INVERTED_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
 
-pub const LOGO_SVG: &[u8] = include_bytes!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/src/images/logo.svg"
-));
+pub const LOGO_SVG: &[u8] =
+    include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/images/logo.svg"));
 pub static LOGO_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
 
 pub const MESSAGE_USER_SVG: &[u8] = include_bytes!(concat!(

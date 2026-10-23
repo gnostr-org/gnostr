@@ -304,15 +304,15 @@ pub fn fetch_all(
 	scope_time!("fetch_all");
 
 	let repo = repo(repo_path)?;
-	let remotes = repo
-		.remotes()?
-		.iter()
-		.try_fold(Vec::new(), |mut acc, remote| {
+	let remotes = repo.remotes()?.iter().try_fold(
+		Vec::new(),
+		|mut acc, remote| {
 			if let Some(remote) = remote? {
 				acc.push(remote.to_owned());
 			}
 			Ok::<_, git2::Error>(acc)
-		})?;
+		},
+	)?;
 	let remotes_count = remotes.len();
 
 	for (idx, remote) in remotes.into_iter().enumerate() {

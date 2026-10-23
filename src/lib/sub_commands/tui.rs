@@ -24,11 +24,11 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
 };
+use gnostr_asyncgit::types::Keys;
 use gnostr_asyncgit::{
     sync::{repo_open_error, resolve_repo_path, utils::repo_work_dir, RepoPath},
     AsyncGitNotification,
 };
-use gnostr_asyncgit::types::Keys;
 use ratatui::backend::CrosstermBackend;
 use scopeguard::defer;
 use scopetime::{self, scope_time};
@@ -372,10 +372,7 @@ pub async fn tui(
     {
         let keys = Keys::parse(sub_command_args.nsec.clone().unwrap().clone()).unwrap();
         let mut secret_key = keys.secret_key().unwrap();
-        debug!(
-            "{{\"private_key\":\"{}\"}}",
-            secret_key.as_hex_string()
-        );
+        debug!("{{\"private_key\":\"{}\"}}", secret_key.as_hex_string());
         debug!("{{\"public_key\":\"{}\"}}", keys.public_key());
     }
 

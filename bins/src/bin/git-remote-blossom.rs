@@ -18,7 +18,7 @@
 //! # Environment
 //! - `NOSTR_NSEC` — signing key for BUD-01 upload auth (nsec1… or hex)
 
-use gnostr_git_helpers::blossom_backend::{parse_blossom_url, BlossomRemote};
+use gnostr_git_helpers::blossom_backend::{BlossomRemote, parse_blossom_url};
 use gnostr_git_helpers::protocol::run_helper;
 
 fn main() {

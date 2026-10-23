@@ -243,7 +243,6 @@ pub async fn publish_manifest(
     }
 }
 
-
 #[cfg(feature = "ipfs")]
 pub async fn add_batch(
     Extension(state): Extension<Arc<IpfsState>>,
@@ -302,7 +301,11 @@ mod tests {
     fn node_roundtrip() {
         let dir = tempfile::tempdir().unwrap();
         let state = IpfsState::init(dir.path().to_str().unwrap(), false);
-        assert!(state.enabled, "kubo node should start: {:?}", state.last_error.lock().unwrap());
+        assert!(
+            state.enabled,
+            "kubo node should start: {:?}",
+            state.last_error.lock().unwrap()
+        );
         let guard = state.node.lock().unwrap();
         let node = guard.as_ref().unwrap();
         let cid = node.unixfs_add_bytes(b"hello phase5").unwrap();

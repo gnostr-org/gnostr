@@ -8,8 +8,8 @@ use std::{
 };
 
 use anyhow::{Context, Result, anyhow, bail};
-use gnostr_asyncgit::git2::{Cred, CredentialType};
 use console::Term;
+use gnostr_asyncgit::git2::{Cred, CredentialType};
 use nostr::{
     event::{Event, EventBuilder, Kind, Tag, TagStandard, UnsignedEvent},
     hashes::sha1::Hash as Sha1Hash,

@@ -5,7 +5,12 @@
 ///
 /// To add a new screenshot test, simply add a new call to the `screenshot_test`
 /// macro with the subcommand name.
-#[cfg(all(test, not(feature = "nightly"), target_os = "macos", feature = "long_tests"))]
+#[cfg(all(
+    test,
+    not(feature = "nightly"),
+    target_os = "macos",
+    feature = "long_tests"
+))]
 mod tests {
 
     use std::{fs, io::Write, path::Path, process::Command};

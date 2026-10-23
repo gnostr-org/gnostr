@@ -43,9 +43,9 @@ use crate::{
         AppOption, BlameFilePopup, BranchListPopup, ChatPopup, CommitPopup, CompareCommitsPopup,
         ConfirmPopup, CreateBranchPopup, DisplayChatPopup, ExternalEditorPopup, FetchPopup,
         FileRevlogPopup, FuzzyFindPopup, GitnotePopup, HelpPopup, InspectChatPopup,
-        InspectCommitPopup, LogSearchPopupPopup, MsgPopup, Nip34Popup, NotesListPopup, OptionsPopup,
-        PullPopup, PushPopup, PushTagsPopup, RenameBranchPopup, ResetPopup, RevisionFilesPopup,
-        StashMsgPopup, SubmodulesListPopup, TagCommitPopup, TagListPopup,
+        InspectCommitPopup, LogSearchPopupPopup, MsgPopup, Nip34Popup, NotesListPopup,
+        OptionsPopup, PullPopup, PushPopup, PushTagsPopup, RenameBranchPopup, ResetPopup,
+        RevisionFilesPopup, StashMsgPopup, SubmodulesListPopup, TagCommitPopup, TagListPopup,
     },
     queue::{Action, AppTabs, InternalEvent, NeedsUpdate, Queue, StackablePopupOpen},
     setup_popups,
@@ -338,7 +338,8 @@ impl App {
                     self.options_popup.show()?;
                     NeedsUpdate::ALL
                 } else if key_match(k, self.key_config.keys.open_nip34) {
-                    self.queue.push(InternalEvent::OpenPopup(StackablePopupOpen::Nip34));
+                    self.queue
+                        .push(InternalEvent::OpenPopup(StackablePopupOpen::Nip34));
                     NeedsUpdate::ALL | NeedsUpdate::COMMANDS
                 } else {
                     NeedsUpdate::empty()
@@ -1024,7 +1025,10 @@ impl App {
                 self.status_tab.reset(&r);
             }
             Action::StashDrop(_) | Action::StashPop(_) => {
-                if let Err(e) = self.stash_tab.action_confirmed(&self.repo.borrow(), &action) {
+                if let Err(e) = self
+                    .stash_tab
+                    .action_confirmed(&self.repo.borrow(), &action)
+                {
                     self.queue.push(InternalEvent::ShowErrorMsg(e.to_string()));
                 }
             }

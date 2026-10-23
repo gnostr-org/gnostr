@@ -1,10 +1,9 @@
 use std::{
     collections::BTreeSet,
     error::Error,
-    fs,
-    io,
-    io::Write,
+    fs, io,
     io::stdout,
+    io::Write,
     path::{Path, PathBuf},
     process::Command,
     sync::mpsc::{self, Receiver},
@@ -19,13 +18,13 @@ use crossterm::{
     ExecutableCommand,
 };
 use filetreelist::{FileTree, MoveSelection};
+use gnostr_relay::App as RelayApp;
 use ratatui::{
     backend::CrosstermBackend,
     prelude::*,
     text::{Line, Span, Text},
     widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Wrap},
 };
-use gnostr_relay::App as RelayApp;
 
 use crate::{nip34_browser, upstream, workflow};
 
@@ -62,7 +61,8 @@ pub fn collect_checkout_paths(dir: impl AsRef<Path>) -> io::Result<Vec<PathBuf>>
 fn build_tree(paths: &[PathBuf]) -> io::Result<FileTree> {
     let path_refs: Vec<&Path> = paths.iter().map(PathBuf::as_path).collect();
     let collapsed: BTreeSet<&String> = BTreeSet::new();
-    filetreelist::FileTree::new(&path_refs, &collapsed).map_err(|err| io::Error::other(err.to_string()))
+    filetreelist::FileTree::new(&path_refs, &collapsed)
+        .map_err(|err| io::Error::other(err.to_string()))
 }
 
 struct App {
@@ -121,7 +121,8 @@ impl ProposalTask {
 
 impl App {
     fn new(checkout_dir: PathBuf, paths: Vec<PathBuf>) -> io::Result<Self> {
-        let branch = workflow::current_branch(&checkout_dir).unwrap_or_else(|_| String::from("HEAD"));
+        let branch =
+            workflow::current_branch(&checkout_dir).unwrap_or_else(|_| String::from("HEAD"));
         Ok(Self {
             checkout_dir,
             tree: build_tree(&paths)?,
@@ -144,13 +145,19 @@ impl App {
             let _ = self.tree.select_file(selected.as_path());
         }
         self.content_scroll = 0;
-        let branch = workflow::current_branch(&self.checkout_dir).unwrap_or_else(|_| String::from("HEAD"));
+        let branch =
+            workflow::current_branch(&self.checkout_dir).unwrap_or_else(|_| String::from("HEAD"));
         self.status_line = status_for_branch(&branch);
         Ok(())
     }
 
     fn selected_entry_path(&self) -> Option<PathBuf> {
-        let visible = self.tree.visual_selection().map(|v| v.count).unwrap_or(0).max(1);
+        let visible = self
+            .tree
+            .visual_selection()
+            .map(|v| v.count)
+            .unwrap_or(0)
+            .max(1);
         self.tree
             .iterate(0, visible)
             .find(|(_, selected)| *selected)
@@ -210,7 +217,12 @@ fn content_for_selection(app: &App) -> (String, String) {
 }
 
 fn render_tree(frame: &mut Frame, app: &App, area: Rect) {
-    let visible = app.tree.visual_selection().map(|v| v.count).unwrap_or(0).max(1);
+    let visible = app
+        .tree
+        .visual_selection()
+        .map(|v| v.count)
+        .unwrap_or(0)
+        .max(1);
     let items: Vec<ListItem> = app
         .tree
         .iterate(0, visible)
@@ -247,7 +259,9 @@ fn render_header(frame: &mut Frame, area: Rect) {
         Line::from(""),
         Line::from(Span::styled(
             " gnostr/nips",
-            Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
         )),
         Line::from(""),
     ]))
@@ -271,15 +285,23 @@ fn toolbar_context(app: &App) -> (String, Style) {
             .unwrap_or(entry_path.as_path())
             .display()
             .to_string();
-        return (format!("directory: {rel}"), Style::default().fg(Color::Yellow));
+        return (
+            format!("directory: {rel}"),
+            Style::default().fg(Color::Yellow),
+        );
     }
 
-    (String::from("no selection"), Style::default().fg(Color::DarkGray))
+    (
+        String::from("no selection"),
+        Style::default().fg(Color::DarkGray),
+    )
 }
 
 fn toolbar_action(key: &str, label: &str, enabled: bool) -> Span<'static> {
     let style = if enabled {
-        Style::default().fg(Color::White).add_modifier(Modifier::BOLD)
+        Style::default()
+            .fg(Color::White)
+            .add_modifier(Modifier::BOLD)
     } else {
         Style::default().fg(Color::DarkGray)
     };
@@ -291,9 +313,10 @@ fn render_toolbar(frame: &mut Frame, app: &App, area: Rect) {
     let file_selected = app.selected_file_path().is_some();
 
     let lines = vec![
-        Line::from(vec![
-            Span::styled(&app.status_line, Style::default().fg(Color::White)),
-        ]),
+        Line::from(vec![Span::styled(
+            &app.status_line,
+            Style::default().fg(Color::White),
+        )]),
         Line::from(vec![
             Span::styled("Context: ", Style::default().fg(Color::Gray)),
             Span::styled(context, context_style),
@@ -330,12 +353,18 @@ fn render_proposal_popup(frame: &mut Frame, app: &App, area: Rect) {
     lines.push(Line::from(vec![
         Span::styled("Proposal log: ", Style::default().fg(Color::Gray)),
         Span::styled(
-            match app.proposal_task.as_ref().and_then(|task| task.result.as_ref()) {
+            match app
+                .proposal_task
+                .as_ref()
+                .and_then(|task| task.result.as_ref())
+            {
                 None => "running".to_string(),
                 Some(Ok(hash)) => format!("done {hash}"),
                 Some(Err(err)) => format!("failed {err}"),
             },
-            Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
         ),
     ]));
 
@@ -354,7 +383,11 @@ fn render_proposal_popup(frame: &mut Frame, app: &App, area: Rect) {
     ]));
 
     let popup = Paragraph::new(Text::from(lines))
-        .block(Block::default().borders(Borders::ALL).title("Console Logger"))
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title("Console Logger"),
+        )
         .wrap(Wrap { trim: false });
     frame.render_widget(Clear, area);
     frame.render_widget(popup, area);
@@ -569,7 +602,11 @@ fn prompt_input(prompt: &str) -> io::Result<Option<String>> {
 }
 
 fn start_proposal_task(app: &mut App) {
-    if app.proposal_task.as_ref().is_some_and(ProposalTask::is_active) {
+    if app
+        .proposal_task
+        .as_ref()
+        .is_some_and(ProposalTask::is_active)
+    {
         app.status_line = String::from("proposal already running");
         return;
     }
@@ -706,7 +743,10 @@ pub fn run_default() -> Result<(), Box<dyn Error>> {
                             app.status_line = match editor_result {
                                 Ok(_) => match app.reload() {
                                     Ok(_) => format!("edited {}", file_path.display()),
-                                    Err(err) => format!("edited {}; reload failed: {err}", file_path.display()),
+                                    Err(err) => format!(
+                                        "edited {}; reload failed: {err}",
+                                        file_path.display()
+                                    ),
                                 },
                                 Err(err) => format!("editor error: {err}"),
                             };
@@ -735,7 +775,8 @@ pub fn run_default() -> Result<(), Box<dyn Error>> {
                         if let Some(branch) = prompt_input("Checkout branch")? {
                             disable_raw_mode()?;
                             stdout().execute(LeaveAlternateScreen)?;
-                            let branch_result = workflow::checkout_branch(&app.checkout_dir, &branch);
+                            let branch_result =
+                                workflow::checkout_branch(&app.checkout_dir, &branch);
                             stdout().execute(EnterAlternateScreen)?;
                             enable_raw_mode()?;
                             app.force_full_repaint = true;

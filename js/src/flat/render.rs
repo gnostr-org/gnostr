@@ -431,7 +431,9 @@ fn render_tree_node(name: &str, node: &TreeNode, path: &str, out: &mut String) {
         return;
     }
 
-    out.push_str(&format!("<li class='flat-tree-dir'><details data-tree-path='{current_path}'><summary>"));
+    out.push_str(&format!(
+        "<li class='flat-tree-dir'><details data-tree-path='{current_path}'><summary>"
+    ));
     out.push_str(name);
     out.push_str("</summary><ul>");
     for (child_name, child) in &node.children {
@@ -465,7 +467,10 @@ pub(crate) fn build_html(url: &str, files: &[FileInfo], export_stem: &str) -> St
                     highlight_code(c)
                 )
             }
-            None => format!("<p class=\"flat-binary\">Skipped binary or large file ({})</p>", f.size),
+            None => format!(
+                "<p class=\"flat-binary\">Skipped binary or large file ({})</p>",
+                f.size
+            ),
         };
 
         sections.push_str(&format!(

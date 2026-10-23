@@ -58,7 +58,10 @@ fn parses_legit_subcommands() {
 
     for (args, predicate) in cases {
         let command = parse_legit(args);
-        assert!(predicate(&command), "unexpected command for {args:?}: {command:?}");
+        assert!(
+            predicate(&command),
+            "unexpected command for {args:?}: {command:?}"
+        );
     }
 }
 

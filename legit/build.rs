@@ -286,7 +286,9 @@ fn main() {
                 println!("cargo:warning=Homebrew detected.");
                 install_zlib();
             } else {
-                println!("cargo:warning=Homebrew not found. Please install zlib manually if needed.");
+                println!(
+                    "cargo:warning=Homebrew not found. Please install zlib manually if needed."
+                );
             }
         }
     }
@@ -330,9 +332,7 @@ fn if_linux_unknown() -> bool {
 
         match pkg_config_check {
             Ok(output) if output.status.success() => {
-                println!(
-                    "cargo:warning=Found `pkg-config` in your PATH."
-                );
+                println!("cargo:warning=Found `pkg-config` in your PATH.");
             }
             _ => {
                 println!(

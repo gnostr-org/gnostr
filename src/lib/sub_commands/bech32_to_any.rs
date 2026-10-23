@@ -1,6 +1,6 @@
 use anyhow::Result;
-use clap::Parser;
 use bech32;
+use clap::Parser;
 use serde_json::{json, Value};
 
 use crate::types::{Id, NAddr, NEvent, NostrBech32, PrivateKey};

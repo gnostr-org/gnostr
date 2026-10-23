@@ -175,7 +175,9 @@ pub fn get_status(
 ) -> Result<Vec<StatusItem>> {
 	scope_time!("get_status");
 
-	if repo_path.workdir().is_some() && matches!(status_type, StatusType::WorkingDir) {
+	if repo_path.workdir().is_some()
+		&& matches!(status_type, StatusType::WorkingDir)
+	{
 		let repo = crate::sync::repository::repo(repo_path)?;
 
 		let show_untracked = if let Some(config) = show_untracked {

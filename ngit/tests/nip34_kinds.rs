@@ -3,12 +3,12 @@ use std::sync::Arc;
 use anyhow::Result;
 use gnostr_asyncgit::git2::Oid;
 use gnostr_ngit::{
-    git::{oid_to_sha1, Repo},
+    git::{Repo, oid_to_sha1},
     git_events::{
-        event_is_cover_letter, event_is_patch_set_root, event_is_revision_root,
-        event_is_valid_pr_or_pr_update, generate_cover_letter_and_patch_events,
-        generate_unsigned_pr_or_update_event, patch_supports_commit_ids, KIND_PULL_REQUEST,
-        KIND_PULL_REQUEST_UPDATE,
+        KIND_PULL_REQUEST, KIND_PULL_REQUEST_UPDATE, event_is_cover_letter,
+        event_is_patch_set_root, event_is_revision_root, event_is_valid_pr_or_pr_update,
+        generate_cover_letter_and_patch_events, generate_unsigned_pr_or_update_event,
+        patch_supports_commit_ids,
     },
     repo_ref::RepoRef,
 };
@@ -58,7 +58,10 @@ async fn cover_letter_and_patch_events_use_git_patch_kind() -> Result<()> {
     let signer: Arc<dyn NostrSigner> = Arc::new(seeded_keys_from_oid(&head)?);
 
     let events = generate_cover_letter_and_patch_events(
-        Some(("example title".to_string(), "example description".to_string())),
+        Some((
+            "example title".to_string(),
+            "example description".to_string(),
+        )),
         &repo,
         &[commit],
         &signer,
@@ -111,7 +114,10 @@ async fn pull_request_and_update_events_use_default_signer() -> Result<()> {
     let clone_hints = vec![clone_url.as_str()];
 
     let patch_events = generate_cover_letter_and_patch_events(
-        Some(("example title".to_string(), "example description".to_string())),
+        Some((
+            "example title".to_string(),
+            "example description".to_string(),
+        )),
         &repo,
         &[commit],
         &signer,
@@ -140,10 +146,12 @@ async fn pull_request_and_update_events_use_default_signer() -> Result<()> {
     assert_eq!(pr_event.kind, KIND_PULL_REQUEST);
     assert!(event_is_valid_pr_or_pr_update(&pr_event));
     assert!(event_is_revision_root(&pr_event));
-    assert!(pr_event
-        .tags
-        .iter()
-        .any(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("e")));
+    assert!(
+        pr_event
+            .tags
+            .iter()
+            .any(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("e"))
+    );
 
     let unsigned_update = generate_unsigned_pr_or_update_event(
         &repo,
@@ -163,13 +171,17 @@ async fn pull_request_and_update_events_use_default_signer() -> Result<()> {
     assert_eq!(update_event.kind, KIND_PULL_REQUEST_UPDATE);
     assert!(event_is_valid_pr_or_pr_update(&update_event));
     assert!(!event_is_revision_root(&update_event));
-    assert!(update_event
-        .tags
-        .iter()
-        .any(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("E")));
-    assert!(update_event
-        .tags
-        .iter()
-        .any(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("P")));
+    assert!(
+        update_event
+            .tags
+            .iter()
+            .any(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("E"))
+    );
+    assert!(
+        update_event
+            .tags
+            .iter()
+            .any(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("P"))
+    );
     Ok(())
 }

@@ -1,9 +1,9 @@
 use anyhow::{Context, Result};
+use ignore::WalkBuilder;
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use ignore::WalkBuilder;
 
 pub(crate) struct ClonedRepo {
     pub(crate) path: PathBuf,
@@ -27,7 +27,15 @@ pub(crate) fn clone_repo(tmp_dir: &Path, repo_url: &str) -> Result<ClonedRepo> {
             "GIT_SSH_COMMAND",
             "ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new",
         )
-        .args(["clone", "--depth", "1", "--single-branch", "--no-tags", &repo_url, "repo"])
+        .args([
+            "clone",
+            "--depth",
+            "1",
+            "--single-branch",
+            "--no-tags",
+            &repo_url,
+            "repo",
+        ])
         .current_dir(tmp_dir)
         .status()
         .context("Git command failed")?;
@@ -45,7 +53,13 @@ pub(crate) fn clone_repo(tmp_dir: &Path, repo_url: &str) -> Result<ClonedRepo> {
 pub(crate) fn checkout_ref(repo_path: &Path, git_ref: &str) -> Result<()> {
     let status = Command::new("git")
         .env("GIT_TERMINAL_PROMPT", "0")
-        .args(["-C", repo_path.to_string_lossy().as_ref(), "checkout", "--force", git_ref])
+        .args([
+            "-C",
+            repo_path.to_string_lossy().as_ref(),
+            "checkout",
+            "--force",
+            git_ref,
+        ])
         .status()
         .context("Git checkout command failed")?;
 
@@ -168,7 +182,13 @@ fn command_in_path(command: &str) -> bool {
 
 fn git_short_hash(repo_path: &Path) -> Result<String> {
     let out = Command::new("git")
-        .args(["-C", repo_path.to_string_lossy().as_ref(), "rev-parse", "--short", "HEAD"])
+        .args([
+            "-C",
+            repo_path.to_string_lossy().as_ref(),
+            "rev-parse",
+            "--short",
+            "HEAD",
+        ])
         .output()
         .context("git rev-parse --short HEAD")?;
 

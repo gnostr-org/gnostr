@@ -7,18 +7,18 @@ use gnostr_crawler::{
     relays::get_config_dir_path,
     tui::{CrawlerDiskTree, CrawlerFileTreeWidget, JsonPanel, MoveSelection},
 };
+use ratatui::crossterm::{
+    event::{self, Event, KeyCode},
+    execute,
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
+};
 use ratatui::{
+    Frame, Terminal,
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout},
     style::{Color, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph},
-    Frame, Terminal,
-};
-use ratatui::crossterm::{
-    event::{self, Event, KeyCode},
-    execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use serde_json::Value;
 
@@ -37,7 +37,9 @@ pub fn run() -> Result<()> {
 
     loop {
         selected.sync(tree.selected_path())?;
-        terminal.terminal.draw(|frame| draw(frame, &tree, &selected))?;
+        terminal
+            .terminal
+            .draw(|frame| draw(frame, &tree, &selected))?;
 
         if event::poll(Duration::from_millis(150))? {
             match event::read()? {
@@ -153,8 +155,11 @@ fn render_selected(frame: &mut Frame, area: ratatui::layout::Rect, selected: &Se
         SelectedFileView::RawText { text } => {
             let lines = text.lines().map(Line::from).collect::<Vec<_>>();
             frame.render_widget(
-                Paragraph::new(lines)
-                    .block(Block::default().borders(Borders::ALL).title("selected text")),
+                Paragraph::new(lines).block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .title("selected text"),
+                ),
                 area,
             );
         }
@@ -199,7 +204,11 @@ impl Drop for TerminalGuard {
 fn draw(frame: &mut Frame, tree: &CrawlerDiskTree, selected: &SelectedFileView) {
     let root = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Length(3), Constraint::Min(0), Constraint::Length(2)])
+        .constraints([
+            Constraint::Length(3),
+            Constraint::Min(0),
+            Constraint::Length(2),
+        ])
         .split(frame.area());
 
     let body = Layout::default()
@@ -209,10 +218,7 @@ fn draw(frame: &mut Frame, tree: &CrawlerDiskTree, selected: &SelectedFileView) 
 
     frame.render_widget(
         Paragraph::new(Line::from(vec![
-            Span::styled(
-                "crawler file buckets",
-                Style::default().fg(Color::Cyan),
-            ),
+            Span::styled("crawler file buckets", Style::default().fg(Color::Cyan)),
             Span::raw("  "),
             Span::styled(
                 tree.root().display().to_string(),

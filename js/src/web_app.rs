@@ -1,19 +1,19 @@
-use std::io;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
-use std::sync::Arc;
 use std::fs as sync_fs;
+use std::io;
+use std::sync::Arc;
 
 use clap::Parser;
 use serde::Serialize;
 use warp::http::StatusCode;
-use warp::Reply;
 use warp::Filter;
+use warp::Reply;
 
 use crate::bridge;
 use crate::crawler;
 use crate::crawler_control;
-use crate::flat;
 use crate::embedded::{get_css_assets, get_images_assets, get_js_assets, get_pwa_assets};
+use crate::flat;
 use crate::relay_control;
 
 fn open(host: &str, port: i32) -> io::Result<()> {
@@ -158,9 +158,8 @@ fn collect_relay_discovery() -> Vec<RelayDiscoveryEntry> {
 /// Run the embedded Nostr web app on the given port.
 pub async fn run(port: u16) -> anyhow::Result<()> {
     const RELAXED_CSP_STRING: &str = "default-src *; manifest-src *; connect-src * ws: wss: http: https:; script-src * 'unsafe-inline' 'unsafe-eval'; script-src-elem * 'unsafe-inline'; script-src-attr * 'unsafe-inline' 'unsafe-hashes'; style-src * 'unsafe-inline' 'unsafe-hashes'; img-src * data:; media-src *; font-src *; child-src *;";
-    const NIP34_REPO_KINDS: [i32; 10] = [
-        30617, 30618, 1617, 1618, 1619, 1620, 1630, 1631, 1632, 1633,
-    ];
+    const NIP34_REPO_KINDS: [i32; 10] =
+        [30617, 30618, 1617, 1618, 1619, 1620, 1630, 1631, 1632, 1633];
 
     pretty_env_logger::init();
     relay_control::start_relay()?;
@@ -265,57 +264,67 @@ pub async fn run(port: u16) -> anyhow::Result<()> {
 
     let nip34_query_route = {
         let shell_html = Arc::clone(&shell_html);
-        warp::path!("nip" / "34" / "query").and(warp::get()).map(move || {
-            warp::reply::with_header(
-                warp::reply::html((*shell_html).clone()),
-                "Content-Security-Policy",
-                RELAXED_CSP_STRING,
-            )
-        })
+        warp::path!("nip" / "34" / "query")
+            .and(warp::get())
+            .map(move || {
+                warp::reply::with_header(
+                    warp::reply::html((*shell_html).clone()),
+                    "Content-Security-Policy",
+                    RELAXED_CSP_STRING,
+                )
+            })
     };
 
     let nip34_relays_yaml_route = {
         let shell_html = Arc::clone(&shell_html);
-        warp::path!("nip" / "34" / "relays.yaml").and(warp::get()).map(move || {
-            warp::reply::with_header(
-                warp::reply::html((*shell_html).clone()),
-                "Content-Security-Policy",
-                RELAXED_CSP_STRING,
-            )
-        })
+        warp::path!("nip" / "34" / "relays.yaml")
+            .and(warp::get())
+            .map(move || {
+                warp::reply::with_header(
+                    warp::reply::html((*shell_html).clone()),
+                    "Content-Security-Policy",
+                    RELAXED_CSP_STRING,
+                )
+            })
     };
 
     let nip34_relays_json_route = {
         let shell_html = Arc::clone(&shell_html);
-        warp::path!("nip" / "34" / "relays.json").and(warp::get()).map(move || {
-            warp::reply::with_header(
-                warp::reply::html((*shell_html).clone()),
-                "Content-Security-Policy",
-                RELAXED_CSP_STRING,
-            )
-        })
+        warp::path!("nip" / "34" / "relays.json")
+            .and(warp::get())
+            .map(move || {
+                warp::reply::with_header(
+                    warp::reply::html((*shell_html).clone()),
+                    "Content-Security-Policy",
+                    RELAXED_CSP_STRING,
+                )
+            })
     };
 
     let nip34_relays_txt_route = {
         let shell_html = Arc::clone(&shell_html);
-        warp::path!("nip" / "34" / "relays.txt").and(warp::get()).map(move || {
-            warp::reply::with_header(
-                warp::reply::html((*shell_html).clone()),
-                "Content-Security-Policy",
-                RELAXED_CSP_STRING,
-            )
-        })
+        warp::path!("nip" / "34" / "relays.txt")
+            .and(warp::get())
+            .map(move || {
+                warp::reply::with_header(
+                    warp::reply::html((*shell_html).clone()),
+                    "Content-Security-Policy",
+                    RELAXED_CSP_STRING,
+                )
+            })
     };
 
     let nip34_relay_route = {
         let shell_html = Arc::clone(&shell_html);
-        warp::path!("nip" / "34" / String).and(warp::get()).map(move |_relay_file: String| {
-            warp::reply::with_header(
-                warp::reply::html((*shell_html).clone()),
-                "Content-Security-Policy",
-                RELAXED_CSP_STRING,
-            )
-        })
+        warp::path!("nip" / "34" / String)
+            .and(warp::get())
+            .map(move |_relay_file: String| {
+                warp::reply::with_header(
+                    warp::reply::html((*shell_html).clone()),
+                    "Content-Security-Policy",
+                    RELAXED_CSP_STRING,
+                )
+            })
     };
 
     let repository_detail_route = {
@@ -334,65 +343,63 @@ pub async fn run(port: u16) -> anyhow::Result<()> {
     let flat_route = warp::path("flat")
         .and(warp::get())
         .and(warp::query::<HashMap<String, String>>())
-        .map(|query: HashMap<String, String>| {
-            match query.get("repo") {
-                Some(repo_url) if !repo_url.is_empty() => {
-                    let git_ref = query.get("ref").map(String::as_str);
-                    let is_precheck = query
-                        .get("check")
-                        .or_else(|| query.get("precheck"))
-                        .map(|value| !matches!(value.as_str(), "" | "0" | "false"))
-                        .unwrap_or(false);
+        .map(|query: HashMap<String, String>| match query.get("repo") {
+            Some(repo_url) if !repo_url.is_empty() => {
+                let git_ref = query.get("ref").map(String::as_str);
+                let is_precheck = query
+                    .get("check")
+                    .or_else(|| query.get("precheck"))
+                    .map(|value| !matches!(value.as_str(), "" | "0" | "false"))
+                    .unwrap_or(false);
 
-                    if is_precheck {
-                        match flat::scan::probe_repo(repo_url, git_ref) {
-                            Ok(_) => warp::reply::with_status(
-                                warp::reply::json(&serde_json::json!({
-                                    "available": true,
-                                    "repo": repo_url,
-                                    "ref": git_ref,
-                                })),
-                                StatusCode::OK,
-                            )
-                            .into_response(),
-                            Err(err) => warp::reply::with_status(
-                                warp::reply::json(&serde_json::json!({
-                                    "available": false,
-                                    "repo": repo_url,
-                                    "ref": git_ref,
-                                    "error": err.to_string(),
-                                })),
-                                StatusCode::NOT_FOUND,
-                            )
-                            .into_response(),
-                        }
-                    } else {
-                        match flat::build_html(repo_url, git_ref, 51_200) {
-                            Ok(html) => warp::reply::with_header(
-                                warp::reply::html(html),
-                                "Content-Security-Policy",
-                                RELAXED_CSP_STRING,
-                            )
-                            .into_response(),
-                            Err(err) => warp::reply::with_status(
-                                warp::reply::html(format!(
-                                    "<h1>Flat view unavailable</h1><p>{}</p>",
-                                    err
-                                )),
-                                StatusCode::INTERNAL_SERVER_ERROR,
-                            )
-                            .into_response(),
-                        }
+                if is_precheck {
+                    match flat::scan::probe_repo(repo_url, git_ref) {
+                        Ok(_) => warp::reply::with_status(
+                            warp::reply::json(&serde_json::json!({
+                                "available": true,
+                                "repo": repo_url,
+                                "ref": git_ref,
+                            })),
+                            StatusCode::OK,
+                        )
+                        .into_response(),
+                        Err(err) => warp::reply::with_status(
+                            warp::reply::json(&serde_json::json!({
+                                "available": false,
+                                "repo": repo_url,
+                                "ref": git_ref,
+                                "error": err.to_string(),
+                            })),
+                            StatusCode::NOT_FOUND,
+                        )
+                        .into_response(),
+                    }
+                } else {
+                    match flat::build_html(repo_url, git_ref, 51_200) {
+                        Ok(html) => warp::reply::with_header(
+                            warp::reply::html(html),
+                            "Content-Security-Policy",
+                            RELAXED_CSP_STRING,
+                        )
+                        .into_response(),
+                        Err(err) => warp::reply::with_status(
+                            warp::reply::html(format!(
+                                "<h1>Flat view unavailable</h1><p>{}</p>",
+                                err
+                            )),
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                        )
+                        .into_response(),
                     }
                 }
-                _ => warp::reply::with_status(
-                    warp::reply::html(
-                        "<h1>Flat view unavailable</h1><p>Missing repo query parameter.</p>",
-                    ),
-                    StatusCode::BAD_REQUEST,
-                )
-                .into_response(),
             }
+            _ => warp::reply::with_status(
+                warp::reply::html(
+                    "<h1>Flat view unavailable</h1><p>Missing repo query parameter.</p>",
+                ),
+                StatusCode::BAD_REQUEST,
+            )
+            .into_response(),
         });
 
     let relay_status_route = warp::path!("api" / "relay" / "status")

@@ -3,8 +3,8 @@ use std::time::Duration;
 use anyhow::Result;
 use async_trait::async_trait;
 use serde_json::Value;
-use tracing::{debug, error, info};
 use std::fmt::Write as _;
+use tracing::{debug, error, info};
 use url::Url;
 
 use crate::query::build_gnostr_query;
@@ -220,7 +220,10 @@ pub async fn dm_inbox_command(
 
     let private_key = parse_private_key(nsec)?;
     for result in results {
-        println!("{}", format_query_frame(result, private_key.as_ref(), json)?);
+        println!(
+            "{}",
+            format_query_frame(result, private_key.as_ref(), json)?
+        );
     }
 
     Ok(())
@@ -336,7 +339,11 @@ fn format_query_frame(
                 event.insert("content".to_string(), Value::String(decrypted));
                 Ok(serde_json::to_string_pretty(&frame)?)
             } else {
-                Ok(format_decrypted_event(event, kind.unwrap_or_default(), &decrypted))
+                Ok(format_decrypted_event(
+                    event,
+                    kind.unwrap_or_default(),
+                    &decrypted,
+                ))
             }
         }
         Err(_) => Ok(result),
@@ -348,7 +355,10 @@ fn format_decrypted_event(
     kind: u64,
     decrypted: &str,
 ) -> String {
-    let id = event.get("id").and_then(Value::as_str).unwrap_or("(unknown)");
+    let id = event
+        .get("id")
+        .and_then(Value::as_str)
+        .unwrap_or("(unknown)");
     let pubkey = event
         .get("pubkey")
         .and_then(Value::as_str)
@@ -398,8 +408,8 @@ fn format_decrypted_event(
 #[cfg(test)]
 mod dm_tests {
     use base64::Engine;
-    use std::collections::HashMap;
     use serial_test::serial;
+    use std::collections::HashMap;
     use tokio;
 
     use super::*;
@@ -428,8 +438,8 @@ mod dm_tests {
     #[test]
     #[ignore]
     fn test_relay_list_to_preferred_urls_prefers_write_relays() {
-        let signing_key = PrivateKey::try_from_hex_string(crate::test_utils::TEST_KEY_1_SK_HEX)
-            .unwrap();
+        let signing_key =
+            PrivateKey::try_from_hex_string(crate::test_utils::TEST_KEY_1_SK_HEX).unwrap();
         let relay_list = RelayList::from_event(
             &EventBuilder::new(
                 EventKind::RelayList,
@@ -549,7 +559,11 @@ mod dm_tests {
             }
         ]);
 
-        let decrypted = format_query_frame(serde_json::to_string(&frame)?, Some(&recipient_privkey), false)?;
+        let decrypted = format_query_frame(
+            serde_json::to_string(&frame)?,
+            Some(&recipient_privkey),
+            false,
+        )?;
         assert!(decrypted.contains("DM event kind 44"));
         assert!(decrypted.contains("secret inbox message"));
         assert!(decrypted.contains("to:"));
@@ -582,7 +596,11 @@ mod dm_tests {
             }
         ]);
 
-        let decrypted = format_query_frame(serde_json::to_string(&frame)?, Some(&recipient_privkey), true)?;
+        let decrypted = format_query_frame(
+            serde_json::to_string(&frame)?,
+            Some(&recipient_privkey),
+            true,
+        )?;
         let parsed: Value = serde_json::from_str(&decrypted)?;
         assert_eq!(parsed[2]["content"], "json inbox message");
         assert_eq!(parsed[2]["kind"], 4);
@@ -635,7 +653,12 @@ mod dm_tests {
 
         log_relays("test_dm_command_success", REAL_DM_RELAYS);
         client
-            .add_relays(REAL_DM_RELAYS.iter().map(|relay| relay.to_string()).collect())
+            .add_relays(
+                REAL_DM_RELAYS
+                    .iter()
+                    .map(|relay| relay.to_string())
+                    .collect(),
+            )
             .await
             .unwrap();
 
@@ -679,13 +702,18 @@ mod dm_tests {
 
         log_relays("test_dm_command_success_bech32_recipient", REAL_DM_RELAYS);
         client
-            .add_relays(REAL_DM_RELAYS.iter().map(|relay| relay.to_string()).collect())
+            .add_relays(
+                REAL_DM_RELAYS
+                    .iter()
+                    .map(|relay| relay.to_string())
+                    .collect(),
+            )
             .await
             .unwrap();
 
         // Create recipient public key from bech32 string
-        let recipient_pubkey = PublicKey::try_from_bech32_string(&default_test_npub(), false)
-            .unwrap();
+        let recipient_pubkey =
+            PublicKey::try_from_bech32_string(&default_test_npub(), false).unwrap();
 
         let message_content = "gnostr dm sub_command test with bech32 recipient!".to_string();
 
@@ -755,7 +783,12 @@ mod dm_tests {
         let _recipient_keys = Keys::new(recipient_privkey.clone());
 
         sender_client
-            .add_relays(REAL_DM_RELAYS.iter().map(|relay| relay.to_string()).collect())
+            .add_relays(
+                REAL_DM_RELAYS
+                    .iter()
+                    .map(|relay| relay.to_string())
+                    .collect(),
+            )
             .await
             .unwrap();
 

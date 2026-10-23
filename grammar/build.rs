@@ -260,21 +260,30 @@ fn is_blacklisted(name: &str) -> bool {
     // Helix languages.toml uses hyphens in some grammar names, while generated
     // linker symbols and our blacklists use underscores. Normalize both.
     let normalized = name.replace('-', "_");
-    if BLACKLISTED_MODULES.contains(&normalized.as_str())
-        || BLACKLISTED_MODULES.contains(&name)
-    {
+    if BLACKLISTED_MODULES.contains(&normalized.as_str()) || BLACKLISTED_MODULES.contains(&name) {
         return true;
     }
     let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
     let target_env = std::env::var("CARGO_CFG_TARGET_ENV").unwrap_or_default();
     match target_os.as_str() {
-        "macos" if MACOS_BLACKLISTED.contains(&normalized.as_str())
-            || MACOS_BLACKLISTED.contains(&name) => true,
-        "windows" if WINDOWS_BLACKLISTED.contains(&normalized.as_str())
-            || WINDOWS_BLACKLISTED.contains(&name) => true,
+        "macos"
+            if MACOS_BLACKLISTED.contains(&normalized.as_str())
+                || MACOS_BLACKLISTED.contains(&name) =>
+        {
+            true
+        }
+        "windows"
+            if WINDOWS_BLACKLISTED.contains(&normalized.as_str())
+                || WINDOWS_BLACKLISTED.contains(&name) =>
+        {
+            true
+        }
         _ if target_env == "musl"
             && (MUSL_BLACKLISTED.contains(&normalized.as_str())
-                || MUSL_BLACKLISTED.contains(&name)) => true,
+                || MUSL_BLACKLISTED.contains(&name)) =>
+        {
+            true
+        }
         _ => false,
     }
 }
@@ -355,7 +364,10 @@ fn main() -> anyhow::Result<()> {
         .context("failed to parse helix languages.toml")?;
 
         let source_root = cache_root.join("sources").join(&grammar_ref);
-        let build_root = cache_root.join("build").join(target_triple()).join(&grammar_ref);
+        let build_root = cache_root
+            .join("build")
+            .join(target_triple())
+            .join(&grammar_ref);
         fs::create_dir_all(&source_root)?;
         fs::create_dir_all(&build_root)?;
         fetch_and_build_grammar(config.grammar.clone(), &source_root, &build_root)?;
@@ -625,26 +637,23 @@ fn build_language_registry(
 }
 
 fn build_grammar_registry(names: impl Iterator<Item = String>) -> proc_macro2::TokenStream {
-    let (ids, plain, camel, snake) = names
-        .filter(|name| !is_blacklisted(name))
-        .enumerate()
-        .fold(
-            (Vec::new(), Vec::new(), Vec::new(), Vec::new()),
-            |(mut ids, mut plain_acc, mut camel_acc, mut snake_acc), (i, name)| {
-                camel_acc.push(format_ident!("{}", name.to_upper_camel_case()));
+    let (ids, plain, camel, snake) = names.filter(|name| !is_blacklisted(name)).enumerate().fold(
+        (Vec::new(), Vec::new(), Vec::new(), Vec::new()),
+        |(mut ids, mut plain_acc, mut camel_acc, mut snake_acc), (i, name)| {
+            camel_acc.push(format_ident!("{}", name.to_upper_camel_case()));
 
-                if name == "move" {
-                    snake_acc.push(format_ident!("r#{}", name.to_snake_case()));
-                } else {
-                    snake_acc.push(format_ident!("{}", name.to_snake_case()));
-                }
+            if name == "move" {
+                snake_acc.push(format_ident!("r#{}", name.to_snake_case()));
+            } else {
+                snake_acc.push(format_ident!("{}", name.to_snake_case()));
+            }
 
-                plain_acc.push(name);
+            plain_acc.push(name);
 
-                ids.push(i);
-                (ids, plain_acc, camel_acc, snake_acc)
-            },
-        );
+            ids.push(i);
+            (ids, plain_acc, camel_acc, snake_acc)
+        },
+    );
 
     quote! {
         #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]

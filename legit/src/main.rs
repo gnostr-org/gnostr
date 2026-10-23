@@ -8,8 +8,8 @@ use std::time::Instant;
 //use std::mem::size_of;
 use argparse::{ArgumentParser, Store};
 use crypto::sha2::Sha256;
-use gnostr_asyncgit::git2::*;
 use gitminer::Gitminer;
+use gnostr_asyncgit::git2::*;
 use std::{io, thread};
 
 mod gitminer;

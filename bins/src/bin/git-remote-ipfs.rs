@@ -17,7 +17,7 @@
 
 use anyhow::{Context, Result};
 
-use gnostr_git_helpers::ipfs_backend::{parse_ipfs_url, IpfsRemote};
+use gnostr_git_helpers::ipfs_backend::{IpfsRemote, parse_ipfs_url};
 use gnostr_git_helpers::protocol::run_helper;
 
 fn main() -> Result<()> {

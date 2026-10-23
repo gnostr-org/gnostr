@@ -7,12 +7,8 @@ use std::borrow::Cow;
 use crate::{test_utils::CliTester, ws::CancellationToken};
 
 type ListenerEventFunc<'a> = &'a dyn Fn(&mut Relay, u64, nostr::Event) -> Result<()>;
-pub type ListenerReqFunc<'a> = &'a dyn Fn(
-    &mut Relay,
-    u64,
-    nostr::SubscriptionId,
-    Vec<nostr::Filter>,
-) -> Result<()>;
+pub type ListenerReqFunc<'a> =
+    &'a dyn Fn(&mut Relay, u64, nostr::SubscriptionId, Vec<nostr::Filter>) -> Result<()>;
 
 pub struct Relay<'a> {
     port: u16,
@@ -238,9 +234,7 @@ fn get_nevent(message: &crate::ws::Message) -> Result<nostr::Event> {
     bail!("not nostr event")
 }
 
-fn get_nreq(
-    message: &crate::ws::Message,
-) -> Result<(nostr::SubscriptionId, Vec<nostr::Filter>)> {
+fn get_nreq(message: &crate::ws::Message) -> Result<(nostr::SubscriptionId, Vec<nostr::Filter>)> {
     if let crate::ws::Message::Text(s) = message.clone() {
         let cm_result = ClientMessage::from_json(s);
         if let Ok(ClientMessage::Req {
@@ -250,7 +244,10 @@ fn get_nreq(
         {
             return Ok((
                 subscription_id.into_owned(),
-                filters.into_iter().map(|filter| filter.into_owned()).collect(),
+                filters
+                    .into_iter()
+                    .map(|filter| filter.into_owned())
+                    .collect(),
             ));
         }
     }

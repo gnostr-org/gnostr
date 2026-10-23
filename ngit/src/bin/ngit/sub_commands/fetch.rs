@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use ngit::{
-    client::{fetching_with_report, Client, Connect, Params},
+    client::{Client, Connect, Params, fetching_with_report},
     git::{Repo, RepoActions, nostr_url::NostrUrlDecoded},
     repo_ref::get_repo_coordinates_when_remote_unknown,
 };

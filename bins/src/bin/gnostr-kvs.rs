@@ -12,7 +12,7 @@ use gnostr::p2p::{
     swarm_builder,
     utils::{generate_ed25519, init_subscriber},
 };
-use libp2p::{gossipsub::IdentTopic, identity, kad, Multiaddr, PeerId};
+use libp2p::{Multiaddr, PeerId, gossipsub::IdentTopic, identity, kad};
 use tokio::{
     io::{self, AsyncBufReadExt},
     select,

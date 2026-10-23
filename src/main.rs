@@ -602,9 +602,14 @@ async fn main() -> anyhow::Result<()> {
 
                 client.add_relays(relays_to_use).await?;
 
-                sub_commands::dm::dm_command(&client, recipient_pubkey, message, sub_command_args.verbose > 0)
-                    .await
-                    .map_err(|e| anyhow!("Error in dm subcommand: {}", e))
+                sub_commands::dm::dm_command(
+                    &client,
+                    recipient_pubkey,
+                    message,
+                    sub_command_args.verbose > 0,
+                )
+                .await
+                .map_err(|e| anyhow!("Error in dm subcommand: {}", e))
             } else {
                 debug!(
                     recipient = %recipient_pubkey.as_hex_string(),
@@ -642,8 +647,7 @@ async fn main() -> anyhow::Result<()> {
             // Call tui with default commands and propagate its result
             let mut default_args = gnostr::core::GnostrSubCommands::default();
             if let Some(dir) = gitdir_value.clone().or(workdir_value.clone()) {
-                default_args.gitdir =
-                    Some(resolve_repo_path(&RepoPath::from(dir.as_str()))?);
+                default_args.gitdir = Some(resolve_repo_path(&RepoPath::from(dir.as_str()))?);
             }
             sub_commands::tui::tui(default_args, &gnostr_cli_args)
                 .await
@@ -728,8 +732,14 @@ mod tests {
         let relays = merge_dm_relays(
             vec!["wss://preferred.example".to_string()],
             vec!["wss://explicit.example".to_string()],
-            vec!["wss://preferred.example".to_string(), "wss://crawler.example".to_string()],
-            vec!["wss://explicit.example".to_string(), "wss://fallback.example".to_string()],
+            vec![
+                "wss://preferred.example".to_string(),
+                "wss://crawler.example".to_string(),
+            ],
+            vec![
+                "wss://explicit.example".to_string(),
+                "wss://fallback.example".to_string(),
+            ],
         );
 
         assert_eq!(

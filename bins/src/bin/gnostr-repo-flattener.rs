@@ -89,7 +89,13 @@ fn main() -> Result<()> {
 
 fn git_short_hash(repo_path: &Path) -> Result<String> {
     let out = Command::new("git")
-        .args(["-C", repo_path.to_string_lossy().as_ref(), "rev-parse", "--short", "HEAD"])
+        .args([
+            "-C",
+            repo_path.to_string_lossy().as_ref(),
+            "rev-parse",
+            "--short",
+            "HEAD",
+        ])
         .output()
         .context("git rev-parse --short HEAD")?;
 
@@ -213,7 +219,10 @@ fn build_html(url: &str, files: Vec<FileInfo>) -> Result<String> {
             Some(c) => {
                 cxml.push_str(&format!("&lt;document index='{}'&gt;\n&lt;source&gt;{}&lt;/source&gt;\n&lt;document_content&gt;\n{}\n&lt;/document_content&gt;\n&lt;/document&gt;\n", 
                     idx+1, f.rel, escape_html(c)));
-                format!("<pre style='background:#f6f8fa; padding:10px; border-radius:5px;'><code>{}</code></pre>", highlight_code(c))
+                format!(
+                    "<pre style='background:#f6f8fa; padding:10px; border-radius:5px;'><code>{}</code></pre>",
+                    highlight_code(c)
+                )
             }
             None => format!(
                 "<p style=\"color:red;\">Skipped: Binary or too large (Size: {} bytes).</p>",

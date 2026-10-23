@@ -2,7 +2,8 @@ use std::{collections::HashMap, error::Error as StdError, io, io::Write, time::S
 
 use crate::crawler::processor::BOOTSTRAP_RELAYS;
 use gnostr_asyncgit::sync::{
-    get_commit_details, get_head, is_workdir_clean, status::get_status, status::StatusType, RepoPath,
+    get_commit_details, get_head, is_workdir_clean, status::get_status, status::StatusType,
+    RepoPath,
 };
 use gnostr_legit::gitminer::{self, Gitminer};
 use once_cell::sync::OnceCell;
@@ -320,7 +321,10 @@ pub async fn gnostr_legit_event(
     let author_name = details.author.name.clone();
     let author_email = details.author.email.clone();
     let author_time = details.author.time;
-    let committer_name = details.committer.as_ref().map(|committer| committer.name.clone());
+    let committer_name = details
+        .committer
+        .as_ref()
+        .map(|committer| committer.name.clone());
     let committer_email = details
         .committer
         .as_ref()
@@ -345,7 +349,10 @@ pub async fn gnostr_legit_event(
     let padded_keys = KeySigner::from_private_key(padded_private_key, "", 1).unwrap();
 
     let mut custom_tags = HashMap::new();
-    custom_tags.insert("serialized_commit".to_string(), vec![serialized_commit.clone()]);
+    custom_tags.insert(
+        "serialized_commit".to_string(),
+        vec![serialized_commit.clone()],
+    );
     custom_tags.insert("gnostr".to_string(), vec!["git".to_string()]);
     custom_tags.insert("GIT".to_string(), vec!["GNOSTR".to_string()]);
     custom_tags.insert(

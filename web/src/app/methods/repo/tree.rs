@@ -13,8 +13,7 @@ pub use crate::app::git::TreeItem;
 use crate::app::methods::filters;
 use crate::app::{
     git::{FileWithContent, PathDestination},
-    into_response,
-    Git, ResponseEither,
+    into_response, Git, ResponseEither,
 };
 
 use crate::app::methods::repo::ChildPath;

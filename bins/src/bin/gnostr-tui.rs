@@ -4,16 +4,16 @@ use anyhow::anyhow;
 use clap::{Parser /* , Subcommand */};
 use gnostr::{
     blockhash, blockheight,
-    cli::{get_app_cache_path, GnostrCli, GnostrCommands},
+    cli::{GnostrCli, GnostrCommands, get_app_cache_path},
     sub_commands,
     types::{Keys, PrivateKey, PublicKey},
     weeble, wobble,
 };
-use gnostr_asyncgit::sync::{repo_open_error, resolve_repo_path, RepoPath};
+use gnostr_asyncgit::sync::{RepoPath, repo_open_error, resolve_repo_path};
 use sha2::{Digest, Sha256};
 use tracing::{debug, /* info, */ trace};
 use tracing_core::metadata::LevelFilter;
-use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry}; // Import the anyhow macro
+use tracing_subscriber::{EnvFilter, Registry, fmt, layer::SubscriberExt, util::SubscriberInitExt}; // Import the anyhow macro
 
 #[cfg(feature = "git")]
 use gnostr_ngit as ngit;
@@ -549,8 +549,7 @@ pub async fn run_with_cli(mut gnostr_cli_args: GnostrCli) -> anyhow::Result<()> 
             // Call tui with default commands and propagate its result
             let mut default_args = gnostr::core::GnostrSubCommands::default();
             if let Some(dir) = gitdir_value.clone().or(workdir_value.clone()) {
-                default_args.gitdir =
-                    Some(resolve_repo_path(&RepoPath::from(dir.as_str()))?);
+                default_args.gitdir = Some(resolve_repo_path(&RepoPath::from(dir.as_str()))?);
             }
             sub_commands::tui::tui(default_args, &gnostr_cli_args)
                 .await

@@ -30,7 +30,9 @@ pub async fn run() {
     }
 
     if args.detach {
-        if let Some(pid) = existing_detached_pid("gnostr-js-relay").expect("check detached relay pid") {
+        if let Some(pid) =
+            existing_detached_pid("gnostr-js-relay").expect("check detached relay pid")
+        {
             println!("gnostr-js relay already running with pid {pid}");
             return;
         }
@@ -45,19 +47,26 @@ pub async fn run() {
             ],
             [(DETACHED_ENV, "1")],
         )
-            .expect("spawn detached relay");
-        let pid_path = capture_detached_pid("gnostr-js-relay", pid).expect("write detached relay pid");
+        .expect("spawn detached relay");
+        let pid_path =
+            capture_detached_pid("gnostr-js-relay", pid).expect("write detached relay pid");
         println!("spawned detached relay pid {pid} at {}", pid_path.display());
         return;
     }
 
     if !is_detached_child {
-        if let Some(pid) = existing_detached_pid("gnostr-js-relay").expect("check detached relay pid") {
+        if let Some(pid) =
+            existing_detached_pid("gnostr-js-relay").expect("check detached relay pid")
+        {
             println!("gnostr-js relay already running with pid {pid}");
             return;
         }
     }
-    launcher::run(args.relay.clone(), args.relay.config_path_if_exists(), "NOSTR")
-        .await
-        .expect("run relay server");
+    launcher::run(
+        args.relay.clone(),
+        args.relay.config_path_if_exists(),
+        "NOSTR",
+    )
+    .await
+    .expect("run relay server");
 }

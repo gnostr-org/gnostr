@@ -1,5 +1,5 @@
 use clap::Parser;
-use gnostr_asyncgit::tui::git::{cli::Args, gitui_error::Error, term, Res};
+use gnostr_asyncgit::tui::git::{Res, cli::Args, gitui_error::Error, term};
 use log::LevelFilter;
 use ratatui::Terminal;
 use simple_logger::SimpleLogger;

@@ -934,10 +934,15 @@ impl RepoActions for Repo {
     async fn get_first_nostr_remote_when_in_ngit_binary(
         &self,
     ) -> Result<Option<(String, NostrUrlDecoded)>> {
-        for remote_name in self.git_repo.remotes()?.iter().filter_map(|remote| match remote {
-            Ok(Some(name)) => Some(name),
-            _ => None,
-        }) {
+        for remote_name in self
+            .git_repo
+            .remotes()?
+            .iter()
+            .filter_map(|remote| match remote {
+                Ok(Some(name)) => Some(name),
+                _ => None,
+            })
+        {
             if let Ok(remote_url) = self.git_repo.find_remote(remote_name)?.url() {
                 if let Ok(nostr_url_decoded) =
                     NostrUrlDecoded::parse_and_resolve(remote_url, &Some(self)).await
@@ -1488,7 +1493,10 @@ mod tests {
                 libgit2 1.9.3\n\
                 \n\
                 "
-            .replace("libgit2 1.9.3", &format!("libgit2 {}", libgit2_version_string()));
+            .replace(
+                "libgit2 1.9.3",
+                &format!("libgit2 {}", libgit2_version_string()),
+            );
 
             assert_eq!(
                 expected,
@@ -1527,7 +1535,10 @@ mod tests {
                 libgit2 1.9.3\n\
                 \n\
                 "
-            .replace("libgit2 1.9.3", &format!("libgit2 {}", libgit2_version_string()));
+            .replace(
+                "libgit2 1.9.3",
+                &format!("libgit2 {}", libgit2_version_string()),
+            );
 
             assert_eq!(
                 expected,

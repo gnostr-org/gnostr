@@ -33,7 +33,9 @@ fn is_help_material_fixture(path: &Path) -> bool {
     }
 
     fs::read_to_string(path.join("description"))
-        .map(|description| description.contains("gnostr learning repo for browsing commits, trees, and patches"))
+        .map(|description| {
+            description.contains("gnostr learning repo for browsing commits, trees, and patches")
+        })
         .unwrap_or(false)
 }
 
@@ -66,11 +68,7 @@ fn stage_paths(repo: &git2::Repository, paths: &[&str]) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn commit_fixture(
-    repo: &git2::Repository,
-    message: &str,
-    paths: &[&str],
-) -> anyhow::Result<()> {
+fn commit_fixture(repo: &git2::Repository, message: &str, paths: &[&str]) -> anyhow::Result<()> {
     stage_paths(repo, paths)?;
 
     let tree_id = repo.index()?.write_tree()?;
@@ -130,32 +128,40 @@ fn create_help_material_source_repo(source_repo: &Path) -> anyhow::Result<git2::
         &["docs/nostr-basics.md", "docs/repo-tour.md"],
     )?;
 
-    commit_fixture(
-        &repo,
-        "Add CRLF patch demo",
-        &["examples/crlf-demo.txt"],
-    )?;
+    commit_fixture(&repo, "Add CRLF patch demo", &["examples/crlf-demo.txt"])?;
 
     Ok(repo)
 }
 
-pub fn ensure_bare_repo_fixture(fixture_root: &Path, fixture_name: &str) -> anyhow::Result<PathBuf> {
+pub fn ensure_bare_repo_fixture(
+    fixture_root: &Path,
+    fixture_name: &str,
+) -> anyhow::Result<PathBuf> {
     let fixture_path = fixture_root.join(format!("{fixture_name}.git"));
 
     if is_help_material_fixture(&fixture_path) {
         return Ok(fixture_path);
     }
 
-    fs::create_dir_all(fixture_root)
-        .with_context(|| format!("failed to create fixture directory {}", fixture_root.display()))?;
+    fs::create_dir_all(fixture_root).with_context(|| {
+        format!(
+            "failed to create fixture directory {}",
+            fixture_root.display()
+        )
+    })?;
 
     if fixture_path.exists() {
-        fs::remove_dir_all(&fixture_path)
-            .with_context(|| format!("failed to remove stale fixture {}", fixture_path.display()))?;
+        fs::remove_dir_all(&fixture_path).with_context(|| {
+            format!("failed to remove stale fixture {}", fixture_path.display())
+        })?;
     }
 
-    let source_repo_dir = tempfile::tempdir_in(fixture_root)
-        .with_context(|| format!("failed to create temp repo under {}", fixture_root.display()))?;
+    let source_repo_dir = tempfile::tempdir_in(fixture_root).with_context(|| {
+        format!(
+            "failed to create temp repo under {}",
+            fixture_root.display()
+        )
+    })?;
     create_help_material_source_repo(source_repo_dir.path())?;
 
     RepoBuilder::new()
@@ -184,14 +190,24 @@ pub fn ensure_bare_repo_fixture(fixture_root: &Path, fixture_name: &str) -> anyh
         .context("failed to peel fixture HEAD to commit")?
         .id();
     fixture_repo
-        .reference("refs/heads/main", head_commit, true, "ensure fixture main ref")
+        .reference(
+            "refs/heads/main",
+            head_commit,
+            true,
+            "ensure fixture main ref",
+        )
         .context("failed to write fixture main ref")?;
 
     fs::write(
         fixture_path.join("description"),
         b"Interactive gnostr learning repo for browsing commits, trees, and patches\n",
     )
-    .with_context(|| format!("failed to write {}", fixture_path.join("description").display()))?;
+    .with_context(|| {
+        format!(
+            "failed to write {}",
+            fixture_path.join("description").display()
+        )
+    })?;
 
     Ok(fixture_path)
 }
@@ -232,10 +248,7 @@ fn update_repository_metadata(scan_path: &Path, db: &rocksdb::DB) {
             relative.display(),
             repository.display()
         );
-        println!(
-            "Processing repository: repository={}",
-            repository.display()
-        );
+        println!("Processing repository: repository={}", repository.display());
 
         let id = match Repository::open(db, relative) {
             Ok(v) => v.map_or_else(RepositoryId::new, |v| {
@@ -251,15 +264,9 @@ fn update_repository_metadata(scan_path: &Path, db: &rocksdb::DB) {
         };
 
         let name = if relative == Path::new(".") {
-            scan_path
-                .file_name()
-                .and_then(OsStr::to_str)
-                .unwrap_or(".")
+            scan_path.file_name().and_then(OsStr::to_str).unwrap_or(".")
         } else {
-            relative
-                .file_name()
-                .and_then(OsStr::to_str)
-                .unwrap_or(".")
+            relative.file_name().and_then(OsStr::to_str).unwrap_or(".")
         };
         // Read description from correct location based on repository type
         let description_path = if std::process::Command::new("git")
@@ -291,13 +298,14 @@ fn update_repository_metadata(scan_path: &Path, db: &rocksdb::DB) {
             }
         }
 
-        let mut git_repository: gix::Repository = match gix::open::Options::isolated().open(&repository_path) {
-            Ok(v) => v.into(),
-            Err(error) => {
-                debug!(%error, "Skipping non-repository path {}", relative.display());
-                continue;
-            }
-        };
+        let mut git_repository: gix::Repository =
+            match gix::open::Options::isolated().open(&repository_path) {
+                Ok(v) => v.into(),
+                Err(error) => {
+                    debug!(%error, "Skipping non-repository path {}", relative.display());
+                    continue;
+                }
+            };
 
         git_repository.object_cache_size(10 * 1024 * 1024);
 

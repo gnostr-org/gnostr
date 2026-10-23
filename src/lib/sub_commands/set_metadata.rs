@@ -135,7 +135,11 @@ pub async fn set_metadata(
     Ok(())
 }
 
-fn build_metadata_event(keys: &Keys, metadata: Metadata, tags: Vec<Tag>) -> Result<Event, AnyhowError> {
+fn build_metadata_event(
+    keys: &Keys,
+    metadata: Metadata,
+    tags: Vec<Tag>,
+) -> Result<Event, AnyhowError> {
     let pre_event = PreEventV3 {
         pubkey: keys.public_key(),
         created_at: Unixtime::now(),
@@ -155,8 +159,8 @@ mod tests {
 
     #[test]
     fn build_metadata_event_uses_shared_test_key() {
-        let private_key = PrivateKey::try_from_bech32_string(crate::test_utils::TEST_KEY_1_NSEC)
-            .unwrap();
+        let private_key =
+            PrivateKey::try_from_bech32_string(crate::test_utils::TEST_KEY_1_NSEC).unwrap();
         let keys = Keys::new(private_key);
         let mut metadata = Metadata::new();
         metadata.name = Some("fred".to_string());
@@ -167,6 +171,8 @@ mod tests {
         assert_eq!(event.kind, EventKind::Metadata);
         assert_eq!(event.pubkey.as_hex_string(), TEST_KEY_1_PUBKEY_HEX);
         assert!(event.content.contains(r#""name":"fred""#));
-        assert!(event.content.contains(r#""about":"other info in metadata""#));
+        assert!(event
+            .content
+            .contains(r#""about":"other info in metadata""#));
     }
 }

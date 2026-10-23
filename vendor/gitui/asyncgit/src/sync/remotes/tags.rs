@@ -68,7 +68,9 @@ fn remote_tag_refs(
 	let remote_tags = remote_heads
 		.iter()
 		.map(|head| head.name().to_owned())
-		.filter(|name| name.starts_with("refs/tags/") && !name.ends_with("^{}"))
+		.filter(|name| {
+			name.starts_with("refs/tags/") && !name.ends_with("^{}")
+		})
 		.collect::<Vec<_>>();
 
 	Ok(remote_tags)
@@ -88,9 +90,7 @@ pub fn tags_missing_remote(
 	let mut local_tags = tags
 		.iter()
 		.filter_map(|tag| {
-			tag.ok()
-				.flatten()
-				.map(|tag| format!("refs/tags/{tag}"))
+			tag.ok().flatten().map(|tag| format!("refs/tags/{tag}"))
 		})
 		.collect::<HashSet<_>>();
 	let remote_tags =

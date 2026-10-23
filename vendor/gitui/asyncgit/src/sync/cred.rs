@@ -90,7 +90,9 @@ pub fn extract_username_password(
 	repo_path: &RepoPath,
 ) -> Result<BasicAuthCredential> {
 	let repo = repo(repo_path)?;
-	let url = remote_url(&repo.find_remote(&get_default_remote_in_repo(&repo)?)?)?;
+	let url = remote_url(
+		&repo.find_remote(&get_default_remote_in_repo(&repo)?)?,
+	)?;
 	let mut helper = CredentialHelper::new(&url);
 
 	//TODO: look at Cred::credential_helper,
@@ -115,9 +117,9 @@ pub fn extract_username_password_for_fetch(
 	repo_path: &RepoPath,
 ) -> Result<BasicAuthCredential> {
 	let repo = repo(repo_path)?;
-	let url = remote_url(
-		&repo.find_remote(&get_default_remote_for_fetch_in_repo(&repo)?)?,
-	)?;
+	let url = remote_url(&repo.find_remote(
+		&get_default_remote_for_fetch_in_repo(&repo)?,
+	)?)?;
 	let mut helper = CredentialHelper::new(&url);
 
 	//TODO: look at Cred::credential_helper,
@@ -142,9 +144,9 @@ pub fn extract_username_password_for_push(
 	repo_path: &RepoPath,
 ) -> Result<BasicAuthCredential> {
 	let repo = repo(repo_path)?;
-	let url = remote_url(
-		&repo.find_remote(&get_default_remote_for_push_in_repo(&repo)?)?,
-	)?;
+	let url = remote_url(&repo.find_remote(
+		&get_default_remote_for_push_in_repo(&repo)?,
+	)?)?;
 	let mut helper = CredentialHelper::new(&url);
 
 	//TODO: look at Cred::credential_helper,

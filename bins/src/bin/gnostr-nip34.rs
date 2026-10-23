@@ -9,29 +9,30 @@ use clap::Parser;
 use crossterm::{
     event::{self, Event, KeyCode, KeyEventKind},
     execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
 use gnostr_asyncgit::git2;
+use gnostr_asyncgit::sync::{AccumulatedPowSummary, RepoPath, accumulated_pow};
 use gnostr_asyncgit::types::{
-    get_leading_zero_bits,
+    EventKind, PrivateKey, PublicKey, TagV3, UncheckedUrl, Unixtime, get_leading_zero_bits,
     nip34::{Nip34Event, Nip34UnsignedEvent, RepoRef, RepoState},
-    EventKind, PrivateKey, PublicKey, TagV3, Unixtime, UncheckedUrl,
 };
-use gnostr_asyncgit::sync::{AccumulatedPowSummary, accumulated_pow, RepoPath};
 use ratatui::{
+    Frame, Terminal,
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Clear, Gauge, List, ListItem, ListState, Paragraph, Tabs, Wrap},
-    Frame, Terminal,
 };
 use serde::Deserialize;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
 enum Nip34Error {
-    #[error("no secret key provided; use --secret-key, set GNOSTR_SECRET_KEY, or provide a config file")]
+    #[error(
+        "no secret key provided; use --secret-key, set GNOSTR_SECRET_KEY, or provide a config file"
+    )]
     MissingSecretKey,
     #[error("invalid secret key: {0}")]
     InvalidSecretKey(String),
@@ -158,21 +159,19 @@ fn parse_public_key(s: &str) -> Result<PublicKey> {
         })
 }
 
-fn resolve_maintainers(
-    cli: &[String],
-    config: &Option<Vec<String>>,
-) -> Result<Vec<PublicKey>> {
+fn resolve_maintainers(cli: &[String], config: &Option<Vec<String>>) -> Result<Vec<PublicKey>> {
     let sources: Vec<&String> = if !cli.is_empty() {
         cli.iter().collect()
     } else {
-        config.as_ref().map(|v| v.iter().collect()).unwrap_or_default()
+        config
+            .as_ref()
+            .map(|v| v.iter().collect())
+            .unwrap_or_default()
     };
     sources
         .into_iter()
         .map(|s| {
-            parse_public_key(s).map_err(|e| {
-                Nip34Error::InvalidMaintainer(format!("{s}: {e}"))
-            })
+            parse_public_key(s).map_err(|e| Nip34Error::InvalidMaintainer(format!("{s}: {e}")))
         })
         .collect()
 }
@@ -461,23 +460,17 @@ impl App {
             .and_then(|p| p.to_str())
             .map(RepoPath::from)
             .ok_or_else(|| {
-                Nip34Error::Git(git2::Error::from_str(
-                    "cannot determine repository path",
-                ))
+                Nip34Error::Git(git2::Error::from_str("cannot determine repository path"))
             })?;
 
         let pow_summary = if commits.is_empty() {
             AccumulatedPowSummary::default()
         } else {
-            accumulated_pow(
-                &repo_path,
-                &format!("HEAD...HEAD~{}", commits.len()),
-                None,
-            )
-            .unwrap_or_else(|e| {
-                tracing::warn!("Failed to compute accumulated PoW: {e}");
-                AccumulatedPowSummary::default()
-            })
+            accumulated_pow(&repo_path, &format!("HEAD...HEAD~{}", commits.len()), None)
+                .unwrap_or_else(|e| {
+                    tracing::warn!("Failed to compute accumulated PoW: {e}");
+                    AccumulatedPowSummary::default()
+                })
         };
 
         let public_key = private_key.public_key();
@@ -491,11 +484,7 @@ impl App {
         let mut nip34_events = vec![];
         let mut startup_warnings = Vec::new();
         let mut repo_ref = resolve_repo_config(cli, config, public_key)?;
-        let relays: Vec<String> = repo_ref
-            .relays
-            .iter()
-            .map(|url| url.to_string())
-            .collect();
+        let relays: Vec<String> = repo_ref.relays.iter().map(|url| url.to_string()).collect();
         repo_ref.root_commit = commits
             .first()
             .map(|commit| commit.full_hash.clone())
@@ -758,9 +747,9 @@ impl App {
                     let from_tree = from_commit_obj.tree()?;
                     let to_tree = to_commit_obj.tree()?;
 
-                    let diff = self
-                        .repo
-                        .diff_tree_to_tree(Some(&from_tree), Some(&to_tree), None)?;
+                    let diff =
+                        self.repo
+                            .diff_tree_to_tree(Some(&from_tree), Some(&to_tree), None)?;
 
                     let mut patch = String::new();
                     diff.print(git2::DiffFormat::Patch, |_delta, _hunk, line| {
@@ -1240,7 +1229,6 @@ fn run_app<B: ratatui::backend::Backend>(
                         KeyCode::Char('2') => app.set_mode(NavigatorMode::Branches),
                         KeyCode::Char('3') => app.set_mode(NavigatorMode::Nip34Events),
                         KeyCode::Down | KeyCode::Char('j') => {
-
                             app.next();
                             if app.current_mode == NavigatorMode::Commits {
                                 app.show_full_commit = false; //always show_full_commit
@@ -1248,35 +1236,24 @@ fn run_app<B: ratatui::backend::Backend>(
                                 if let Err(e) = app.load_full_commit() {
                                     app.set_error(format!("{e}"));
                                 }
-
                             }
-
-                        },
+                        }
                         KeyCode::Up | KeyCode::Char('k') => {
-
-                           app.previous();
+                            app.previous();
                             if app.current_mode == NavigatorMode::Commits {
                                 app.show_full_commit = false; //always show_full_commit
 
                                 if let Err(e) = app.load_full_commit() {
                                     app.set_error(format!("{e}"));
                                 }
-
                             }
-
-                        },
+                        }
                         /*KeyCode::Enter | */
                         KeyCode::Char(' ') => match app.current_mode {
-
-                            NavigatorMode::Commits => {
-
-                               app.toggle_commit_selection()
-
-                            },
+                            NavigatorMode::Commits => app.toggle_commit_selection(),
                             NavigatorMode::Branches => {
 
                                 // Could add branch checkout here
-
                             }
                             NavigatorMode::Nip34Events => app.toggle_nip34_selection(),
                         },
@@ -1287,28 +1264,24 @@ fn run_app<B: ratatui::backend::Backend>(
                                 if let Err(e) = app.load_full_commit() {
                                     app.set_error(format!("{e}"));
                                 }
-
                             }
                         }
                         KeyCode::Left => {
                             if app.current_mode == NavigatorMode::Commits && app.show_full_commit {
-                                  app.show_full_commit = false;
-                                  if let Err(e) = app.load_full_commit() {
-                                      app.set_error(format!("{e}"));
-                                  }
+                                app.show_full_commit = false;
+                                if let Err(e) = app.load_full_commit() {
+                                    app.set_error(format!("{e}"));
+                                }
                             }
                         }
                         KeyCode::Char('c') => {
-
                             app.clear_selection();
                             app.show_full_commit = false;
                             app.clear_messages();
-
                         }
                         KeyCode::Char('n') => {
                             // Create NIP-34 patch from selected commits
                             if app.current_mode == NavigatorMode::Commits {
-
                                 match app.create_nip34_patch_event() {
                                     Ok(()) => app.set_status("NIP-34 patch event created"),
                                     Err(e) => app.set_error(format!("{e}")),
@@ -1317,7 +1290,6 @@ fn run_app<B: ratatui::backend::Backend>(
                         }
                         KeyCode::Char('r') => {
                             if app.current_mode == NavigatorMode::Nip34Events {
-
                                 match app.republish_nip34_event() {
                                     Ok(()) => app.set_status("NIP-34 event republished"),
                                     Err(e) => app.set_error(format!("{e}")),
@@ -1402,11 +1374,7 @@ fn ui(f: &mut Frame, app: &mut App) {
     ]);
 
     let tabs = Tabs::new(titles)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title(title),
-        )
+        .block(Block::default().borders(Borders::ALL).title(title))
         .style(Style::default().fg(Color::Cyan))
         .highlight_style(Style::default().fg(Color::White).bg(Color::Blue))
         .divider(" | ")
@@ -1449,7 +1417,10 @@ fn ui(f: &mut Frame, app: &mut App) {
 fn render_message(f: &mut Frame, app: &App, area: Rect) {
     if let Some(ref msg) = app.error_message {
         let line = Line::from(vec![
-            Span::styled("ERROR ", Style::default().fg(Color::Red).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "ERROR ",
+                Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
+            ),
             Span::styled(msg.clone(), Style::default().fg(Color::Red)),
         ]);
         let widget = Paragraph::new(line)
@@ -1459,7 +1430,12 @@ fn render_message(f: &mut Frame, app: &App, area: Rect) {
         f.render_widget(widget, area);
     } else if let Some(ref msg) = app.status_message {
         let line = Line::from(vec![
-            Span::styled("OK ", Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "OK ",
+                Style::default()
+                    .fg(Color::Green)
+                    .add_modifier(Modifier::BOLD),
+            ),
             Span::styled(msg.clone(), Style::default().fg(Color::Green)),
         ]);
         let widget = Paragraph::new(line)
@@ -1583,24 +1559,43 @@ fn render_commits_view(f: &mut Frame, app: &mut App, area: Rect) {
         f.render_widget(
             Paragraph::new(vec![
                 Line::from(vec![
-                    Span::styled("aPoW", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+                    Span::styled(
+                        "aPoW",
+                        Style::default()
+                            .fg(Color::Cyan)
+                            .add_modifier(Modifier::BOLD),
+                    ),
                     Span::raw(" = accumulated proof-of-work"),
                 ]),
                 Line::from(vec![
                     Span::raw("commits "),
-                    Span::styled(format!("{} bits", app.pow_summary.commit_pow), Style::default().fg(Color::Green)),
+                    Span::styled(
+                        format!("{} bits", app.pow_summary.commit_pow),
+                        Style::default().fg(Color::Green),
+                    ),
                 ]),
                 Line::from(vec![
                     Span::raw("notes   "),
-                    Span::styled(format!("{} bits", app.pow_summary.note_pow), Style::default().fg(Color::Yellow)),
+                    Span::styled(
+                        format!("{} bits", app.pow_summary.note_pow),
+                        Style::default().fg(Color::Yellow),
+                    ),
                 ]),
                 Line::from(vec![
                     Span::raw("events  "),
-                    Span::styled(format!("{} bits", event_pow), Style::default().fg(Color::Magenta)),
+                    Span::styled(
+                        format!("{} bits", event_pow),
+                        Style::default().fg(Color::Magenta),
+                    ),
                 ]),
                 Line::from(vec![
                     Span::raw("total   "),
-                    Span::styled(format!("{} bits", total), Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+                    Span::styled(
+                        format!("{} bits", total),
+                        Style::default()
+                            .fg(Color::Cyan)
+                            .add_modifier(Modifier::BOLD),
+                    ),
                 ]),
             ])
             .block(Block::default().title("PoW").borders(Borders::ALL)),
@@ -1841,48 +1836,123 @@ fn render_nip34_view(f: &mut Frame, app: &mut App, area: Rect) {
 /// Returns styled help spans for the bottom bar.
 fn get_help_spans(app: &App) -> Vec<Span<'static>> {
     let mut spans = vec![
-        Span::styled("?", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+        Span::styled(
+            "?",
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
+        ),
         Span::raw(" help "),
-        Span::styled("q", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+        Span::styled(
+            "q",
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
+        ),
         Span::raw(" quit "),
-        Span::styled("1/2/3", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+        Span::styled(
+            "1/2/3",
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
+        ),
         Span::raw(" tabs "),
-        Span::styled("tab", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+        Span::styled(
+            "tab",
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
+        ),
         Span::raw(" switch "),
-        Span::styled("j/k", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+        Span::styled(
+            "j/k",
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
+        ),
         Span::raw(" move "),
     ];
 
     match app.current_mode {
         NavigatorMode::Commits => {
             spans.extend([
-                Span::styled("space", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+                Span::styled(
+                    "space",
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
+                ),
                 Span::raw(" select "),
-                Span::styled("n", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+                Span::styled(
+                    "n",
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
+                ),
                 Span::raw(" patch "),
-                Span::styled("c", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+                Span::styled(
+                    "c",
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
+                ),
                 Span::raw(" clear "),
-                Span::styled("right", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+                Span::styled(
+                    "right",
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
+                ),
                 Span::raw(" diff "),
             ]);
         }
         NavigatorMode::Branches => {
             spans.extend([
-                Span::styled("enter", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+                Span::styled(
+                    "enter",
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
+                ),
                 Span::raw(" focus "),
             ]);
         }
         NavigatorMode::Nip34Events => {
             spans.extend([
-                Span::styled("space", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+                Span::styled(
+                    "space",
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
+                ),
                 Span::raw(" select "),
-                Span::styled("p", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+                Span::styled(
+                    "p",
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
+                ),
                 Span::raw(" publish "),
-                Span::styled("s", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+                Span::styled(
+                    "s",
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
+                ),
                 Span::raw(" syndicate "),
-                Span::styled("r", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+                Span::styled(
+                    "r",
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
+                ),
                 Span::raw(" republish "),
-                Span::styled("c", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+                Span::styled(
+                    "c",
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
+                ),
                 Span::raw(" clear "),
             ]);
         }
@@ -1913,47 +1983,59 @@ fn render_help_overlay(f: &mut Frame, area: Rect) {
     f.render_widget(Clear, popup);
 
     let lines = vec![
-        Line::from(vec![
-            Span::styled("Navigation", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
-        ]),
+        Line::from(vec![Span::styled(
+            "Navigation",
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        )]),
         Line::from("1/2/3  jump to Commits / Branches / NIP-34 Events"),
         Line::from("tab    cycle through tabs"),
         Line::from("j/k    move selection up/down (also arrow keys)"),
         Line::from("q/esc  quit the application"),
         Line::from(""),
-        Line::from(vec![
-            Span::styled("Commits", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
-        ]),
+        Line::from(vec![Span::styled(
+            "Commits",
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        )]),
         Line::from("space  select/deselect a commit (max 2 for patch)"),
         Line::from("right  show diff / details for selected commit"),
         Line::from("left   return to commit list summary"),
         Line::from("n      create a NIP-34 patch event from the selected range"),
         Line::from("c      clear selection and messages"),
         Line::from(""),
-        Line::from(vec![
-            Span::styled("NIP-34 Events", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
-        ]),
+        Line::from(vec![Span::styled(
+            "NIP-34 Events",
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        )]),
         Line::from("space  select/deselect an event"),
         Line::from("p      publish the selected event to configured relays"),
         Line::from("s      syndicate the selected event via crawler/p2p relays (if enabled)"),
         Line::from("r      republish the selected event with a fresh timestamp"),
         Line::from("c      clear selection and messages"),
         Line::from(""),
-        Line::from(vec![
-            Span::styled("PoW / aPoW", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
-        ]),
-        Line::from("The header shows accumulated proof-of-work across git commits and NIP-34 events."),
+        Line::from(vec![Span::styled(
+            "PoW / aPoW",
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        )]),
+        Line::from(
+            "The header shows accumulated proof-of-work across git commits and NIP-34 events.",
+        ),
         Line::from("Event PoW is the number of leading zero bits in the event id."),
     ];
 
-    let help = Paragraph::new(lines)
-        .wrap(Wrap { trim: false })
-        .block(
-            Block::default()
-                .title("Help (press esc, ?, or F1 to close)")
-                .borders(Borders::ALL)
-                .border_style(Style::default().fg(Color::Cyan)),
-        );
+    let help = Paragraph::new(lines).wrap(Wrap { trim: false }).block(
+        Block::default()
+            .title("Help (press esc, ?, or F1 to close)")
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(Color::Cyan)),
+    );
     f.render_widget(help, popup);
 }
 

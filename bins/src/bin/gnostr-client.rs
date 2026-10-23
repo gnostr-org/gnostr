@@ -4,10 +4,10 @@ use clap::{Parser, Subcommand};
 use gnostr::nostr_client::NostrClient;
 use gnostr::queue::InternalEvent;
 use gnostr_asyncgit::types::{
-    nip18,
+    ContentEncryptionAlgorithm, EventKind, EventV3, Id, KeySigner, Nip05, PreEventV3, PrivateKey,
+    PublicKey, Rumor, Signature, Signer, TagV3, UncheckedUrl, Unixtime,
     nip2::{self, Contact},
-    nip26, nip59, nip9, ContentEncryptionAlgorithm, EventKind, EventV3, Id, KeySigner, Nip05,
-    PreEventV3, PrivateKey, PublicKey, Rumor, Signature, Signer, TagV3, UncheckedUrl, Unixtime,
+    nip9, nip18, nip26, nip59,
 };
 
 use secp256k1::XOnlyPublicKey;

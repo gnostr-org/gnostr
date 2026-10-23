@@ -13,8 +13,7 @@ use warp::Filter;
 use warp::ws::{Message, WebSocket};
 //use warp::filters::BoxedFilter; // for .boxed()
 
-
-use log::{trace, debug, info, warn, error};
+use log::{debug, error, info, trace, warn};
 use pretty_env_logger::env_logger::Env;
 
 use gnostr_js::websock_index_html::WEBSOCKET_INDEX_HTML;
@@ -39,17 +38,16 @@ type Users = Arc<RwLock<HashMap<usize, mpsc::UnboundedSender<Message>>>>;
 use webbrowser;
 
 fn open(host: &str, port: i32) -> Result<(), tokio::io::Error> {
+    let url = format!("http://{}:{}", host, port); // Correctly format with the protocol
 
-let url = format!("http://{}:{}", host, port); // Correctly format with the protocol
+    println!("Attempting to open: {}", url);
 
-println!("Attempting to open: {}", url);
+    match webbrowser::open(&url) {
+        Ok(_) => println!("Successfully opened the browser to {}", url),
+        Err(e) => eprintln!("Failed to open browser: {}", e),
+    }
 
-match webbrowser::open(&url) {
-    Ok(_) => println!("Successfully opened the browser to {}", url),
-    Err(e) => eprintln!("Failed to open browser: {}", e),
-}
-
-Ok(())
+    Ok(())
 }
 
 #[tokio::main]
@@ -77,7 +75,6 @@ async fn main() {
 
     let _ = pretty_env_logger::try_init();
 
-
     // Keep track of all connected users, key is usize, value
     // is a websocket sender.
     let users = Users::default();
@@ -100,8 +97,8 @@ async fn main() {
 
 
            // end .map(|ws: warp::ws::Ws, users| {
-        });//
-           // end .map(|ws: warp::ws::Ws, users| {
+        }); //
+    // end .map(|ws: warp::ws::Ws, users| {
 
     // GET / -> index html
     let index = warp::path::end().map(|| warp::reply::html(WEBSOCKET_INDEX_HTML));
@@ -109,7 +106,7 @@ async fn main() {
     let routes = chat // First priority: /chat
         .or(index)   // Second priority: /
         .or(js_files) // Third priority: /js/ files
-        .boxed();    // Apply type erasure
+        .boxed(); // Apply type erasure
 
     let _ = open("127.0.0.1", args.port.try_into().unwrap());
     warp::serve(routes).run(([127, 0, 0, 1], args.port)).await;

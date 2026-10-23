@@ -128,8 +128,10 @@ fn path_segments(prefix: &str) -> Vec<(String, String)> {
 
 pub async fn handle_spa() -> impl IntoResponse {
     // For SPA routes, we don't need repositories data, just serve the template
-    let empty_repositories: Vec<(Option<String>, Vec<crate::app::database::schema::repository::YokedRepository>)> =
-        Vec::new();
+    let empty_repositories: Vec<(
+        Option<String>,
+        Vec<crate::app::database::schema::repository::YokedRepository>,
+    )> = Vec::new();
     into_response(View {
         repositories: empty_repositories,
         base_href: "/".to_string(),

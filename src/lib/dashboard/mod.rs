@@ -1253,10 +1253,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                                 } else if active_tab == 1 {
                                     is_relay_active = true;
                                 } else if active_tab == 0
-                                    && visible_nodes
-                                        .get(selected_node)
-                                        .copied()
-                                        .unwrap_or(false)
+                                    && visible_nodes.get(selected_node).copied().unwrap_or(false)
                                 {
                                     active_node = Some(selected_node);
                                     active_tab = 0;

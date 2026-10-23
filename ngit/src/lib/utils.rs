@@ -74,11 +74,7 @@ pub fn get_remote_name_by_url(git_repo: &Repository, url: &str) -> Result<String
                     Err(_) => false,
                 };
 
-                if matches {
-                    Some(name)
-                } else {
-                    None
-                }
+                if matches { Some(name) } else { None }
             }
             _ => None,
         })

@@ -1,24 +1,16 @@
-use std::{
-    borrow::Cow,
-    collections::HashMap,
-    convert::TryFrom,
-    str::FromStr,
-    sync::Arc,
-};
+use std::{borrow::Cow, collections::HashMap, convert::TryFrom, str::FromStr, sync::Arc};
 
 use anyhow::{Context, Result, bail};
-use gnostr_asyncgit::{
-    blockheight::blockheight_sync,
-    weeble::weeble_sync,
-    wobble::wobble_sync,
+use gnostr_asyncgit::sync::{
+    NoteInfo, RepoPath, commit::padded_note_id, default_notes_ref, list_notes,
 };
-use gnostr_asyncgit::sync::{commit::padded_note_id, default_notes_ref, list_notes, NoteInfo, RepoPath};
+use gnostr_asyncgit::{blockheight::blockheight_sync, weeble::weeble_sync, wobble::wobble_sync};
 use nostr::{
     event::UnsignedEvent,
     nips::{nip01::Coordinate, nip10::Marker, nip19::Nip19},
 };
 use nostr_sdk::{
-    Event, EventBuilder, EventId, FromBech32, Kind, Keys, NostrSigner, PublicKey, Tag, TagKind,
+    Event, EventBuilder, EventId, FromBech32, Keys, Kind, NostrSigner, PublicKey, Tag, TagKind,
     TagStandard, Timestamp, hashes::sha1::Hash as Sha1Hash,
 };
 
@@ -167,7 +159,8 @@ pub async fn generate_git_note_event(
     signer: &Arc<dyn NostrSigner>,
 ) -> Result<Event> {
     let created_at = Timestamp::from(
-        u64::try_from(note.committer_time).context("git note committer time must be non-negative")?,
+        u64::try_from(note.committer_time)
+            .context("git note committer time must be non-negative")?,
     );
 
     sign_event(
@@ -1276,7 +1269,8 @@ mod tests {
                 annotated_id: git2::Oid::from_str("0123456789abcdef0123456789abcdef01234567")
                     .expect("valid commit id"),
                 notes_ref: Some("refs/notes/commits".to_string()),
-                message: "nip34:git note protocol example:deterministically linked git note".to_string(),
+                message: "nip34:git note protocol example:deterministically linked git note"
+                    .to_string(),
                 author: "author".to_string(),
                 committer: "committer".to_string(),
                 committer_time,
@@ -1317,8 +1311,7 @@ mod tests {
             }));
             assert!(tags.iter().any(|tag| {
                 tag.as_slice().first().map(|s| s.as_str()) == Some("notes-ref")
-                    && tag.as_slice().get(1).map(|s| s.as_str())
-                        == Some("refs/notes/commits")
+                    && tag.as_slice().get(1).map(|s| s.as_str()) == Some("refs/notes/commits")
             }));
             assert!(tags.iter().any(|tag| {
                 tag.as_slice().first().map(|s| s.as_str()) == Some("weeble")
@@ -1352,10 +1345,12 @@ mod tests {
                 event.content,
                 "nip34:git note protocol example:deterministically linked git note"
             );
-            assert!(event
-                .tags
-                .iter()
-                .any(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("e")));
+            assert!(
+                event
+                    .tags
+                    .iter()
+                    .any(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("e"))
+            );
             let (blockheight, weeble, _wobble) = git_note_runtime_values()?;
             let weeble_str = weeble.to_string();
             assert!(event.tags.iter().any(|tag| {

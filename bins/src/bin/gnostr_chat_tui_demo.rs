@@ -7,8 +7,7 @@
 
 use std::{
     collections::{BTreeMap, HashMap},
-    fs,
-    io,
+    fs, io,
     path::Path,
     sync::{Arc, RwLock},
     time::Duration,
@@ -18,28 +17,28 @@ use anyhow::{Context, Result};
 use gnostr_asyncgit::{
     tui::nostr::widgets::*,
     types::{
-        ChannelCreationEvent, ChannelMessageEvent, EventKind, EventReference, EventV3, Filter,
-        Id, IdHex, Metadata, NAddr, Nip19, Nip19Profile, Profile, PublicKey, PublicKeyHex,
-        RelayInformationDocument, RelayList, RelayListUsage, RelayMessage, RelayUrl, RepoRef,
-        RepoState, Signature, Tag, Unixtime, UncheckedUrl, RelayUsageSet,
+        ChannelCreationEvent, ChannelMessageEvent, EventKind, EventReference, EventV3, Filter, Id,
+        IdHex, Metadata, NAddr, Nip19, Nip19Profile, Profile, PublicKey, PublicKeyHex,
+        RelayInformationDocument, RelayList, RelayListUsage, RelayMessage, RelayUrl, RelayUsageSet,
+        RepoRef, RepoState, Signature, Tag, UncheckedUrl, Unixtime,
     },
 };
 use gnostr_crawler::Relay as CrawlerRelay;
+use ratatui::crossterm::{
+    event::{self, Event, KeyCode, KeyEvent, KeyModifiers},
+    execute,
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
+};
 use ratatui::{
+    Frame, Terminal,
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Tabs, Wrap},
-    Frame, Terminal,
-};
-use ratatui::crossterm::{
-    event::{self, Event, KeyCode, KeyEvent, KeyModifiers},
-    execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use sha2::{Digest, Sha256};
-use tui_input::{backend::crossterm::EventHandler, Input};
+use tui_input::{Input, backend::crossterm::EventHandler};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -345,7 +344,11 @@ impl App {
         let root = frame.area();
         let layout = Layout::default()
             .direction(Direction::Vertical)
-            .constraints([Constraint::Length(3), Constraint::Min(0), Constraint::Length(3)])
+            .constraints([
+                Constraint::Length(3),
+                Constraint::Min(0),
+                Constraint::Length(3),
+            ])
             .split(root);
 
         let tabs = self
@@ -357,7 +360,11 @@ impl App {
             Tabs::new(tabs)
                 .select(self.selected)
                 .style(Style::default().fg(Color::Gray))
-                .highlight_style(Style::default().fg(Color::Magenta).add_modifier(Modifier::BOLD))
+                .highlight_style(
+                    Style::default()
+                        .fg(Color::Magenta)
+                        .add_modifier(Modifier::BOLD),
+                )
                 .divider(Span::raw(" | "))
                 .block(Block::default().title("tabs").borders(Borders::ALL)),
             layout[0],
@@ -365,7 +372,10 @@ impl App {
 
         let content = Layout::default()
             .direction(Direction::Horizontal)
-            .constraints([Constraint::Length(self.preset.nav_width()), Constraint::Min(0)])
+            .constraints([
+                Constraint::Length(self.preset.nav_width()),
+                Constraint::Min(0),
+            ])
             .split(layout[1]);
 
         self.draw_nav(frame, content[0]);
@@ -390,8 +400,8 @@ impl App {
                     Span::raw(self.toast.as_deref().unwrap_or("ready")),
                 ]),
             ])
-                .wrap(Wrap { trim: true })
-                .block(Block::default().title("status").borders(Borders::ALL)),
+            .wrap(Wrap { trim: true })
+            .block(Block::default().title("status").borders(Borders::ALL)),
             layout[2],
         );
     }
@@ -427,12 +437,10 @@ impl App {
                     Span::styled("keys: ", Style::default().fg(Color::Magenta)),
                     Span::raw("/ search, ? help, F1 overlay, enter accept, esc exit"),
                 ]),
-                Line::from(vec![
-                    Span::raw("j/k or arrows move, tab cycles pages, 1-9 jump"),
-                ]),
-                Line::from(vec![
-                    Span::raw("ctrl-u clears search query"),
-                ]),
+                Line::from(vec![Span::raw(
+                    "j/k or arrows move, tab cycles pages, 1-9 jump",
+                )]),
+                Line::from(vec![Span::raw("ctrl-u clears search query")]),
                 Line::from("F1 opens help overlay"),
             ])
             .wrap(Wrap { trim: true })
@@ -468,11 +476,18 @@ impl App {
         if self.input_mode == InputMode::Search {
             let input = Paragraph::new(self.search_query())
                 .style(Style::default().fg(Color::Cyan))
-                .scroll((0, self.search_input.visual_scroll(layout[0].width.saturating_sub(4) as usize) as u16))
+                .scroll((
+                    0,
+                    self.search_input
+                        .visual_scroll(layout[0].width.saturating_sub(4) as usize)
+                        as u16,
+                ))
                 .block(Block::default().title("search input").borders(Borders::ALL));
             frame.render_widget(input, layout[0]);
             let cursor = self.search_input.visual_cursor();
-            let scroll = self.search_input.visual_scroll(layout[0].width.saturating_sub(4) as usize);
+            let scroll = self
+                .search_input
+                .visual_scroll(layout[0].width.saturating_sub(4) as usize);
             frame.set_cursor_position((
                 layout[0].x + 1 + (cursor.max(scroll) - scroll) as u16,
                 layout[0].y + 1,
@@ -483,7 +498,10 @@ impl App {
     fn draw_page(&self, frame: &mut Frame, area: Rect, page: Page, data: &DemoData) {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
-            .constraints([Constraint::Length(self.preset.summary_height()), Constraint::Min(0)])
+            .constraints([
+                Constraint::Length(self.preset.summary_height()),
+                Constraint::Min(0),
+            ])
             .split(area);
 
         frame.render_widget(
@@ -507,7 +525,11 @@ impl App {
         format!(
             "preset: {} | selected view: {page} | query: {} | crawler relays: {} | relay entries: {} | updated: {} | search: / focus | ?: help | F1 overlay | enter accept | esc exit",
             self.preset.title(),
-            if self.search_query().is_empty() { "<empty>" } else { self.search_query() },
+            if self.search_query().is_empty() {
+                "<empty>"
+            } else {
+                self.search_query()
+            },
             data.crawler_relays.len(),
             data.relay_list.0.len(),
             data.updated_at
@@ -528,7 +550,7 @@ impl App {
                 Line::from("/ focus search input"),
                 Line::from("? toggle help overlay"),
                 Line::from("F1 toggle help overlay"),
-                        Line::from("1-9 jump presets, tab cycles pages"),
+                Line::from("1-9 jump presets, tab cycles pages"),
                 Line::from("ctrl-u clears search, pgup/pgdn scroll"),
             ])
             .wrap(Wrap { trim: true })
@@ -657,8 +679,11 @@ impl Page {
                     .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
                     .split(area);
                 frame.render_widget(
-                    RelayInformationDocumentWidget::new(&data.relay_document)
-                        .block(Block::default().title("relay document").borders(Borders::ALL)),
+                    RelayInformationDocumentWidget::new(&data.relay_document).block(
+                        Block::default()
+                            .title("relay document")
+                            .borders(Borders::ALL),
+                    ),
                     chunks[0],
                 );
                 let right = Layout::default()
@@ -673,7 +698,11 @@ impl Page {
                 frame.render_widget(
                     Paragraph::new(data.crawler_relays_text())
                         .wrap(Wrap { trim: true })
-                        .block(Block::default().title("crawler relay discovery").borders(Borders::ALL)),
+                        .block(
+                            Block::default()
+                                .title("crawler relay discovery")
+                                .borders(Borders::ALL),
+                        ),
                     right[1],
                 );
             }
@@ -726,8 +755,11 @@ impl Page {
                     right[0],
                 );
                 frame.render_widget(
-                    EventReferenceWidget::new(&data.event_reference)
-                        .block(Block::default().title("event reference").borders(Borders::ALL)),
+                    EventReferenceWidget::new(&data.event_reference).block(
+                        Block::default()
+                            .title("event reference")
+                            .borders(Borders::ALL),
+                    ),
                     right[1],
                 );
                 frame.render_widget(
@@ -760,13 +792,19 @@ impl Page {
                     right[0],
                 );
                 frame.render_widget(
-                    ChannelCreationEventWidget::new(&data.channel_creation)
-                        .block(Block::default().title("channel creation").borders(Borders::ALL)),
+                    ChannelCreationEventWidget::new(&data.channel_creation).block(
+                        Block::default()
+                            .title("channel creation")
+                            .borders(Borders::ALL),
+                    ),
                     right[1],
                 );
                 frame.render_widget(
-                    ChannelMessageEventWidget::new(&data.channel_message)
-                        .block(Block::default().title("channel message").borders(Borders::ALL)),
+                    ChannelMessageEventWidget::new(&data.channel_message).block(
+                        Block::default()
+                            .title("channel message")
+                            .borders(Borders::ALL),
+                    ),
                     right[2],
                 );
             }
@@ -791,12 +829,19 @@ impl Page {
                 frame.render_widget(
                     Paragraph::new(data.crawler_relays_text())
                         .wrap(Wrap { trim: true })
-                        .block(Block::default().title("crawler relay").borders(Borders::ALL)),
+                        .block(
+                            Block::default()
+                                .title("crawler relay")
+                                .borders(Borders::ALL),
+                        ),
                     right[0],
                 );
                 frame.render_widget(
-                    RelayMessageWidget::new(&data.relay_message)
-                        .block(Block::default().title("relay message").borders(Borders::ALL)),
+                    RelayMessageWidget::new(&data.relay_message).block(
+                        Block::default()
+                            .title("relay message")
+                            .borders(Borders::ALL),
+                    ),
                     right[1],
                 );
                 frame.render_widget(
@@ -846,181 +891,198 @@ impl Page {
 
 fn render_gallery(frame: &mut Frame, area: Rect, data: &DemoData, gallery_layout: usize) {
     match gallery_layout % DemoPreset::gallery_layout_count() {
-            0 => {
-                let rows = Layout::default()
-                    .direction(Direction::Vertical)
-                    .constraints([Constraint::Percentage(40), Constraint::Percentage(30), Constraint::Percentage(30)])
-                    .split(area);
-                let top = Layout::default()
-                    .direction(Direction::Horizontal)
-                    .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
-                    .split(rows[0]);
-                frame.render_widget(
-                    EventV3Widget::new(&data.event)
-                        .block(Block::default().title("event v3").borders(Borders::ALL)),
-                    top[0],
-                );
-                frame.render_widget(
-                    MetadataWidget::new(&data.metadata)
-                        .block(Block::default().title("metadata").borders(Borders::ALL)),
-                    top[1],
-                );
-                let middle = Layout::default()
-                    .direction(Direction::Horizontal)
-                    .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
-                    .split(rows[1]);
-                frame.render_widget(
-                    RelayInformationDocumentWidget::new(&data.relay_document)
-                        .block(Block::default().title("relay info").borders(Borders::ALL)),
-                    middle[0],
-                );
-                frame.render_widget(
-                    ProfileWidget::new(&data.profile)
-                        .block(Block::default().title("profile").borders(Borders::ALL)),
-                    middle[1],
-                );
-                let bottom = Layout::default()
-                    .direction(Direction::Horizontal)
-                    .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
-                    .split(rows[2]);
-                frame.render_widget(
-                    RepoRefWidget::new(&data.repo_ref)
-                        .block(Block::default().title("repo ref").borders(Borders::ALL)),
-                    bottom[0],
-                );
-                frame.render_widget(
-                    FilterWidget::new(&data.filter)
-                        .block(Block::default().title("filter").borders(Borders::ALL)),
-                    bottom[1],
-                );
-            }
-            1 => {
-                let cols = Layout::default()
-                    .direction(Direction::Horizontal)
-                    .constraints([Constraint::Length(34), Constraint::Min(0)])
-                    .split(area);
-                frame.render_widget(
-                    RelayListWidget::new(&data.relay_list)
-                        .block(Block::default().title("relay list").borders(Borders::ALL)),
-                    cols[0],
-                );
-                let right = Layout::default()
-                    .direction(Direction::Vertical)
-                    .constraints([
-                        Constraint::Percentage(25),
-                        Constraint::Percentage(25),
-                        Constraint::Percentage(25),
-                        Constraint::Percentage(25),
-                    ])
-                    .split(cols[1]);
-                frame.render_widget(
-                    RepoStateWidget::new(&data.repo_state)
-                        .block(Block::default().title("repo state").borders(Borders::ALL)),
-                    right[0],
-                );
-                frame.render_widget(
-                    ChannelCreationEventWidget::new(&data.channel_creation)
-                        .block(Block::default().title("channel creation").borders(Borders::ALL)),
-                    right[1],
-                );
-                frame.render_widget(
-                    ChannelMessageEventWidget::new(&data.channel_message)
-                        .block(Block::default().title("channel message").borders(Borders::ALL)),
-                    right[2],
-                );
-                frame.render_widget(
-                    RelayMessageWidget::new(&data.relay_message)
-                        .block(Block::default().title("relay message").borders(Borders::ALL)),
-                    right[3],
-                );
-            }
-            2 => {
-                let cols = Layout::default()
-                    .direction(Direction::Horizontal)
-                    .constraints([Constraint::Percentage(33), Constraint::Percentage(34), Constraint::Percentage(33)])
-                    .split(area);
-                frame.render_widget(
-                    Nip19Widget::new(&data.nip19)
-                        .block(Block::default().title("nip19").borders(Borders::ALL)),
-                    cols[0],
-                );
-                let center = Layout::default()
-                    .direction(Direction::Vertical)
-                    .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
-                    .split(cols[1]);
-                frame.render_widget(
-                    NAddrWidget::new(&data.naddr)
-                        .block(Block::default().title("naddr").borders(Borders::ALL)),
-                    center[0],
-                );
-                frame.render_widget(
-                    EventReferenceWidget::new(&data.event_reference)
-                        .block(Block::default().title("event ref").borders(Borders::ALL)),
-                    center[1],
-                );
-                let right = Layout::default()
-                    .direction(Direction::Vertical)
-                    .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
-                    .split(cols[2]);
-                frame.render_widget(
-                    PublicKeyWidget::new(&data.public_key)
-                        .block(Block::default().title("pubkey").borders(Borders::ALL)),
-                    right[0],
-                );
-                frame.render_widget(
-                    TagWidget::new(&data.tag)
-                        .block(Block::default().title("tag").borders(Borders::ALL)),
-                    right[1],
-                );
-            }
-            _ => {
-                let rows = Layout::default()
-                    .direction(Direction::Vertical)
-                    .constraints([Constraint::Length(8), Constraint::Min(0)])
-                    .split(area);
-                frame.render_widget(
-                    Paragraph::new(vec![
-                        Line::from("gallery layout 3"),
-                        Line::from("mixes overview and repo widgets"),
-                        Line::from("press [ or ] to rotate layouts"),
-                    ])
-                    .wrap(Wrap { trim: true })
-                    .block(Block::default().title("gallery").borders(Borders::ALL)),
-                    rows[0],
-                );
-                let grid = Layout::default()
-                    .direction(Direction::Horizontal)
-                    .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
-                    .split(rows[1]);
-                let left = Layout::default()
-                    .direction(Direction::Vertical)
-                    .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
-                    .split(grid[0]);
-                frame.render_widget(
-                    EventV3Widget::new(&data.event)
-                        .block(Block::default().title("event").borders(Borders::ALL)),
-                    left[0],
-                );
-                frame.render_widget(
-                    MetadataWidget::new(&data.metadata)
-                        .block(Block::default().title("metadata").borders(Borders::ALL)),
-                    left[1],
-                );
-                let right = Layout::default()
-                    .direction(Direction::Vertical)
-                    .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
-                    .split(grid[1]);
-                frame.render_widget(
-                    RepoRefWidget::new(&data.repo_ref)
-                        .block(Block::default().title("repo ref").borders(Borders::ALL)),
-                    right[0],
-                );
-                frame.render_widget(
-                    RepoStateWidget::new(&data.repo_state)
-                        .block(Block::default().title("repo state").borders(Borders::ALL)),
-                    right[1],
-                );
-            }
+        0 => {
+            let rows = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([
+                    Constraint::Percentage(40),
+                    Constraint::Percentage(30),
+                    Constraint::Percentage(30),
+                ])
+                .split(area);
+            let top = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+                .split(rows[0]);
+            frame.render_widget(
+                EventV3Widget::new(&data.event)
+                    .block(Block::default().title("event v3").borders(Borders::ALL)),
+                top[0],
+            );
+            frame.render_widget(
+                MetadataWidget::new(&data.metadata)
+                    .block(Block::default().title("metadata").borders(Borders::ALL)),
+                top[1],
+            );
+            let middle = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+                .split(rows[1]);
+            frame.render_widget(
+                RelayInformationDocumentWidget::new(&data.relay_document)
+                    .block(Block::default().title("relay info").borders(Borders::ALL)),
+                middle[0],
+            );
+            frame.render_widget(
+                ProfileWidget::new(&data.profile)
+                    .block(Block::default().title("profile").borders(Borders::ALL)),
+                middle[1],
+            );
+            let bottom = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+                .split(rows[2]);
+            frame.render_widget(
+                RepoRefWidget::new(&data.repo_ref)
+                    .block(Block::default().title("repo ref").borders(Borders::ALL)),
+                bottom[0],
+            );
+            frame.render_widget(
+                FilterWidget::new(&data.filter)
+                    .block(Block::default().title("filter").borders(Borders::ALL)),
+                bottom[1],
+            );
+        }
+        1 => {
+            let cols = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([Constraint::Length(34), Constraint::Min(0)])
+                .split(area);
+            frame.render_widget(
+                RelayListWidget::new(&data.relay_list)
+                    .block(Block::default().title("relay list").borders(Borders::ALL)),
+                cols[0],
+            );
+            let right = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([
+                    Constraint::Percentage(25),
+                    Constraint::Percentage(25),
+                    Constraint::Percentage(25),
+                    Constraint::Percentage(25),
+                ])
+                .split(cols[1]);
+            frame.render_widget(
+                RepoStateWidget::new(&data.repo_state)
+                    .block(Block::default().title("repo state").borders(Borders::ALL)),
+                right[0],
+            );
+            frame.render_widget(
+                ChannelCreationEventWidget::new(&data.channel_creation).block(
+                    Block::default()
+                        .title("channel creation")
+                        .borders(Borders::ALL),
+                ),
+                right[1],
+            );
+            frame.render_widget(
+                ChannelMessageEventWidget::new(&data.channel_message).block(
+                    Block::default()
+                        .title("channel message")
+                        .borders(Borders::ALL),
+                ),
+                right[2],
+            );
+            frame.render_widget(
+                RelayMessageWidget::new(&data.relay_message).block(
+                    Block::default()
+                        .title("relay message")
+                        .borders(Borders::ALL),
+                ),
+                right[3],
+            );
+        }
+        2 => {
+            let cols = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([
+                    Constraint::Percentage(33),
+                    Constraint::Percentage(34),
+                    Constraint::Percentage(33),
+                ])
+                .split(area);
+            frame.render_widget(
+                Nip19Widget::new(&data.nip19)
+                    .block(Block::default().title("nip19").borders(Borders::ALL)),
+                cols[0],
+            );
+            let center = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+                .split(cols[1]);
+            frame.render_widget(
+                NAddrWidget::new(&data.naddr)
+                    .block(Block::default().title("naddr").borders(Borders::ALL)),
+                center[0],
+            );
+            frame.render_widget(
+                EventReferenceWidget::new(&data.event_reference)
+                    .block(Block::default().title("event ref").borders(Borders::ALL)),
+                center[1],
+            );
+            let right = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+                .split(cols[2]);
+            frame.render_widget(
+                PublicKeyWidget::new(&data.public_key)
+                    .block(Block::default().title("pubkey").borders(Borders::ALL)),
+                right[0],
+            );
+            frame.render_widget(
+                TagWidget::new(&data.tag)
+                    .block(Block::default().title("tag").borders(Borders::ALL)),
+                right[1],
+            );
+        }
+        _ => {
+            let rows = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([Constraint::Length(8), Constraint::Min(0)])
+                .split(area);
+            frame.render_widget(
+                Paragraph::new(vec![
+                    Line::from("gallery layout 3"),
+                    Line::from("mixes overview and repo widgets"),
+                    Line::from("press [ or ] to rotate layouts"),
+                ])
+                .wrap(Wrap { trim: true })
+                .block(Block::default().title("gallery").borders(Borders::ALL)),
+                rows[0],
+            );
+            let grid = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+                .split(rows[1]);
+            let left = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+                .split(grid[0]);
+            frame.render_widget(
+                EventV3Widget::new(&data.event)
+                    .block(Block::default().title("event").borders(Borders::ALL)),
+                left[0],
+            );
+            frame.render_widget(
+                MetadataWidget::new(&data.metadata)
+                    .block(Block::default().title("metadata").borders(Borders::ALL)),
+                left[1],
+            );
+            let right = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+                .split(grid[1]);
+            frame.render_widget(
+                RepoRefWidget::new(&data.repo_ref)
+                    .block(Block::default().title("repo ref").borders(Borders::ALL)),
+                right[0],
+            );
+            frame.render_widget(
+                RepoStateWidget::new(&data.repo_state)
+                    .block(Block::default().title("repo state").borders(Borders::ALL)),
+                right[1],
+            );
+        }
     }
 }
 
@@ -1051,7 +1113,11 @@ fn render_ideas(frame: &mut Frame, area: Rect, data: &DemoData) {
     frame.render_widget(
         Paragraph::new(data.crawler_relays_text())
             .wrap(Wrap { trim: true })
-            .block(Block::default().title("live relay data").borders(Borders::ALL)),
+            .block(
+                Block::default()
+                    .title("live relay data")
+                    .borders(Borders::ALL),
+            ),
         left[1],
     );
 
@@ -1072,8 +1138,7 @@ fn render_ideas(frame: &mut Frame, area: Rect, data: &DemoData) {
         right[0],
     );
     frame.render_widget(
-        TagWidget::new(&data.tag)
-            .block(Block::default().title("tag").borders(Borders::ALL)),
+        TagWidget::new(&data.tag).block(Block::default().title("tag").borders(Borders::ALL)),
         right[1],
     );
 }
@@ -1218,7 +1283,6 @@ impl DemoPreset {
     fn gallery_layout_count() -> usize {
         4
     }
-
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -1329,7 +1393,11 @@ impl DemoData {
             relays: vec![relay_url.clone()],
             marker: Some("root".to_string()),
         };
-        let tag = Tag::new_event(git.state_id, Some(unchecked_relay.clone()), Some("root".to_string()));
+        let tag = Tag::new_event(
+            git.state_id,
+            Some(unchecked_relay.clone()),
+            Some("root".to_string()),
+        );
 
         let mut repo_events = HashMap::new();
         repo_events.insert(git.coordinate.clone(), git.state_event.clone());
@@ -1419,9 +1487,8 @@ impl DemoData {
                 interval.tick().await;
                 if let Err(err) = Self::refresh_from_network(&client, &data).await {
                     if let Ok(mut state) = data.write() {
-                        state.relay_message = RelayMessage::Notice(format!(
-                            "network refresh failed: {err}"
-                        ));
+                        state.relay_message =
+                            RelayMessage::Notice(format!("network refresh failed: {err}"));
                         state.updated_at = Unixtime::now();
                     }
                 }
@@ -1454,9 +1521,8 @@ impl DemoData {
                 Ok(tuple) => tuple,
                 Err(err) => {
                     if let Ok(mut state) = data.write() {
-                        state.relay_message = RelayMessage::Notice(format!(
-                            "relay refresh request failed: {err}"
-                        ));
+                        state.relay_message =
+                            RelayMessage::Notice(format!("relay refresh request failed: {err}"));
                     }
                     continue;
                 }
@@ -1484,10 +1550,8 @@ impl DemoData {
                 });
             }
             if let Ok(mut state) = data.write() {
-                state.relay_message = RelayMessage::Notice(format!(
-                    "refreshed {} from the network",
-                    url
-                ));
+                state.relay_message =
+                    RelayMessage::Notice(format!("refreshed {} from the network", url));
                 state.updated_at = Unixtime::now();
             }
         }
@@ -1498,7 +1562,13 @@ impl DemoData {
                 .as_ref()
                 .map(|v| v.len())
                 .unwrap_or(0)
-                .cmp(&a.relay.supported_nips.as_ref().map(|v| v.len()).unwrap_or(0))
+                .cmp(
+                    &a.relay
+                        .supported_nips
+                        .as_ref()
+                        .map(|v| v.len())
+                        .unwrap_or(0),
+                )
                 .then_with(|| a.relay.name.cmp(&b.relay.name))
         });
 
@@ -1549,7 +1619,11 @@ impl DemoData {
                 relays: vec![relay_url.clone()],
                 marker: Some("root".to_string()),
             };
-            let tag = Tag::new_event(git.state_id, Some(unchecked_relay.clone()), Some("root".to_string()));
+            let tag = Tag::new_event(
+                git.state_id,
+                Some(unchecked_relay.clone()),
+                Some("root".to_string()),
+            );
             let mut repo_events = HashMap::new();
             repo_events.insert(git.coordinate.clone(), git.state_event.clone());
             let repo_ref = RepoRef {
@@ -1663,7 +1737,10 @@ fn load_crawler_relays(config_dir: &Path) -> Result<Vec<LoadedRelay>> {
     let mut discovered: BTreeMap<String, LoadedRelay> = BTreeMap::new();
 
     for nip_entry in fs::read_dir(config_dir).with_context(|| {
-        format!("reading crawler relay cache directory {}", config_dir.display())
+        format!(
+            "reading crawler relay cache directory {}",
+            config_dir.display()
+        )
     })? {
         let nip_entry = nip_entry?;
         if !nip_entry.file_type()?.is_dir() {
@@ -1715,13 +1792,23 @@ fn load_crawler_relays(config_dir: &Path) -> Result<Vec<LoadedRelay>> {
             .as_ref()
             .map(|v| v.len())
             .unwrap_or(0)
-            .cmp(&a.relay.supported_nips.as_ref().map(|v| v.len()).unwrap_or(0))
+            .cmp(
+                &a.relay
+                    .supported_nips
+                    .as_ref()
+                    .map(|v| v.len())
+                    .unwrap_or(0),
+            )
             .then_with(|| a.relay.name.cmp(&b.relay.name))
     });
     Ok(relays)
 }
 
-fn merge_loaded_relay(existing: &mut LoadedRelay, incoming: CrawlerRelay, incoming_pubkey: Option<String>) {
+fn merge_loaded_relay(
+    existing: &mut LoadedRelay,
+    incoming: CrawlerRelay,
+    incoming_pubkey: Option<String>,
+) {
     if existing.pubkey_hex.is_none() {
         existing.pubkey_hex = incoming_pubkey;
     }
@@ -1795,8 +1882,8 @@ fn load_relay_urls(config_dir: &Path, relays: &[LoadedRelay]) -> Result<Vec<Stri
     }
 
     let mut urls = Vec::new();
-    for nip_entry in fs::read_dir(config_dir)
-        .with_context(|| format!("reading {}", config_dir.display()))?
+    for nip_entry in
+        fs::read_dir(config_dir).with_context(|| format!("reading {}", config_dir.display()))?
     {
         let nip_entry = nip_entry?;
         if !nip_entry.file_type()?.is_dir() {
@@ -1838,7 +1925,10 @@ fn relay_pubkey(relay: &LoadedRelay) -> Result<PublicKey> {
         .with_context(|| format!("parsing relay pubkey {pubkey}"))
 }
 
-fn relay_document_from_relay(relay: &LoadedRelay, pubkey: PublicKey) -> Result<RelayInformationDocument> {
+fn relay_document_from_relay(
+    relay: &LoadedRelay,
+    pubkey: PublicKey,
+) -> Result<RelayInformationDocument> {
     Ok(RelayInformationDocument {
         name: relay.relay.name.clone(),
         description: relay.relay.description.clone(),
@@ -1880,7 +1970,11 @@ fn metadata_from_relay(relay: &LoadedRelay) -> Metadata {
     if let Some(nips) = relay.relay.supported_nips.clone() {
         other.insert(
             "supported_nips".to_string(),
-            serde_json::Value::Array(nips.into_iter().map(|nip| serde_json::Value::from(nip)).collect()),
+            serde_json::Value::Array(
+                nips.into_iter()
+                    .map(|nip| serde_json::Value::from(nip))
+                    .collect(),
+            ),
         );
     }
     Metadata {
@@ -1908,9 +2002,7 @@ fn load_git_snapshot(
     unchecked_relay: &UncheckedUrl,
 ) -> Result<GitSnapshot> {
     let repo = git2::Repository::discover(".").context("discovering git repository")?;
-    let workdir = repo
-        .workdir()
-        .context("missing git workdir")?;
+    let workdir = repo.workdir().context("missing git workdir")?;
     let repo_name = workdir
         .file_name()
         .and_then(|name| name.to_str())

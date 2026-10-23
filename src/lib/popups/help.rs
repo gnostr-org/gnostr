@@ -4,7 +4,6 @@ use anyhow::Result;
 use crossterm::event::Event;
 use gnostr_asyncgit::hash;
 use itertools::Itertools;
-use serde_json::Value;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
@@ -12,6 +11,7 @@ use ratatui::{
     widgets::{Block, BorderType, Borders, Clear, Paragraph},
     Frame,
 };
+use serde_json::Value;
 use ui::style::SharedTheme;
 
 use crate::{
@@ -64,8 +64,7 @@ impl DrawableComponent for HelpPopup {
             );
 
             f.render_widget(
-                Paragraph::new(self.get_footer_text())
-                .alignment(Alignment::Right),
+                Paragraph::new(self.get_footer_text()).alignment(Alignment::Right),
                 chunks[1],
             );
         }

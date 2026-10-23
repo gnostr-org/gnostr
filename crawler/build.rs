@@ -1,5 +1,5 @@
-use chrono::TimeZone;
 use anyhow::Result;
+use chrono::TimeZone;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -8,9 +8,9 @@ use std::collections::HashSet;
 use std::fs::{self, File};
 use std::io::Write;
 use std::path::PathBuf;
+use std::process::Command;
 use tokio;
 use url::Url;
-use std::process::Command;
 
 // build.rs - This file will generate src/relays.yaml
 

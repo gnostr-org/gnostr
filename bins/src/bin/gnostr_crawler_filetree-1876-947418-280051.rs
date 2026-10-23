@@ -1,7 +1,6 @@
 use std::{
     collections::{BTreeMap, BTreeSet, HashMap},
-    fs,
-    io,
+    fs, io,
     path::{Path, PathBuf},
     time::Duration,
 };
@@ -9,18 +8,18 @@ use std::{
 use anyhow::{Context, Result};
 use gnostr_crawler::{relays::get_config_dir_path, tui::JsonPanel};
 use gnostr_filetreelist::{FileTree, MoveSelection};
+use ratatui::crossterm::{
+    event::{self, Event, KeyCode},
+    execute,
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
+};
 use ratatui::{
+    Frame, Terminal,
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, List, ListItem, Paragraph},
-    Frame, Terminal,
-};
-use ratatui::crossterm::{
-    event::{self, Event, KeyCode},
-    execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use serde_json::Value;
 
@@ -42,9 +41,16 @@ pub fn run() -> Result<()> {
 
     loop {
         selected.sync(tree.selected_path())?;
-        terminal
-            .terminal
-            .draw(|frame| draw(frame, &tree, &selected, input_mode, &search_query, status_message.as_deref()))?;
+        terminal.terminal.draw(|frame| {
+            draw(
+                frame,
+                &tree,
+                &selected,
+                input_mode,
+                &search_query,
+                status_message.as_deref(),
+            )
+        })?;
 
         if event::poll(Duration::from_millis(150))? {
             match event::read()? {
@@ -235,13 +241,11 @@ impl BucketedCrawlerTree {
     }
 
     fn entry_matches_filter(&self, entry: &FileEntry) -> bool {
-        self.active_filter
-            .as_ref()
-            .is_none_or(|filter| {
-                let needle = filter.to_ascii_lowercase();
-                let path = entry.virtual_path.to_string_lossy().to_ascii_lowercase();
-                path.contains(&needle)
-            })
+        self.active_filter.as_ref().is_none_or(|filter| {
+            let needle = filter.to_ascii_lowercase();
+            let path = entry.virtual_path.to_string_lossy().to_ascii_lowercase();
+            path.contains(&needle)
+        })
     }
 
     fn render_items(&self, start: usize, max: usize) -> Vec<ListItem<'static>> {
@@ -260,7 +264,10 @@ impl BucketedCrawlerTree {
                 };
                 let label = format!("{indent}{icon} {}", item.info().path_str());
                 let style = if selected {
-                    Style::default().fg(Color::Black).bg(Color::Cyan).add_modifier(Modifier::BOLD)
+                    Style::default()
+                        .fg(Color::Black)
+                        .bg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD)
                 } else {
                     Style::default()
                 };
@@ -268,7 +275,11 @@ impl BucketedCrawlerTree {
                     Span::styled(label, style),
                     Span::raw("  "),
                     Span::styled(
-                        if item.kind().is_path() { "bucket" } else { "file" },
+                        if item.kind().is_path() {
+                            "bucket"
+                        } else {
+                            "file"
+                        },
                         Style::default().fg(Color::DarkGray),
                     ),
                 ]))
@@ -364,7 +375,11 @@ fn draw(
 ) {
     let root = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Length(3), Constraint::Min(0), Constraint::Length(5)])
+        .constraints([
+            Constraint::Length(3),
+            Constraint::Min(0),
+            Constraint::Length(5),
+        ])
         .split(frame.area());
 
     let top = Layout::default()
@@ -384,9 +399,11 @@ fn draw(
         .direction(Direction::Vertical)
         .constraints([Constraint::Length(3), Constraint::Min(0)])
         .split(body[0]);
-    frame.render_widget(search_box(input_mode, search_query).block(
-        Block::default().borders(Borders::ALL).title("tree search"),
-    ), tree_area[0]);
+    frame.render_widget(
+        search_box(input_mode, search_query)
+            .block(Block::default().borders(Borders::ALL).title("tree search")),
+        tree_area[0],
+    );
     frame.render_widget(tree_panel_list(tree, tree_area[1]), tree_area[1]);
     render_selected(frame, body[1], selected);
     frame.render_widget(footer(tree, status_message), root[2]);
@@ -409,7 +426,10 @@ fn header(tree: &BucketedCrawlerTree) -> Paragraph<'static> {
         Span::raw("  "),
         Span::styled(filter_label, Style::default().fg(Color::Magenta)),
         Span::raw("  "),
-        Span::styled(tree.root.display().to_string(), Style::default().fg(Color::Yellow)),
+        Span::styled(
+            tree.root.display().to_string(),
+            Style::default().fg(Color::Yellow),
+        ),
         Span::raw("  "),
         Span::styled(bucket_line, Style::default().fg(Color::DarkGray)),
     ]))
@@ -425,16 +445,26 @@ fn search_box(input_mode: InputMode, search_query: &str) -> Paragraph<'static> {
 
     Paragraph::new(Line::from(vec![Span::styled(
         label,
-        Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
+        Style::default()
+            .fg(Color::White)
+            .add_modifier(Modifier::BOLD),
     )]))
     .block(Block::default().borders(Borders::ALL).title("search"))
 }
 
 fn tree_panel_list(tree: &BucketedCrawlerTree, area: ratatui::layout::Rect) -> List<'static> {
     let mut items = vec![ListItem::new(Line::from(vec![
-        Span::styled("crawler", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+        Span::styled(
+            "crawler",
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
+        ),
         Span::raw("  "),
-        Span::styled("bucket/json|text|yaml", Style::default().fg(Color::DarkGray)),
+        Span::styled(
+            "bucket/json|text|yaml",
+            Style::default().fg(Color::DarkGray),
+        ),
     ]))];
     let view_height = area.height.saturating_sub(2).max(1) as usize;
     let (start, count) = tree
@@ -474,8 +504,11 @@ fn render_selected(frame: &mut Frame, area: ratatui::layout::Rect, selected: &Se
         SelectedFileView::RawText { text } => {
             let lines = text.lines().map(Line::from).collect::<Vec<_>>();
             frame.render_widget(
-                Paragraph::new(lines)
-                    .block(Block::default().borders(Borders::ALL).title("selected text")),
+                Paragraph::new(lines).block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .title("selected text"),
+                ),
                 area,
             );
         }
@@ -500,10 +533,7 @@ enum InputMode {
     Search,
 }
 
-fn footer(
-    tree: &BucketedCrawlerTree,
-    status_message: Option<&str>,
-) -> Paragraph<'static> {
+fn footer(tree: &BucketedCrawlerTree, status_message: Option<&str>) -> Paragraph<'static> {
     let status_line = status_message.unwrap_or_default().to_string();
 
     Paragraph::new(vec![
@@ -519,23 +549,20 @@ fn footer(
             Span::raw("  "),
             Span::styled("esc cancel", Style::default().fg(Color::Cyan)),
         ]),
-        Line::from(vec![
-            Span::raw(""),
-        ]),
-        Line::from(vec![
-            Span::styled(
-                format!(
-                    "selected: {}",
-                    tree.selected_path()
-                        .map(|p| p.display().to_string())
-                        .unwrap_or_default()
-                ),
-                Style::default().fg(Color::Green),
+        Line::from(vec![Span::raw("")]),
+        Line::from(vec![Span::styled(
+            format!(
+                "selected: {}",
+                tree.selected_path()
+                    .map(|p| p.display().to_string())
+                    .unwrap_or_default()
             ),
-        ]),
-        Line::from(vec![
-            Span::styled(status_line, Style::default().fg(Color::Red)),
-        ]),
+            Style::default().fg(Color::Green),
+        )]),
+        Line::from(vec![Span::styled(
+            status_line,
+            Style::default().fg(Color::Red),
+        )]),
     ])
     .block(Block::default().borders(Borders::ALL).title("help"))
 }
@@ -553,7 +580,10 @@ fn walk(dir: &Path, files: &mut Vec<PathBuf>) -> Result<()> {
         let path = entry.path();
         let file_name = entry.file_name();
         let file_name = file_name.to_string_lossy();
-        if file_name == "target" || file_name == ".git" || file_name.starts_with('.') && path.is_dir() {
+        if file_name == "target"
+            || file_name == ".git"
+            || file_name.starts_with('.') && path.is_dir()
+        {
             continue;
         }
         let meta = entry.metadata()?;

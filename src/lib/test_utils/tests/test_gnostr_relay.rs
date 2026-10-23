@@ -10,7 +10,7 @@ mod tests {
     use gnostr_relay::App as GnostrRelayApp;
     use nostr::{EventBuilder, Keys, Kind, Tag};
     use serde_json::json;
-    use tempfile::{NamedTempFile, tempdir};
+    use tempfile::{tempdir, NamedTempFile};
     use tokio::sync::Mutex as TokioMutex;
     use tokio_tungstenite::{connect_async, tungstenite::Message};
 
@@ -34,14 +34,13 @@ mod tests {
         .to_string();
         fs::write(&config_path, default_config_content).expect("Failed to write temp config");
 
-        let app_data =
-            GnostrRelayApp::create(
-                Some(&config_path),
-                true,
-                Some("NOSTR".to_owned()),
-                Some(&data_path),
-            )
-                .expect("Failed to create GnostrRelayApp");
+        let app_data = GnostrRelayApp::create(
+            Some(&config_path),
+            true,
+            Some("NOSTR".to_owned()),
+            Some(&data_path),
+        )
+        .expect("Failed to create GnostrRelayApp");
 
         let r = app_data.setting.read();
         let server_address = format!("{}:{}", r.network.host, r.network.port);

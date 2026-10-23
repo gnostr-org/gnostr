@@ -125,7 +125,10 @@ pub fn open_database(config: &Config) -> Result<Arc<rocksdb::DB>, anyhow::Error>
             }
             Some(_) => None,
             None => {
-                db.put("schema_version", crate::app::database::schema::SCHEMA_VERSION)?;
+                db.put(
+                    "schema_version",
+                    crate::app::database::schema::SCHEMA_VERSION,
+                )?;
                 None
             }
         };
@@ -271,7 +274,9 @@ pub fn init_static_asset_hashes() {
         .set(build_asset_hash(dark_css))
         .unwrap();
 
-    super::ADD_RELAY_SVG_HASH.set(build_asset_hash(super::ADD_RELAY_SVG)).unwrap();
+    super::ADD_RELAY_SVG_HASH
+        .set(build_asset_hash(super::ADD_RELAY_SVG))
+        .unwrap();
     super::CLOSE_MODAL_SVG_HASH
         .set(build_asset_hash(super::CLOSE_MODAL_SVG))
         .unwrap();

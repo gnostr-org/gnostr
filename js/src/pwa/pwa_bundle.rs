@@ -16,4 +16,3 @@ pub fn get_pwa_assets() -> HashMap<String, &'static [u8]> {
     );
     assets
 }
-

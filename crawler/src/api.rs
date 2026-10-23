@@ -1984,7 +1984,6 @@ pub fn run_api_server_detached(
     Ok(())
 }
 
-
 async fn get_p2p_peers() -> impl IntoResponse {
     let peers: Vec<String> = dirs::data_dir()
         .map(|d| d.join("gnostr").join("p2p-peers.json"))

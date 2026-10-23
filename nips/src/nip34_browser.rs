@@ -5,8 +5,8 @@ use std::{
     time::Duration,
 };
 
-use futures::{future::join_all, SinkExt, StreamExt};
 use crossterm::event::{KeyCode, KeyEvent};
+use futures::{future::join_all, SinkExt, StreamExt};
 use gnostr_asyncgit::{
     default_gnostr_private_key,
     types::{
@@ -14,7 +14,10 @@ use gnostr_asyncgit::{
         Options, PrivateKey, RelayMessage, SubscriptionId, Unixtime,
     },
 };
-use ratatui::{prelude::*, widgets::{Clear, List, ListItem, Paragraph, Wrap}};
+use ratatui::{
+    prelude::*,
+    widgets::{Clear, List, ListItem, Paragraph, Wrap},
+};
 use tokio_tungstenite::{connect_async, tungstenite::Message as WsMessage};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -189,7 +192,11 @@ impl Nip34Browser {
 
         Self {
             receiver: rx,
-            tabs: ALL_TABS.iter().copied().map(|tab| Nip34TabData::new(tab, Vec::new())).collect(),
+            tabs: ALL_TABS
+                .iter()
+                .copied()
+                .map(|tab| Nip34TabData::new(tab, Vec::new()))
+                .collect(),
             active_tab: 0,
             loading: false,
             error: None,
@@ -281,8 +288,7 @@ impl Nip34Browser {
             })
             .collect();
 
-        let list = List::new(items)
-            .highlight_symbol(">");
+        let list = List::new(items).highlight_symbol(">");
         frame.render_widget(list, body[0]);
 
         let detail = tab
@@ -362,17 +368,17 @@ fn render_event_detail(event: &Event) -> String {
     )
 }
 
-fn load_nip34_tabs(relay_urls: Vec<String>, timeout: Duration) -> Result<Vec<Nip34TabData>, String> {
+fn load_nip34_tabs(
+    relay_urls: Vec<String>,
+    timeout: Duration,
+) -> Result<Vec<Nip34TabData>, String> {
     let runtime = tokio::runtime::Runtime::new().map_err(|err| err.to_string())?;
     runtime.block_on(async {
         if relay_urls.is_empty() {
             return Err(String::from("no local relay endpoint configured"));
         }
 
-        let keys = Keys::new(PrivateKey(
-            default_gnostr_private_key(),
-            KeySecurity::Weak,
-        ));
+        let keys = Keys::new(PrivateKey(default_gnostr_private_key(), KeySecurity::Weak));
         let mut client = Client::new(&keys, Options::new());
         client
             .add_relays(relay_urls)
@@ -434,21 +440,22 @@ async fn subscribe_nip34_updates(
 
                 while let Some(message) = read.next().await {
                     match message {
-                        Ok(WsMessage::Text(text)) => match serde_json::from_str::<RelayMessage>(&text)
-                        {
-                            Ok(RelayMessage::Event(_, event)) => {
-                                if tx.send(Nip34Update::Event(*event)).is_err() {
-                                    return;
+                        Ok(WsMessage::Text(text)) => {
+                            match serde_json::from_str::<RelayMessage>(&text) {
+                                Ok(RelayMessage::Event(_, event)) => {
+                                    if tx.send(Nip34Update::Event(*event)).is_err() {
+                                        return;
+                                    }
                                 }
+                                Ok(RelayMessage::Notice(_))
+                                | Ok(RelayMessage::Notify(_))
+                                | Ok(RelayMessage::Eose(_))
+                                | Ok(RelayMessage::Ok(_, _, _))
+                                | Ok(RelayMessage::Auth(_))
+                                | Ok(RelayMessage::Closed(_, _)) => {}
+                                Err(_) => {}
                             }
-                            Ok(RelayMessage::Notice(_))
-                            | Ok(RelayMessage::Notify(_))
-                            | Ok(RelayMessage::Eose(_))
-                            | Ok(RelayMessage::Ok(_, _, _))
-                            | Ok(RelayMessage::Auth(_))
-                            | Ok(RelayMessage::Closed(_, _)) => {}
-                            Err(_) => {}
-                        },
+                        }
                         Ok(WsMessage::Ping(payload)) => {
                             if write.send(WsMessage::Pong(payload)).await.is_err() {
                                 break;

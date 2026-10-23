@@ -8,7 +8,12 @@ macro_rules! introspection_here {
 #[macro_export]
 macro_rules! introspection_debug {
     ($message:expr) => {
-        format!("[DEBUG] {}::{} {}", module_path!(), function_name!(), $message)
+        format!(
+            "[DEBUG] {}::{} {}",
+            module_path!(),
+            function_name!(),
+            $message
+        )
     };
 }
 

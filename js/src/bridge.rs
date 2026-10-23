@@ -36,12 +36,10 @@ pub fn asset_response(
     assets: Arc<HashMap<String, &'static [u8]>>,
 ) -> warp::reply::Response {
     match assets.get(&filename) {
-        Some(content) => warp::reply::with_header(
-            *content,
-            "Content-Type",
-            asset_content_type(&filename),
-        )
-        .into_response(),
+        Some(content) => {
+            warp::reply::with_header(*content, "Content-Type", asset_content_type(&filename))
+                .into_response()
+        }
         None => warp::reply::with_status("Not Found", StatusCode::NOT_FOUND).into_response(),
     }
 }

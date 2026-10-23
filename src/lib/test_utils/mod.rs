@@ -7,6 +7,8 @@ use std::{
     time::Duration,
 };
 
+pub use ::nostr::nips::nip65::RelayMetadata;
+pub use ::nostr::{Event, EventBuilder, EventId, Kind, Metadata, Tag, TagKind, TagStandard};
 use anyhow::{bail, ensure, Context, Result};
 use dialoguer::theme::{ColorfulTheme, Theme};
 use expectrl::{
@@ -15,14 +17,12 @@ use expectrl::{
     Eof, Expect,
 };
 use futures::executor::block_on;
-pub use ::nostr::{Event, EventBuilder, EventId, Kind, Metadata, Tag, TagKind, TagStandard};
-pub use ::nostr::nips::nip65::RelayMetadata;
 use nostr_database::{nostr as nostr_db, NostrDatabase};
 use nostr_lmdb::NostrLMDB;
 use nostr_sdk::prelude::*;
 use once_cell::sync::Lazy;
-use strip_ansi_escapes::strip_str;
 use std::sync::Arc;
+use strip_ansi_escapes::strip_str;
 use tokio::runtime::Handle;
 
 pub use crate::test_utils::git::GitTestRepo;
@@ -77,44 +77,44 @@ pub fn generate_test_key_1_metadata_event_old(name: &str) -> nostr::Event {
 
 pub fn generate_test_key_1_kind_event(kind: Kind) -> nostr::Event {
     EventBuilder::new(kind, "")
-    .sign_with_keys(&TEST_KEY_1_KEYS)
-    .unwrap()
+        .sign_with_keys(&TEST_KEY_1_KEYS)
+        .unwrap()
 }
 
 pub fn generate_test_key_1_relay_list_event() -> nostr::Event {
     EventBuilder::new(Kind::RelayList, "")
-    .tags([
-        Tag::from_standardized(TagStandard::RelayMetadata {
-            relay_url: nostr::RelayUrl::from_str("ws://localhost:8053").unwrap(),
-            metadata: Some(RelayMetadata::Write),
-        }),
-        Tag::from_standardized(TagStandard::RelayMetadata {
-            relay_url: nostr::RelayUrl::from_str("ws://localhost:8054").unwrap(),
-            metadata: Some(RelayMetadata::Read),
-        }),
-        Tag::from_standardized(TagStandard::RelayMetadata {
-            relay_url: nostr::RelayUrl::from_str("ws://localhost:8055").unwrap(),
-            metadata: None,
-        }),
-    ])
-    .sign_with_keys(&TEST_KEY_1_KEYS)
-    .unwrap()
+        .tags([
+            Tag::from_standardized(TagStandard::RelayMetadata {
+                relay_url: nostr::RelayUrl::from_str("ws://localhost:8053").unwrap(),
+                metadata: Some(RelayMetadata::Write),
+            }),
+            Tag::from_standardized(TagStandard::RelayMetadata {
+                relay_url: nostr::RelayUrl::from_str("ws://localhost:8054").unwrap(),
+                metadata: Some(RelayMetadata::Read),
+            }),
+            Tag::from_standardized(TagStandard::RelayMetadata {
+                relay_url: nostr::RelayUrl::from_str("ws://localhost:8055").unwrap(),
+                metadata: None,
+            }),
+        ])
+        .sign_with_keys(&TEST_KEY_1_KEYS)
+        .unwrap()
 }
 
 pub fn generate_test_key_1_relay_list_event_same_as_fallback() -> nostr::Event {
     EventBuilder::new(Kind::RelayList, "")
-    .tags([
-        Tag::from_standardized(TagStandard::RelayMetadata {
-            relay_url: nostr::RelayUrl::from_str("ws://localhost:8051").unwrap(),
-            metadata: Some(RelayMetadata::Write),
-        }),
-        Tag::from_standardized(TagStandard::RelayMetadata {
-            relay_url: nostr::RelayUrl::from_str("ws://localhost:8052").unwrap(),
-            metadata: Some(RelayMetadata::Write),
-        }),
-    ])
-    .sign_with_keys(&TEST_KEY_1_KEYS)
-    .unwrap()
+        .tags([
+            Tag::from_standardized(TagStandard::RelayMetadata {
+                relay_url: nostr::RelayUrl::from_str("ws://localhost:8051").unwrap(),
+                metadata: Some(RelayMetadata::Write),
+            }),
+            Tag::from_standardized(TagStandard::RelayMetadata {
+                relay_url: nostr::RelayUrl::from_str("ws://localhost:8052").unwrap(),
+                metadata: Some(RelayMetadata::Write),
+            }),
+        ])
+        .sign_with_keys(&TEST_KEY_1_KEYS)
+        .unwrap()
 }
 
 pub static TEST_KEY_2_NSEC: &str =
@@ -145,8 +145,9 @@ pub fn make_event_old_or_change_user(
     keys: &nostr::Keys,
     how_old_in_secs: u64,
 ) -> nostr::Event {
-    let mut unsigned =
-        EventBuilder::new(event.kind, event.content.clone()).tags(event.tags.clone()).build(keys.public_key());
+    let mut unsigned = EventBuilder::new(event.kind, event.content.clone())
+        .tags(event.tags.clone())
+        .build(keys.public_key());
 
     unsigned.created_at =
         nostr::Timestamp::from(nostr::Timestamp::now().as_secs() - how_old_in_secs);
@@ -171,39 +172,39 @@ pub fn generate_repo_ref_event_with_git_server(git_servers: Vec<String>) -> nost
     // take the author and committer from global git config
     let root_commit = "9ee507fc4357d7ee16a5d8901bedcd103f23c17d";
     EventBuilder::new(Kind::GitRepoAnnouncement, "")
-    .tags([
-        Tag::identifier(format!("{root_commit}-consider-it-random")),
-        Tag::from_standardized(TagStandard::Reference(root_commit.to_string())),
-        Tag::from_standardized(TagStandard::Name("example name".into())),
-        Tag::from_standardized(TagStandard::Description("example description".into())),
-        Tag::custom(
-            TagKind::Custom(std::borrow::Cow::Borrowed("clone")),
-            git_servers,
-        ),
-        Tag::custom(
-            TagKind::Custom(std::borrow::Cow::Borrowed("web")),
-            vec![
-                "https://exampleproject.xyz".to_string(),
-                "https://gitworkshop.dev/123".to_string(),
-            ],
-        ),
-        Tag::custom(
-            TagKind::Custom(std::borrow::Cow::Borrowed("relays")),
-            vec![
-                "ws://localhost:8055".to_string(),
-                "ws://localhost:8056".to_string(),
-            ],
-        ),
-        Tag::custom(
-            TagKind::Custom(std::borrow::Cow::Borrowed("maintainers")),
-            vec![
-                TEST_KEY_1_KEYS.public_key().to_string(),
-                TEST_KEY_2_KEYS.public_key().to_string(),
-            ],
-        ),
-    ])
-    .sign_with_keys(&TEST_KEY_1_KEYS)
-    .unwrap()
+        .tags([
+            Tag::identifier(format!("{root_commit}-consider-it-random")),
+            Tag::from_standardized(TagStandard::Reference(root_commit.to_string())),
+            Tag::from_standardized(TagStandard::Name("example name".into())),
+            Tag::from_standardized(TagStandard::Description("example description".into())),
+            Tag::custom(
+                TagKind::Custom(std::borrow::Cow::Borrowed("clone")),
+                git_servers,
+            ),
+            Tag::custom(
+                TagKind::Custom(std::borrow::Cow::Borrowed("web")),
+                vec![
+                    "https://exampleproject.xyz".to_string(),
+                    "https://gitworkshop.dev/123".to_string(),
+                ],
+            ),
+            Tag::custom(
+                TagKind::Custom(std::borrow::Cow::Borrowed("relays")),
+                vec![
+                    "ws://localhost:8055".to_string(),
+                    "ws://localhost:8056".to_string(),
+                ],
+            ),
+            Tag::custom(
+                TagKind::Custom(std::borrow::Cow::Borrowed("maintainers")),
+                vec![
+                    TEST_KEY_1_KEYS.public_key().to_string(),
+                    TEST_KEY_2_KEYS.public_key().to_string(),
+                ],
+            ),
+        ])
+        .sign_with_keys(&TEST_KEY_1_KEYS)
+        .unwrap()
 }
 
 /// enough to fool event_is_patch_set_root
@@ -1415,16 +1416,18 @@ pub fn create_proposals_with_first_rebased_and_repo_with_latest_main_and_unrebas
 fn get_first_proposal_event_id() -> Result<nostr_db::EventId> {
     // get proposal id of first
     let client = Client::default();
-    let proposals = Handle::current().block_on(client.fetch_events_from(
-        ["ws://localhost:8055"],
-        nostr_db::Filter::default()
-            .kind(nostr_db::Kind::GitPatch)
-            .custom_tag(
-                nostr_db::SingleLetterTag::lowercase(nostr_db::Alphabet::T),
-                "root",
-            ),
-        Duration::from_millis(500),
-    ))?;
+    let proposals = Handle::current().block_on(
+        client.fetch_events_from(
+            ["ws://localhost:8055"],
+            nostr_db::Filter::default()
+                .kind(nostr_db::Kind::GitPatch)
+                .custom_tag(
+                    nostr_db::SingleLetterTag::lowercase(nostr_db::Alphabet::T),
+                    "root",
+                ),
+            Duration::from_millis(500),
+        ),
+    )?;
 
     let proposal_1_id = proposals
         .iter()

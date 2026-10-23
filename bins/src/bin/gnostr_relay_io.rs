@@ -1,7 +1,5 @@
 #![allow(dead_code)]
-
 #![allow(dead_code)]
-
 #![allow(dead_code)]
 
 #[path = "gnostr_chat_tui_demo.rs"]

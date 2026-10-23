@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 
 #[derive(Clone, Copy, Debug, Default)]
-pub struct TemplateHtml {
-}
+pub struct TemplateHtml {}
 
 impl TemplateHtml {
     pub fn new() -> Self {
@@ -25,6 +24,9 @@ impl TemplateHtml {
 
 pub fn get_template_assets() -> HashMap<String, &'static [u8]> {
     let mut assets = HashMap::new();
-    assets.insert("template.html".to_string(), include_bytes!("template.html") as &'static [u8]);
+    assets.insert(
+        "template.html".to_string(),
+        include_bytes!("template.html") as &'static [u8],
+    );
     assets
 }

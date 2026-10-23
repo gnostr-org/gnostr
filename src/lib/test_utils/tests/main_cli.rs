@@ -44,7 +44,11 @@ mod tests {
     fn send_sigint(child: &std::process::Child) {
         let pid = child.id() as libc::pid_t;
         let rc = unsafe { libc::kill(pid, libc::SIGINT) };
-        assert!(rc == 0, "failed to send SIGINT: {}", std::io::Error::last_os_error());
+        assert!(
+            rc == 0,
+            "failed to send SIGINT: {}",
+            std::io::Error::last_os_error()
+        );
     }
 
     #[cfg(not(unix))]

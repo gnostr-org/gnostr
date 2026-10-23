@@ -1,33 +1,34 @@
 use std::{path::Path, sync::Arc};
 
 use anyhow::Result;
+use gnostr_asyncgit::git2::Oid;
 use gnostr_asyncgit::{
     create_temp_repo_with_empty_tree,
     profiles::{bitcoindev_1, bitcoindev_2, bitcoindev_3},
     sync::{
-        add_note, append_public_attestation_log, default_notes_ref, list_notes, mine_note,
-        remove_note, show_note, stage_add_file, RepoPath,
+        RepoPath, add_note, append_public_attestation_log, default_notes_ref, list_notes,
+        mine_note, remove_note, show_note, stage_add_file,
     },
-    types::{get_leading_zero_bits, nip13::NIP13Event, nip3::create_attestation_with_pow, Id},
+    types::{Id, get_leading_zero_bits, nip3::create_attestation_with_pow, nip13::NIP13Event},
 };
-use gnostr_asyncgit::git2::Oid;
 use gnostr_legit::gitminer::{Gitminer, Options as LegitOptions};
 use gnostr_ngit::{
-    git::{oid_to_sha1, Repo},
+    git::{Repo, oid_to_sha1},
     git_events::{
-        event_is_cover_letter, event_is_patch_set_root, event_is_revision_root,
-        event_is_valid_pr_or_pr_update, generate_cover_letter_and_patch_events,
-        generate_git_note_event, generate_git_note_event_with_pow, generate_unsigned_pr_or_update_event, git_note_event_id,
-        git_note_tags, patch_supports_commit_ids, KIND_PULL_REQUEST, KIND_PULL_REQUEST_UPDATE,
+        KIND_PULL_REQUEST, KIND_PULL_REQUEST_UPDATE, event_is_cover_letter,
+        event_is_patch_set_root, event_is_revision_root, event_is_valid_pr_or_pr_update,
+        generate_cover_letter_and_patch_events, generate_git_note_event,
+        generate_git_note_event_with_pow, generate_unsigned_pr_or_update_event, git_note_event_id,
+        git_note_tags, patch_supports_commit_ids,
     },
     repo_ref::RepoRef,
 };
 use nostr_sdk::{Keys, NostrSigner};
-use serial_test::serial;
-use test_utils::{generate_repo_ref_event, git::GitTestRepo};
 use secp256k1::SECP256K1;
-use time::OffsetDateTime;
+use serial_test::serial;
 use std::sync::Once;
+use test_utils::{generate_repo_ref_event, git::GitTestRepo};
+use time::OffsetDateTime;
 
 fn init_test_log() {
     static INIT: Once = Once::new();
@@ -154,13 +155,7 @@ async fn real_repo_git_notes_workflow_creates_signed_event() -> Result<()> {
 
     let note_text = "nip34:git note protocol example:deterministically linked git note";
 
-    let note_id = add_note(
-        repo_path,
-        head,
-        note_text,
-        Some(notes_ref.as_str()),
-        false,
-    )?;
+    let note_id = add_note(repo_path, head, note_text, Some(notes_ref.as_str()), false)?;
     println!(
         "notes created: note_id={note_id} annotated_id={head} notes_ref={notes_ref} message={note_text}"
     );
@@ -237,7 +232,13 @@ async fn nip34_examples_for_all_kinds() -> Result<()> {
     let note_repo_path: &RepoPath = &note_repo_path_owned;
     let notes_ref = default_notes_ref(note_repo_path)?;
     let note_text = "nip34:git note protocol example:deterministically linked git note";
-    let note_id = add_note(note_repo_path, head, note_text, Some(notes_ref.as_str()), false)?;
+    let note_id = add_note(
+        note_repo_path,
+        head,
+        note_text,
+        Some(notes_ref.as_str()),
+        false,
+    )?;
     let note = show_note(note_repo_path, head, Some(notes_ref.as_str()))?.expect("note exists");
     let git_note_event = generate_git_note_event(&note, &signer).await?;
     println!(
@@ -246,7 +247,10 @@ async fn nip34_examples_for_all_kinds() -> Result<()> {
     println!("git note event: {git_note_event:#?}");
 
     let patch_events = generate_cover_letter_and_patch_events(
-        Some(("example title".to_string(), "example description".to_string())),
+        Some((
+            "example title".to_string(),
+            "example description".to_string(),
+        )),
         &repo,
         &[commit],
         &signer,
@@ -306,14 +310,18 @@ async fn nip34_examples_for_all_kinds() -> Result<()> {
     assert_eq!(update_event.kind, KIND_PULL_REQUEST_UPDATE);
     assert!(event_is_valid_pr_or_pr_update(&update_event));
     assert!(!event_is_revision_root(&update_event));
-    assert!(update_event
-        .tags
-        .iter()
-        .any(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("E")));
-    assert!(update_event
-        .tags
-        .iter()
-        .any(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("P")));
+    assert!(
+        update_event
+            .tags
+            .iter()
+            .any(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("E"))
+    );
+    assert!(
+        update_event
+            .tags
+            .iter()
+            .any(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("P"))
+    );
     remove_note(note_repo_path, head, Some(notes_ref.as_str()))?;
     Ok(())
 }
@@ -371,7 +379,7 @@ async fn pretty_print_attestations() -> Result<()> {
         let signer_keys = Keys::generate();
         let git_note_event =
             gnostr_ngit::git_events::generate_git_note_event_with_pow(&note, &signer_keys, 4)
-        .await?;
+                .await?;
 
         println!(
             "pretty_print_attestations\n{}",
@@ -446,7 +454,12 @@ async fn nip34_event_matrix_covers_commit_note_and_pow_variants() -> Result<()> 
         let note_base_message = format!("{label} note");
 
         let note = if mine_note_flag {
-            mine_git_note(repo_path, head, &note_base_message, Some(notes_ref.as_str()))?
+            mine_git_note(
+                repo_path,
+                head,
+                &note_base_message,
+                Some(notes_ref.as_str()),
+            )?
         } else {
             let note_id = add_note(
                 repo_path,
@@ -477,10 +490,7 @@ async fn nip34_event_matrix_covers_commit_note_and_pow_variants() -> Result<()> 
 
         println!(
             "matrix case event built: kind={:?} id={} pow={} tags={:?}",
-            event.kind,
-            event.id,
-            pow_event_flag,
-            event.tags
+            event.kind, event.id, pow_event_flag, event.tags
         );
 
         assert_eq!(event.kind, nostr_sdk::Kind::GitPatch);
@@ -495,13 +505,19 @@ async fn nip34_event_matrix_covers_commit_note_and_pow_variants() -> Result<()> 
             expected_root
         );
         if pow_event_flag {
-            assert!(event.tags.iter().any(|tag| {
-                tag.as_slice().first().map(|s| s.as_str()) == Some("nonce")
-            }));
+            assert!(
+                event
+                    .tags
+                    .iter()
+                    .any(|tag| { tag.as_slice().first().map(|s| s.as_str()) == Some("nonce") })
+            );
         } else {
-            assert!(!event.tags.iter().any(|tag| {
-                tag.as_slice().first().map(|s| s.as_str()) == Some("nonce")
-            }));
+            assert!(
+                !event
+                    .tags
+                    .iter()
+                    .any(|tag| { tag.as_slice().first().map(|s| s.as_str()) == Some("nonce") })
+            );
         }
     }
 

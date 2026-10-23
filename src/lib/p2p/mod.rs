@@ -33,11 +33,7 @@ use tokio::{io, select};
 use tracing::{debug, info, trace, warn};
 use ureq::Agent;
 
-use crate::{
-    blockhash_async, blockheight_async,
-    p2p::network_config::Network,
-    types::Event,
-};
+use crate::{blockhash_async, blockheight_async, p2p::network_config::Network, types::Event};
 use gnostr_chat::{
     msg::{Msg, MsgKind},
     ChatSubCommands,

@@ -162,7 +162,8 @@ pub fn get_branches_info(
 			let upstream_branch =
 				upstream.ok().and_then(|upstream| {
 					let reference =
-						bytes2string(upstream.get().name_bytes()).ok()?;
+						bytes2string(upstream.get().name_bytes())
+							.ok()?;
 					Some(UpstreamBranch { reference })
 				});
 
@@ -235,8 +236,9 @@ pub fn get_branch_remote(
 	let branch = repo.find_branch(branch, BranchType::Local)?;
 	let reference = bytes2string(branch.get().name_bytes())?;
 	let remote_name = repo.branch_upstream_remote(&reference).ok();
-	Ok(remote_name
-		.and_then(|remote_name| remote_name.as_str().ok().map(str::to_owned)))
+	Ok(remote_name.and_then(|remote_name| {
+		remote_name.as_str().ok().map(str::to_owned)
+	}))
 }
 
 /// Retrieve the upstream merge of a local `branch`,
@@ -251,8 +253,9 @@ pub fn get_branch_upstream_merge(
 	let branch = repo.find_branch(branch, BranchType::Local)?;
 	let reference = bytes2string(branch.get().name_bytes())?;
 	let remote_name = repo.branch_upstream_merge(&reference).ok();
-	Ok(remote_name
-		.and_then(|remote_name| remote_name.as_str().ok().map(str::to_owned)))
+	Ok(remote_name.and_then(|remote_name| {
+		remote_name.as_str().ok().map(str::to_owned)
+	}))
 }
 
 /// returns whether the pull merge strategy is set to rebase
@@ -261,7 +264,8 @@ pub fn config_is_pull_rebase(repo_path: &RepoPath) -> Result<bool> {
 	let config = repo.config()?;
 
 	if let Ok(rebase) = config.get_entry("pull.rebase") {
-		let value = rebase.value().map(String::from).unwrap_or_default();
+		let value =
+			rebase.value().map(String::from).unwrap_or_default();
 		return Ok(value == "true");
 	}
 

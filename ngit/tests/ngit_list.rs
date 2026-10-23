@@ -144,14 +144,14 @@ mod cannot_find_repo_event {
         }
 
         #[tokio::test]
-#[ignore]
+        #[ignore]
         #[serial]
         async fn warns_not_valid_input_and_asks_again() -> Result<()> {
             run_async_repo_event_ref_needed(true, false).await
         }
 
         #[tokio::test]
-#[ignore]
+        #[ignore]
         #[serial]
         async fn finds_based_on_naddr_on_embeded_relay_and_added_as_origin_remote() -> Result<()> {
             run_async_repo_event_ref_needed(false, true).await
@@ -176,7 +176,7 @@ mod when_main_branch_is_uptodate {
                 mod cli_prompts {
                     use super::*;
                     #[tokio::test]
-#[ignore]
+                    #[ignore]
                     #[serial]
                     async fn prompts_to_choose_from_proposal_titles() -> Result<()> {
                         let (mut r51, mut r52, mut r53, mut r55, mut r56) = (
@@ -248,7 +248,7 @@ mod when_main_branch_is_uptodate {
                 }
 
                 #[tokio::test]
-#[ignore]
+                #[ignore]
                 #[serial]
                 async fn proposal_branch_created_with_correct_name() -> Result<()> {
                     let (_, test_repo) =
@@ -264,7 +264,7 @@ mod when_main_branch_is_uptodate {
                 }
 
                 #[tokio::test]
-#[ignore]
+                #[ignore]
                 #[serial]
                 async fn proposal_branch_checked_out() -> Result<()> {
                     let (_, test_repo) =
@@ -277,7 +277,7 @@ mod when_main_branch_is_uptodate {
                 }
 
                 #[tokio::test]
-#[ignore]
+                #[ignore]
                 #[serial]
                 async fn proposal_branch_tip_is_most_recent_patch() -> Result<()> {
                     let (originating_repo, test_repo) =
@@ -299,7 +299,7 @@ mod when_main_branch_is_uptodate {
                     use super::*;
 
                     #[tokio::test]
-#[ignore]
+                    #[ignore]
                     #[serial]
                     async fn prompts_to_choose_from_proposal_titles() -> Result<()> {
                         let (mut r51, mut r52, mut r53, mut r55, mut r56) = (
@@ -371,7 +371,7 @@ mod when_main_branch_is_uptodate {
                 }
 
                 #[tokio::test]
-#[ignore]
+                #[ignore]
                 #[serial]
                 async fn proposal_branch_created_with_correct_name() -> Result<()> {
                     let (_, test_repo) =
@@ -387,7 +387,7 @@ mod when_main_branch_is_uptodate {
                 }
 
                 #[tokio::test]
-#[ignore]
+                #[ignore]
                 #[serial]
                 async fn proposal_branch_checked_out() -> Result<()> {
                     let (_, test_repo) =
@@ -400,7 +400,7 @@ mod when_main_branch_is_uptodate {
                 }
 
                 #[tokio::test]
-#[ignore]
+                #[ignore]
                 #[serial]
                 async fn proposal_branch_tip_is_most_recent_patch() -> Result<()> {
                     let (originating_repo, test_repo) =
@@ -496,7 +496,7 @@ mod when_main_branch_is_uptodate {
                     use super::*;
 
                     #[tokio::test]
-#[ignore]
+                    #[ignore]
                     #[serial]
                     async fn prompts_to_choose_from_proposal_titles() -> Result<()> {
                         let (mut r51, mut r52, mut r53, mut r55, mut r56) = (
@@ -576,7 +576,7 @@ mod when_main_branch_is_uptodate {
                 }
 
                 #[tokio::test]
-#[ignore]
+                #[ignore]
                 #[serial]
                 async fn proposal_branch_created_with_correct_name() -> Result<()> {
                     let (_, test_repo) = prep_and_run().await?;
@@ -591,7 +591,7 @@ mod when_main_branch_is_uptodate {
                 }
 
                 #[tokio::test]
-#[ignore]
+                #[ignore]
                 #[serial]
                 async fn proposal_branch_checked_out() -> Result<()> {
                     let (_, test_repo) = prep_and_run().await?;
@@ -603,7 +603,7 @@ mod when_main_branch_is_uptodate {
                 }
 
                 #[tokio::test]
-#[ignore]
+                #[ignore]
                 #[serial]
                 async fn proposal_branch_tip_is_most_recent_patch() -> Result<()> {
                     let (originating_repo, test_repo) = prep_and_run().await?;
@@ -725,7 +725,7 @@ mod when_main_branch_is_uptodate {
                     use super::*;
 
                     #[tokio::test]
-#[ignore]
+                    #[ignore]
                     #[serial]
                     async fn prompts_to_choose_from_proposal_titles() -> Result<()> {
                         let (mut r51, mut r52, mut r53, mut r55, mut r56) = (
@@ -823,7 +823,7 @@ mod when_main_branch_is_uptodate {
                 }
 
                 #[tokio::test]
-#[ignore]
+                #[ignore]
                 #[serial]
                 async fn proposal_branch_checked_out() -> Result<()> {
                     let (_, test_repo) = prep_and_run().await?;
@@ -915,7 +915,7 @@ mod when_main_branch_is_uptodate {
                     use super::*;
 
                     #[tokio::test]
-#[ignore]
+                    #[ignore]
                     #[serial]
                     async fn prompts_to_choose_from_proposal_titles() -> Result<()> {
                         let (mut r51, mut r52, mut r53, mut r55, mut r56) = (
@@ -989,7 +989,7 @@ mod when_main_branch_is_uptodate {
                 }
 
                 #[tokio::test]
-#[ignore]
+                #[ignore]
                 #[serial]
                 async fn proposal_branch_checked_out() -> Result<()> {
                     let (_, test_repo) = prep_and_run().await?;
@@ -1001,7 +1001,7 @@ mod when_main_branch_is_uptodate {
                 }
 
                 #[tokio::test]
-#[ignore]
+                #[ignore]
                 #[serial]
                 async fn proposal_branch_tip_is_most_recent_patch() -> Result<()> {
                     let (originating_repo, test_repo) = prep_and_run().await?;
@@ -1110,7 +1110,7 @@ mod when_main_branch_is_uptodate {
                     use super::*;
 
                     #[tokio::test]
-#[ignore]
+                    #[ignore]
                     #[serial]
                     async fn out_reflects_second_choice_discarding_old_and_applying_new()
                     -> Result<()> {
@@ -1193,7 +1193,7 @@ mod when_main_branch_is_uptodate {
                 }
 
                 #[tokio::test]
-#[ignore]
+                #[ignore]
                 #[serial]
                 async fn second_choice_discarded_unpublished_commits_and_checked_out_latest_revision()
                 -> Result<()> {
@@ -1295,7 +1295,7 @@ mod when_main_branch_is_uptodate {
                     use super::*;
 
                     #[tokio::test]
-#[ignore]
+                    #[ignore]
                     #[serial]
                     async fn prompts_to_choose_from_proposal_titles() -> Result<()> {
                         let (mut r51, mut r52, mut r53, mut r55, mut r56) = (
@@ -1375,7 +1375,7 @@ mod when_main_branch_is_uptodate {
                 }
 
                 #[tokio::test]
-#[ignore]
+                #[ignore]
                 #[serial]
                 async fn proposal_branch_checked_out() -> Result<()> {
                     let (_, test_repo) = prep_and_run().await?;
@@ -1387,7 +1387,7 @@ mod when_main_branch_is_uptodate {
                 }
 
                 #[tokio::test]
-#[ignore]
+                #[ignore]
                 #[serial]
                 async fn didnt_overwrite_local_appendments() -> Result<()> {
                     let (originating_repo, test_repo) = prep_and_run().await?;
@@ -1481,7 +1481,7 @@ mod when_main_branch_is_uptodate {
                     use super::*;
 
                     #[tokio::test]
-#[ignore]
+                    #[ignore]
                     #[serial]
                     async fn prompts_to_choose_from_proposal_titles() -> Result<()> {
                         let (mut r51, mut r52, mut r53, mut r55, mut r56) = (
@@ -1554,7 +1554,7 @@ mod when_main_branch_is_uptodate {
                 }
 
                 #[tokio::test]
-#[ignore]
+                #[ignore]
                 #[serial]
                 async fn proposal_branch_checked_out() -> Result<()> {
                     let (_, test_repo) = prep_and_run().await?;
@@ -1566,7 +1566,7 @@ mod when_main_branch_is_uptodate {
                 }
 
                 #[tokio::test]
-#[ignore]
+                #[ignore]
                 #[serial]
                 async fn proposal_branch_tip_is_most_recent_proposal_revision_tip() -> Result<()> {
                     let (originating_repo, test_repo) = prep_and_run().await?;

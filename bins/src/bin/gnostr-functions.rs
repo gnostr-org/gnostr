@@ -558,7 +558,9 @@ fn install_gnumakefile() {
         Err(e) => eprintln!("Failed to execute 'which make': {}", e),
     }
 
-    eprintln!("GNU Make (gmake) not found. On macOS, you can install it via Homebrew: brew install gnu-make");
+    eprintln!(
+        "GNU Make (gmake) not found. On macOS, you can install it via Homebrew: brew install gnu-make"
+    );
     println!("install-gnumakefile completed.");
 }
 
@@ -569,7 +571,10 @@ fn bitcoin_autogen() {
     match status {
         Ok(s) if s.success() => println!("./autogen.sh executed successfully."),
         Ok(s) => eprintln!("./autogen.sh exited with status: {}", s),
-        Err(e) => eprintln!("Failed to execute ./autogen.sh: {}. Please ensure the script exists and is executable.", e),
+        Err(e) => eprintln!(
+            "Failed to execute ./autogen.sh: {}. Please ensure the script exists and is executable.",
+            e
+        ),
     }
     println!("bitcoin-autogen completed.");
 }

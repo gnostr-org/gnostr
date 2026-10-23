@@ -40,11 +40,7 @@ pub fn render(scan_path: &Path, relative_path: &Path) -> Option<Response> {
             }
             href.push(&name);
             let href = href.to_string_lossy().to_string();
-            entries.push(Entry {
-                name,
-                href,
-                is_dir,
-            });
+            entries.push(Entry { name, href, is_dir });
         }
     }
 
@@ -62,11 +58,14 @@ pub fn render(scan_path: &Path, relative_path: &Path) -> Option<Response> {
 
     let segments = path_segments(relative_path);
 
-    Some(into_response(View {
-        title,
-        segments,
-        entries,
-    }).into_response())
+    Some(
+        into_response(View {
+            title,
+            segments,
+            entries,
+        })
+        .into_response(),
+    )
 }
 
 fn path_segments(path: &Path) -> Vec<(String, String)> {

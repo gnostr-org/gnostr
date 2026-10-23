@@ -60,7 +60,10 @@ pub fn run_with_args(args: Args) -> Result<()> {
 }
 
 fn default_output_path(repo_url: &str, short_hash: &str) -> PathBuf {
-    PathBuf::from(format!("{}.html", default_output_stem(repo_url, short_hash)))
+    PathBuf::from(format!(
+        "{}.html",
+        default_output_stem(repo_url, short_hash)
+    ))
 }
 
 fn default_output_stem(repo_url: &str, short_hash: &str) -> String {

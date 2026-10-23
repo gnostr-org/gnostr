@@ -1,6 +1,6 @@
+use gnostr_asyncgit::git2::Signature;
 use gnostr_ngit::git_events::KIND_PULL_REQUEST;
 use rstest::*;
-use gnostr_asyncgit::git2::Signature;
 
 use super::*;
 

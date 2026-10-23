@@ -192,8 +192,8 @@ pub async fn generate_repo_with_state_event() -> Result<(Event, GitTestRepo)> {
     Ok((state_event.clone(), source_git_repo))
 }
 
-pub async fn prep_source_repo_and_events_including_proposals(
-) -> Result<(Vec<Event>, GitTestRepo)> {
+pub async fn prep_source_repo_and_events_including_proposals() -> Result<(Vec<Event>, GitTestRepo)>
+{
     let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
     let source_path = source_git_repo.dir.to_str().unwrap().to_string();
 

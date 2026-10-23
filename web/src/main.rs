@@ -1,6 +1,5 @@
 use std::{future::IntoFuture, net::SocketAddr, sync::Arc};
 
-
 use anyhow::Context;
 
 use axum::{
@@ -57,7 +56,6 @@ use tracing_subscriber::{
     fmt::format::FmtSpan, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter,
 };
 
-
 async fn run_as_service() -> Result<(), anyhow::Error> {
     info!("Starting gnostr-gnit in daemon mode...");
 
@@ -90,7 +88,6 @@ async fn run_as_service() -> Result<(), anyhow::Error> {
     Ok(())
 }
 
-
 #[cfg(any(target_os = "linux", target_os = "macos"))]
 fn build_daemon_args() -> Vec<String> {
     let mut daemon_args = Vec::new();
@@ -113,7 +110,6 @@ fn build_daemon_args() -> Vec<String> {
 
     daemon_args
 }
-
 
 #[tokio::main]
 #[allow(clippy::too_many_lines)]
@@ -160,11 +156,9 @@ async fn main() -> Result<(), anyhow::Error> {
         .context("Could not canonicalize scan path")?;
 
     println!("canonical_scan_path={}", &canonical_scan_path.display());
-    let _fixture = gnostr_web::app::database::indexer::ensure_bare_repo_fixture(
-        &canonical_scan_path,
-        "crlf",
-    )
-    .context("failed to prepare crlf learning fixture")?;
+    let _fixture =
+        gnostr_web::app::database::indexer::ensure_bare_repo_fixture(&canonical_scan_path, "crlf")
+            .context("failed to prepare crlf learning fixture")?;
     let config = Config {
         db_store: args.db_store.clone(),
         scan_path: canonical_scan_path.clone(),
@@ -242,13 +236,19 @@ async fn main() -> Result<(), anyhow::Error> {
                 .join("ipfs")
         });
         let _ = std::fs::create_dir_all(&repo);
-        let state = gnostr_web::app::methods::ipfs::IpfsState::init(&repo.to_string_lossy(), args.ipfs_online);
+        let state = gnostr_web::app::methods::ipfs::IpfsState::init(
+            &repo.to_string_lossy(),
+            args.ipfs_online,
+        );
         if state.enabled {
             if let Some(url) = state.gateway.lock().unwrap().clone() {
                 info!("Kubo gateway listening at {url}");
             }
         } else {
-            tracing::warn!("Kubo node not started: {:?}", state.last_error.lock().unwrap().clone());
+            tracing::warn!(
+                "Kubo node not started: {:?}",
+                state.last_error.lock().unwrap().clone()
+            );
         }
         state
     };
@@ -256,12 +256,21 @@ async fn main() -> Result<(), anyhow::Error> {
     #[cfg(feature = "ipfs")]
     let ipfs_routes = Router::new()
         .route("/api/ipfs/add", axum::routing::post(methods::ipfs::add))
-        .route("/api/ipfs/add-batch", axum::routing::post(methods::ipfs::add_batch))
+        .route(
+            "/api/ipfs/add-batch",
+            axum::routing::post(methods::ipfs::add_batch),
+        )
         .route("/api/ipfs/cat/:cid", get(methods::ipfs::cat))
-        .route("/api/ipfs/pin/:cid", axum::routing::post(methods::ipfs::pin))
+        .route(
+            "/api/ipfs/pin/:cid",
+            axum::routing::post(methods::ipfs::pin),
+        )
         .route("/api/ipfs/ls", get(methods::ipfs::ls))
         .route("/api/ipfs/peers", get(methods::ipfs::peers))
-        .route("/api/ipfs/manifest", axum::routing::post(methods::ipfs::publish_manifest))
+        .route(
+            "/api/ipfs/manifest",
+            axum::routing::post(methods::ipfs::publish_manifest),
+        )
         .route("/ipfs/:cid", get(methods::ipfs::ipfs_proxy))
         .route("/api/ipfs/gateway", get(methods::ipfs::gateway))
         .route("/api/ipfs/status", get(methods::ipfs::status));

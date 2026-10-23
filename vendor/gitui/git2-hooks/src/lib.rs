@@ -135,10 +135,9 @@ fn find_program_in_paths(
 	program: &str,
 	paths: &[PathBuf],
 ) -> Option<PathBuf> {
-	paths
-		.iter()
-		.map(|dir| dir.join(program))
-		.find(|candidate| candidate.is_file() && is_executable(candidate))
+	paths.iter().map(|dir| dir.join(program)).find(|candidate| {
+		candidate.is_file() && is_executable(candidate)
+	})
 }
 
 fn is_executable(path: &Path) -> bool {
@@ -408,7 +407,13 @@ pub fn hooks_applypatch_msg(
 	other_paths: Option<&[&str]>,
 	msg_file: &str,
 ) -> Result<HookResult> {
-	run_hook_stub(repo, other_paths, HOOK_APPLYPATCH_MSG, &[msg_file], None)
+	run_hook_stub(
+		repo,
+		other_paths,
+		HOOK_APPLYPATCH_MSG,
+		&[msg_file],
+		None,
+	)
 }
 
 /// Git invokes `pre-applypatch` after a patch has been applied but before the
@@ -445,7 +450,13 @@ pub fn hooks_pre_merge_commit(
 	other_paths: Option<&[&str]>,
 	args: &[&str],
 ) -> Result<HookResult> {
-	run_hook_stub(repo, other_paths, HOOK_PRE_MERGE_COMMIT, args, None)
+	run_hook_stub(
+		repo,
+		other_paths,
+		HOOK_PRE_MERGE_COMMIT,
+		args,
+		None,
+	)
 }
 
 /// Git invokes `post-merge` after a merge has completed.
@@ -502,12 +513,8 @@ pub fn hooks_post_checkout(
 		repo,
 		other_paths,
 		HOOK_POST_CHECKOUT,
-		[
-			old_head,
-			new_head,
-			if branch_switch { "1" } else { "0" },
-		]
-		.as_slice(),
+		[old_head, new_head, if branch_switch { "1" } else { "0" }]
+			.as_slice(),
 		None,
 	)
 }
@@ -532,7 +539,13 @@ pub fn hooks_sendemail_validate(
 	other_paths: Option<&[&str]>,
 	args: &[&str],
 ) -> Result<HookResult> {
-	run_hook_stub(repo, other_paths, HOOK_SENDEMAIL_VALIDATE, args, None)
+	run_hook_stub(
+		repo,
+		other_paths,
+		HOOK_SENDEMAIL_VALIDATE,
+		args,
+		None,
+	)
 }
 
 /// Git invokes `update` on the server side once per ref that is about to be
@@ -576,7 +589,13 @@ pub fn hooks_pre_receive(
 	other_paths: Option<&[&str]>,
 	stdin: &[u8],
 ) -> Result<HookResult> {
-	run_hook_stub(repo, other_paths, HOOK_PRE_RECEIVE, &[], Some(stdin))
+	run_hook_stub(
+		repo,
+		other_paths,
+		HOOK_PRE_RECEIVE,
+		&[],
+		Some(stdin),
+	)
 }
 
 /// Git invokes `post-receive` after refs have been updated on the server side.
@@ -589,7 +608,13 @@ pub fn hooks_post_receive(
 	other_paths: Option<&[&str]>,
 	stdin: &[u8],
 ) -> Result<HookResult> {
-	run_hook_stub(repo, other_paths, HOOK_POST_RECEIVE, &[], Some(stdin))
+	run_hook_stub(
+		repo,
+		other_paths,
+		HOOK_POST_RECEIVE,
+		&[],
+		Some(stdin),
+	)
 }
 
 /// Git invokes `proc-receive` for custom server-side ref processing.
@@ -603,7 +628,13 @@ pub fn hooks_proc_receive(
 	args: &[&str],
 	stdin: &[u8],
 ) -> Result<HookResult> {
-	run_hook_stub(repo, other_paths, HOOK_PROC_RECEIVE, args, Some(stdin))
+	run_hook_stub(
+		repo,
+		other_paths,
+		HOOK_PROC_RECEIVE,
+		args,
+		Some(stdin),
+	)
 }
 
 /// Git invokes `push-to-checkout` when a push needs to update the checked-out
@@ -616,7 +647,13 @@ pub fn hooks_push_to_checkout(
 	other_paths: Option<&[&str]>,
 	args: &[&str],
 ) -> Result<HookResult> {
-	run_hook_stub(repo, other_paths, HOOK_PUSH_TO_CHECKOUT, args, None)
+	run_hook_stub(
+		repo,
+		other_paths,
+		HOOK_PUSH_TO_CHECKOUT,
+		args,
+		None,
+	)
 }
 
 /// Git invokes `reference-transaction` around batches of ref updates.
@@ -709,14 +746,9 @@ mod tests {
 
 	#[cfg(not(windows))]
 	fn python_interpreter() -> Option<&'static str> {
-		["python3", "python"]
-			.into_iter()
-			.find(|candidate| {
-				Command::new(candidate)
-					.arg("--version")
-					.output()
-					.is_ok()
-			})
+		["python3", "python"].into_iter().find(|candidate| {
+			Command::new(candidate).arg("--version").output().is_ok()
+		})
 	}
 
 	fn branch_update(
@@ -764,7 +796,8 @@ mod tests {
 		};
 		let gnostr_path = tempdir.path().join(gnostr_name);
 
-		fs::write(&gnostr_path, "#!/bin/sh\nexit 0\n").expect("write gnostr stub");
+		fs::write(&gnostr_path, "#!/bin/sh\nexit 0\n")
+			.expect("write gnostr stub");
 		#[cfg(unix)]
 		{
 			use std::os::unix::fs::PermissionsExt;
@@ -773,10 +806,12 @@ mod tests {
 				.expect("metadata")
 				.permissions();
 			perms.set_mode(0o755);
-			fs::set_permissions(&gnostr_path, perms).expect("chmod gnostr stub");
+			fs::set_permissions(&gnostr_path, perms)
+				.expect("chmod gnostr stub");
 		}
 
-		let found = gnostr_bin_from_paths(&[tempdir.path().to_path_buf()]);
+		let found =
+			gnostr_bin_from_paths(&[tempdir.path().to_path_buf()]);
 
 		assert_eq!(found, Some(gnostr_path));
 	}

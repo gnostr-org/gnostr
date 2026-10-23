@@ -67,10 +67,10 @@ pub mod css;
 /// Deterministic Nostr profile fixtures used in tests and examples.
 pub mod profiles;
 
-/// Local Nostr and Git domain types.
-pub mod types;
 #[cfg(feature = "ipfs")]
 pub mod ipfs;
+/// Local Nostr and Git domain types.
+pub mod types;
 
 /// Terminal UI entry points.
 #[cfg(feature = "tui")]

@@ -1,11 +1,11 @@
 use clap::Parser;
 use futures::StreamExt;
+use gnostr_p2p::cli;
 use libp2p::{
     identify, noise, ping, relay,
     swarm::{NetworkBehaviour, SwarmEvent},
     tcp, yamux,
 };
-use gnostr_p2p::cli;
 
 #[derive(Debug, Parser)]
 #[command(
@@ -55,11 +55,7 @@ async fn main() -> anyhow::Result<()> {
         })?
         .build();
 
-    cli::listen_default_addresses_relay(
-        &mut swarm,
-        opt.node.port,
-        opt.node.use_ipv6,
-    )?;
+    cli::listen_default_addresses_relay(&mut swarm, opt.node.port, opt.node.use_ipv6)?;
     while let Some(event) = swarm.next().await {
         match event {
             SwarmEvent::Behaviour(RelayBehaviourEvent::Identify(identify::Event::Received {

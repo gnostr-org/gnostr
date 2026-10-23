@@ -1,12 +1,12 @@
 use std::{env, io::Result, process, time::SystemTime};
 
 #[allow(unused_imports)]
+use gnostr::Config;
+#[allow(unused_imports)]
 use gnostr::run;
 use gnostr::utils::{
     get_current_working_dir, get_epoch_millisecs, get_epoch_secs, strip_trailing_newline,
 };
-#[allow(unused_imports)]
-use gnostr::Config;
 
 fn main() -> Result<()> {
     if cfg!(debug_assertions) {

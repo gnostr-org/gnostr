@@ -338,9 +338,18 @@ impl Nip34Popup {
         match self.mode {
             Nip34Mode::Commits => {
                 if let Some(commit) = self.commits.get(self.selected_index()) {
-                    out.push(Line::from(vec![Span::raw(format!("Commit: {}", commit.full_hash))]));
-                    out.push(Line::from(vec![Span::raw(format!("Author: {}", commit.author))]));
-                    out.push(Line::from(vec![Span::raw(format!("Date: {}", commit.date))]));
+                    out.push(Line::from(vec![Span::raw(format!(
+                        "Commit: {}",
+                        commit.full_hash
+                    ))]));
+                    out.push(Line::from(vec![Span::raw(format!(
+                        "Author: {}",
+                        commit.author
+                    ))]));
+                    out.push(Line::from(vec![Span::raw(format!(
+                        "Date: {}",
+                        commit.date
+                    ))]));
                     out.push(Line::from(vec![Span::raw(String::new())]));
                     out.push(Line::from(vec![Span::raw("Message:")]));
                     out.push(Line::from(vec![Span::raw(
@@ -350,9 +359,18 @@ impl Nip34Popup {
             }
             Nip34Mode::Branches => {
                 if let Some(branch) = self.branches.get(self.selected_index()) {
-                    out.push(Line::from(vec![Span::raw(format!("Branch: {}", branch.name))]));
-                    out.push(Line::from(vec![Span::raw(format!("Commit: {}", branch.full_hash))]));
-                    out.push(Line::from(vec![Span::raw(format!("Author: {}", branch.author))]));
+                    out.push(Line::from(vec![Span::raw(format!(
+                        "Branch: {}",
+                        branch.name
+                    ))]));
+                    out.push(Line::from(vec![Span::raw(format!(
+                        "Commit: {}",
+                        branch.full_hash
+                    ))]));
+                    out.push(Line::from(vec![Span::raw(format!(
+                        "Author: {}",
+                        branch.author
+                    ))]));
                     out.push(Line::from(vec![Span::raw(format!(
                         "Current: {}",
                         if branch.is_current { "yes" } else { "no" }
@@ -369,10 +387,20 @@ impl Nip34Popup {
                     let event = &row.event;
                     let kind = u32::from(event.kind);
                     out.push(Line::from(vec![Span::raw(format!("Event: {}", row.label))]));
-                    out.push(Line::from(vec![Span::raw(format!("Kind: {} ({})", kind, kind_label(event.kind)))]));
+                    out.push(Line::from(vec![Span::raw(format!(
+                        "Kind: {} ({})",
+                        kind,
+                        kind_label(event.kind)
+                    ))]));
                     out.push(Line::from(vec![Span::raw(format!("Id: {}", event.id))]));
-                    out.push(Line::from(vec![Span::raw(format!("Author: {}", event.pubkey))]));
-                    out.push(Line::from(vec![Span::raw(format!("Created: {}", event.created_at))]));
+                    out.push(Line::from(vec![Span::raw(format!(
+                        "Author: {}",
+                        event.pubkey
+                    ))]));
+                    out.push(Line::from(vec![Span::raw(format!(
+                        "Created: {}",
+                        event.created_at
+                    ))]));
                     out.push(Line::from(vec![Span::raw(String::new())]));
                     out.push(Line::from(vec![Span::raw("Tags:")]));
                     let tag_text = event
@@ -381,7 +409,9 @@ impl Nip34Popup {
                         .map(|tag| format!("{tag:?}"))
                         .collect::<Vec<_>>()
                         .join(" | ");
-                    out.push(Line::from(vec![Span::raw(tag_text.unicode_truncate(width).0.to_string())]));
+                    out.push(Line::from(vec![Span::raw(
+                        tag_text.unicode_truncate(width).0.to_string(),
+                    )]));
                     out.push(Line::from(vec![Span::raw(String::new())]));
                     out.push(Line::from(vec![Span::raw("Content:")]));
                     out.push(Line::from(vec![Span::raw(
@@ -402,9 +432,7 @@ impl Nip34Popup {
                 .map(|commit| {
                     ListItem::new(Line::from(vec![Span::raw(format!(
                         "[{}] {} - {}",
-                        commit.hash,
-                        commit.author,
-                        commit.summary
+                        commit.hash, commit.author, commit.summary
                     ))]))
                 })
                 .collect(),
@@ -520,7 +548,7 @@ impl DrawableComponent for Nip34Popup {
                         .borders(Borders::ALL)
                         .title(Span::styled("Details", self.theme.title(true)))
                         .border_style(self.theme.block(true)),
-            );
+                );
             f.render_widget(details, chunks[2]);
 
             self.current_height.set(chunks[1].height.into());
@@ -605,9 +633,10 @@ impl Component for Nip34Popup {
         self.event_state.borrow_mut().select(None);
 
         if let Err(err) = self.reload() {
-            self.queue.push(crate::queue::InternalEvent::ShowErrorMsg(format!(
-                "failed to load NIP-34 snapshot:\n{err}"
-            )));
+            self.queue
+                .push(crate::queue::InternalEvent::ShowErrorMsg(format!(
+                    "failed to load NIP-34 snapshot:\n{err}"
+                )));
         }
         self.visible = true;
         Ok(())

@@ -23,6 +23,8 @@ use crate::sub_commands::git;
 use crate::query::cli::QuerySubCommand;
 // Import the new relay subcommand module
 use crate::sub_commands::crawler;
+#[cfg(feature = "blossom")]
+use crate::sub_commands::server;
 use crate::sub_commands::{
     bech32_to_any, broadcast_events, convert_key, create_badge, create_public_channel,
     custom_event, delete_event, delete_profile, fetch, fetch_by_id, generate_keypair,
@@ -30,8 +32,6 @@ use crate::sub_commands::{
     privkey_to_bech32, profile_badges, publish_contactlist_csv, push, react, relay, send,
     send_channel_message, set_channel_metadata, set_metadata, sniper, user_status, vanity,
 };
-#[cfg(feature = "blossom")]
-use crate::sub_commands::server;
 
 /// CliArgs
 #[derive(Parser, Debug)]
@@ -329,7 +329,11 @@ pub struct DmArgs {
     #[arg(long, help = "Recipient's public key (hex or bech32)")]
     pub recipient: String,
     /// Message content
-    #[arg(short, long, help = "The message to send; omit to list DMs for the recipient")]
+    #[arg(
+        short,
+        long,
+        help = "The message to send; omit to list DMs for the recipient"
+    )]
     pub message: Option<String>,
     /// Relay to send the DM to (can be used multiple times)
     #[arg(short, long, action = clap::ArgAction::Append, help = "Relay to send the DM to (can be used multiple times)")]
@@ -428,13 +432,8 @@ mod tests {
     #[test]
     fn dm_subcommand_allows_missing_message_for_inbox_mode() {
         let recipient = default_test_npub();
-        let cli = GnostrCli::try_parse_from([
-            "gnostr",
-            "dm",
-            "--recipient",
-            &recipient,
-        ])
-        .expect("dm subcommand");
+        let cli = GnostrCli::try_parse_from(["gnostr", "dm", "--recipient", &recipient])
+            .expect("dm subcommand");
 
         match cli.command {
             Some(GnostrCommands::Dm(args)) => {
@@ -448,15 +447,9 @@ mod tests {
     #[test]
     fn dm_subcommand_parses_limit_for_inbox_mode() {
         let recipient = default_test_npub();
-        let cli = GnostrCli::try_parse_from([
-            "gnostr",
-            "dm",
-            "--recipient",
-            &recipient,
-            "--limit",
-            "25",
-        ])
-        .expect("dm subcommand");
+        let cli =
+            GnostrCli::try_parse_from(["gnostr", "dm", "--recipient", &recipient, "--limit", "25"])
+                .expect("dm subcommand");
 
         match cli.command {
             Some(GnostrCommands::Dm(args)) => {
@@ -470,14 +463,8 @@ mod tests {
     #[test]
     fn dm_subcommand_parses_json_flag_for_inbox_mode() {
         let recipient = default_test_npub();
-        let cli = GnostrCli::try_parse_from([
-            "gnostr",
-            "dm",
-            "--recipient",
-            &recipient,
-            "--json",
-        ])
-        .expect("dm subcommand");
+        let cli = GnostrCli::try_parse_from(["gnostr", "dm", "--recipient", &recipient, "--json"])
+            .expect("dm subcommand");
 
         match cli.command {
             Some(GnostrCommands::Dm(args)) => {

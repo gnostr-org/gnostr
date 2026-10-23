@@ -1,9 +1,9 @@
 use serde::Serialize;
+use std::fs;
+use std::path::Path;
 use std::path::PathBuf;
 use warp::http::StatusCode;
 use warp::Reply;
-use std::fs;
-use std::path::Path;
 
 use crate::utils::detach::{
     capture_detached_pid, existing_detached_pid, kill_process_by_pid, listener_pid_on_port,
@@ -95,7 +95,9 @@ pub fn relay_status() -> anyhow::Result<RelayProcessState> {
             running: true,
             pid,
             message: match pid {
-                Some(pid) => format!("relay already listening on 127.0.0.1:{RELAY_PORT} with pid {pid}"),
+                Some(pid) => {
+                    format!("relay already listening on 127.0.0.1:{RELAY_PORT} with pid {pid}")
+                }
                 None => format!("relay already listening on 127.0.0.1:{RELAY_PORT}"),
             },
             disk_usage_bytes: Some(relay_and_crawler_disk_usage_bytes()?),

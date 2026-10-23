@@ -169,7 +169,13 @@ pub fn filter_commit_by_search(
 				.options
 				.fields
 				.contains(SearchFields::MESSAGE_SUMMARY)
-				.then(|| commit.summary().ok().flatten().map(|msg| filter.match_text(msg)))
+				.then(|| {
+					commit
+						.summary()
+						.ok()
+						.flatten()
+						.map(|msg| filter.match_text(msg))
+				})
 				.flatten()
 				.unwrap_or_default();
 
@@ -177,7 +183,13 @@ pub fn filter_commit_by_search(
 				.options
 				.fields
 				.contains(SearchFields::MESSAGE_BODY)
-				.then(|| commit.body().ok().flatten().map(|msg| filter.match_text(msg)))
+				.then(|| {
+					commit
+						.body()
+						.ok()
+						.flatten()
+						.map(|msg| filter.match_text(msg))
+				})
 				.flatten()
 				.unwrap_or_default();
 
@@ -185,7 +197,12 @@ pub fn filter_commit_by_search(
 				.options
 				.fields
 				.contains(SearchFields::FILENAMES)
-				.then(|| get_commit_diff(repo, *commit_id, None, None, None).ok())
+				.then(|| {
+					get_commit_diff(
+						repo, *commit_id, None, None, None,
+					)
+					.ok()
+				})
 				.flatten()
 				.is_some_and(|diff| filter.match_diff(&diff));
 
