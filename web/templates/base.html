@@ -15,8 +15,6 @@
     {%- block head -%}{%- endblock %}
   </head>
   <body>
-    <div id="status"></div>
-    <div id="cid-chain"></div>
         <!-- Notice type="module" is mandatory for modern CDN usage -->
   <script type="module">
     // 1. Import Helia core and UnixFS file system helpers directly from jsDelivr ESM builds
@@ -65,14 +63,6 @@
               nameCell.appendChild(cidEl);
             }
 
-            const chainEl = document.getElementById("cid-chain");
-            if (chainEl) {
-              const item = document.createElement("div");
-              item.style.fontSize = "0.7rem";
-              item.style.fontFamily = "monospace";
-              item.textContent = cidStr;
-              chainEl.appendChild(item);
-            }
 
             // Broadcast / announce the CID to the network when possible.
             try {
@@ -98,18 +88,10 @@
           console.debug("Could not publish manifest", publishErr);
         }
 
-        const statusEl = document.getElementById("status");
-        if (statusEl) {
-          statusEl.innerText = `Helia is running! Indexed ${cidChain.length} repos.`;
-        }
         console.log("Helia Node:", helia);
         console.log("CID merkle chain:", cidChain);
       } catch (error) {
         console.error("Failed to start Helia:", error);
-        const statusEl = document.getElementById("status");
-        if (statusEl) {
-          statusEl.innerText = "Failed to load Helia.";
-        }
       }
     }
 
