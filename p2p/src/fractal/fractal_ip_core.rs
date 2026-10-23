@@ -168,7 +168,7 @@ pub async fn run_fractal_engine(
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
+    use std::collections::{HashMap, HashSet};
     use std::path::Path;
     use std::process::Command;
     use std::time::Duration;
@@ -496,6 +496,65 @@ mod tests {
             .flat_map(|packets| packets.clone())
             .collect();
         let modified_ids: Vec<String> = modified_slices.iter().map(|s| s.id.clone()).collect();
+
+        // Compare packet manifests/data between original and modified repos.
+        let original_by_id: HashMap<String, &ProtocolSlice> = walk
+            .files
+            .values()
+            .flat_map(|packets| packets.iter().map(|p| (p.id.clone(), p)))
+            .collect();
+        let modified_by_id: HashMap<String, &ProtocolSlice> = modified_walk
+            .files
+            .values()
+            .flat_map(|packets| packets.iter().map(|p| (p.id.clone(), p)))
+            .collect();
+
+        let original_ids: HashSet<String> = original_by_id.keys().cloned().collect();
+        let modified_ids_set: HashSet<String> = modified_by_id.keys().cloned().collect();
+
+        let added_ids: Vec<&String> = modified_ids_set.difference(&original_ids).collect();
+        let removed_ids: Vec<&String> = original_ids.difference(&modified_ids_set).collect();
+        let common_ids: Vec<&String> = original_ids.intersection(&modified_ids_set).collect();
+
+        println!("\n=== perfect_ip packet diff (modified .git vs original .git) ===");
+        println!("original packets: {}", original_ids.len());
+        println!("modified packets: {}", modified_ids_set.len());
+        println!("added packets: {}", added_ids.len());
+        println!("removed packets: {}", removed_ids.len());
+
+        for id in &added_ids {
+            let slice = modified_by_id[*id];
+            println!(
+                "+ {id} ({} bytes, {})",
+                slice.data.len(),
+                if slice.is_parity { "parity" } else { "data" }
+            );
+        }
+        for id in &removed_ids {
+            let slice = original_by_id[*id];
+            println!(
+                "- {id} ({} bytes, {})",
+                slice.data.len(),
+                if slice.is_parity { "parity" } else { "data" }
+            );
+        }
+
+        let mut changed_count = 0usize;
+        for id in &common_ids {
+            let original = original_by_id[*id];
+            let modified = modified_by_id[*id];
+            if original.data != modified.data {
+                changed_count += 1;
+                println!(
+                    "~ {id} ({} -> {} bytes, sha256 {} -> {})",
+                    original.data.len(),
+                    modified.data.len(),
+                    sha256_hex(&original.data),
+                    sha256_hex(&modified.data)
+                );
+            }
+        }
+        println!("changed packets: {changed_count}");
 
         let mut receiver_manager = IntegrityManager::new(modified_ids.clone());
         for slice in &modified_slices {
