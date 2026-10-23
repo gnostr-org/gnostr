@@ -359,6 +359,10 @@ pub fn list_directory(
                     debug!("{line}");
                     lines.push(format!("{indent}  {line}"));
                 }
+                for slice in &batch.packets {
+                    let json = serde_json::to_string(slice).unwrap_or_default();
+                    lines.push(format!("{indent}  payload: {json}"));
+                }
             }
         } else {
             lines.push(format!("{indent}{} [special]", relative.display()));
