@@ -15,6 +15,8 @@ TAG=true
 PUBLISH=true
 PUSH=true
 POSITIONAL_ARGS=()
+# shellcheck source=scripts/lib/cargo-files.sh
+source "$(dirname "${BASH_SOURCE[0]}")/lib/cargo-files.sh"
 while (($#)); do
     case "$1" in
         --interactive|-i)
@@ -92,50 +94,6 @@ manifest_package_name() {
     local manifest="$1"
 
     perl -0ne 'print "$1\n" and exit if /\[package\].*?^name\s*=\s*"([^"]+)"/ms' "$manifest"
-}
-
-cargo_paths() {
-    while IFS= read -r -d '' path; do
-        case "$path" in
-            ./vendor/*|vendor/*|./target/*|target/*) continue ;;
-        esac
-        printf '%s\0' "$path"
-    done < <(
-        find . \( -path './vendor' -o -path './target' \) -prune -o \( -name Cargo.lock -o -name Cargo.toml \) -print0
-    )
-}
-
-stage_cargo_files() {
-    local paths=()
-    while IFS= read -r -d '' path; do
-        paths+=("$path")
-    done < <(cargo_paths)
-
-    if [ "${#paths[@]}" -gt 0 ]; then
-        git add -- "${paths[@]}"
-    fi
-}
-
-managed_manifests() {
-    python3 - <<'PY'
-import os
-
-root = os.path.abspath(".")
-
-paths = []
-for dirpath, dirnames, filenames in os.walk(root):
-    dirpath_norm = os.path.abspath(dirpath).replace("\\", "/")
-    dirnames[:] = [name for name in dirnames if name not in {"vendor", "target"}]
-    if "/vendor/" in dirpath_norm:
-        continue
-    if "/target/" in dirpath_norm:
-        continue
-    if "Cargo.toml" in filenames:
-        paths.append(os.path.join(dirpath, "Cargo.toml"))
-
-for path in sorted(set(paths)):
-    print(path)
-PY
 }
 
 versioned_path_dependencies() {

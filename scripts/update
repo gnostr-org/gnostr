@@ -34,6 +34,8 @@ done
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 ROOT_CARGO_TOML="$REPO_ROOT/Cargo.toml"
+# shellcheck source=scripts/lib/cargo-files.sh
+source "$SCRIPT_DIR/lib/cargo-files.sh"
 
 set_workspace_version() {
     local manifest="$1"
@@ -56,22 +58,6 @@ if [[ "$INTERACTIVE" == true ]]; then
     [[ "$DRY_RUN" != true ]] || args+=(--dry-run)
     exec "$SCRIPT_DIR/update_versions.sh" "${args[@]}" ${POSITIONAL_ARGS[@]+"${POSITIONAL_ARGS[@]}"}
 fi
-
-stage_cargo_files() {
-    local paths=()
-    while IFS= read -r -d '' path; do
-        case "$path" in
-            ./vendor/*|vendor/*) continue ;;
-        esac
-        paths+=("$path")
-    done < <(
-        find . -path './vendor' -prune -o \( -name Cargo.lock -o -name Cargo.toml \) -print0
-    )
-
-    if [ "${#paths[@]}" -gt 0 ]; then
-        git add -f -- "${paths[@]}"
-    fi
-}
 
 if [ ! -f "$ROOT_CARGO_TOML" ]; then
     echo "Error: $ROOT_CARGO_TOML not found."
@@ -96,7 +82,7 @@ if [ "$DRY_RUN" = true ]; then
 fi
 
 git add scripts
-stage_cargo_files
+stage_cargo_files -f
 
 NEW_TAG="$(gnostr git tag create)"
 NEW_VERSION="${NEW_TAG#v}"
@@ -104,7 +90,7 @@ NEW_VERSION="${NEW_TAG#v}"
 set_workspace_version "$ROOT_CARGO_TOML" "$NEW_VERSION"
 taplo format "$ROOT_CARGO_TOML" || cargo install taplo-cli
 
-stage_cargo_files
+stage_cargo_files -f
 git add "$ROOT_CARGO_TOML"
 
 if [ "${#POSITIONAL_ARGS[@]}" -gt 0 ]; then

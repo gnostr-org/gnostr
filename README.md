@@ -100,6 +100,8 @@ used; custom existing outputs must carry the script's output marker.
 `update` and `update_versions.sh --interactive` select release stages and crates
 for the current workspace version; synchronization still covers all managed
 manifests. Without interactive mode, the existing full release behavior remains.
+Update discovery uses the parent Git repository's file list: submodule contents,
+vendored files, and build-output directories are not staged or version-rewritten.
 
 Shell menu regressions use mocked tools and do not perform real builds,
 publishes, workflow cancellation, or remote deletion:
