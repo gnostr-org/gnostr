@@ -7400,6 +7400,7 @@ dependencies = [
  "serde_yaml",
  "serial_test 3.5.0",
  "sha2 0.10.9",
+ "tempfile",
  "terminal_size 0.4.4",
  "textwrap 0.16.4",
  "tokio",

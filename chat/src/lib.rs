@@ -8,6 +8,8 @@ pub mod command;
 pub mod event;
 pub mod message;
 pub mod msg;
+#[cfg(feature = "ipfs")]
+pub mod ipfs;
 pub mod p2p;
 pub mod session;
 pub mod tui;

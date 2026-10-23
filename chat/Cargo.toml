@@ -19,6 +19,7 @@ path = "src/lib.rs"
 
 [features]
 long_tests = []
+ipfs = ["gnostr-p2p/ipfs"]
 
 [dependencies]
 anyhow = "1.0.98"
@@ -98,3 +99,4 @@ ureq = { version = "2.12.1", features = ["json", "charset"] }
 
 [dev-dependencies]
 serial_test = "3.2.0"
+tempfile = "3"

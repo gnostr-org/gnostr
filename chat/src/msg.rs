@@ -43,6 +43,17 @@ pub enum MsgKind {
     Debug,
 }
 
+/// A content-addressed attachment carried by a chat message.
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Default)]
+pub struct Attachment {
+    /// IPFS CID of the attachment bytes.
+    pub cid: String,
+    /// Original file name.
+    pub name: String,
+    /// MIME type, if known.
+    pub mime: String,
+}
+
 /// A single chat message or structured payload moving through the swarm.
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 #[serde(default)]
@@ -63,6 +74,9 @@ pub struct Msg {
     pub sequence_num: Option<usize>,
     /// Total chunk count for reassembly.
     pub total_chunks: Option<usize>,
+    /// Content-addressed attachments (IPFS CIDs).
+    #[serde(default)]
+    pub attachments: Vec<Attachment>,
 }
 
 impl Default for Msg {
@@ -76,6 +90,7 @@ impl Default for Msg {
             message_id: None,
             sequence_num: None,
             total_chunks: None,
+            attachments: Vec::new(),
         }
     }
 }
@@ -136,6 +151,12 @@ impl Msg {
     /// Set the total number of chunks required to reassemble the message.
     pub fn set_total_chunks(mut self, total_chunks: usize) -> Self {
         self.total_chunks = Some(total_chunks);
+        self
+    }
+
+    /// Attach a content-addressed attachment (IPFS CID).
+    pub fn add_attachment(mut self, attachment: Attachment) -> Self {
+        self.attachments.push(attachment);
         self
     }
 
@@ -486,5 +507,30 @@ impl Display for Msg {
                 write!(f, "[ONESHOT] {}: {}", self.from, self.content[0])
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod attachment_tests {
+    use super::*;
+
+    #[test]
+    fn attachment_roundtrips() {
+        let mut msg = Msg::chat("hello");
+        msg = msg.add_attachment(Attachment {
+            cid: "QmTest".into(),
+            name: "file.txt".into(),
+            mime: "text/plain".into(),
+        });
+        let json = serde_json::to_string(&msg).unwrap();
+        let back: Msg = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.attachments.len(), 1);
+        assert_eq!(back.attachments[0].cid, "QmTest");
+    }
+
+    #[test]
+    fn default_has_no_attachments() {
+        let msg = Msg::default();
+        assert!(msg.attachments.is_empty());
     }
 }
