@@ -325,6 +325,7 @@ mod tests {
             workdir: None,
             gitdir: None,
             oneshot: None,
+            relay: None,
         };
 
         assert_eq!(chat_topic(&args), "gnostr-dev");
@@ -348,6 +349,7 @@ mod tests {
                 workdir: None,
                 gitdir: None,
                 oneshot: None,
+                relay: None,
             }
         };
 
