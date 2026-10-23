@@ -1,2 +1,6 @@
 /target
 .idea
+xcode/**/.build
+xcode/**/build
+target
+.git
