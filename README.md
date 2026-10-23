@@ -64,6 +64,46 @@ The `blossom-git` tools image includes `git`, `git-lfs`, `blossom-cli`, and
 `blossom-lfs`. The `blossom-server` image wraps upstream `blossom-server`
 defaults and persists data under the `blossom_server_data` volume.
 
+## Interactive scripts and Make targets
+
+`make script-list` lists automatically discovered top-level shell scripts.
+Run one with `make script-NAME ARGS='...'`; existing Make targets are unchanged:
+
+```bash
+make script-gh-cancel-queue
+make script-gh-workflow ARGS='--interactive'
+make script-cross ARGS='--interactive --dry-run'
+make script-cross ARGS='--target macos-x64 --install-targets'
+```
+
+The GitHub workflow, Git ref/hook, build/install, Docker stack, cache, yank,
+fractal-clone, and version-update scripts support `--interactive` (`-i`).
+Menus accept numbers separated by spaces or commas, `all`, or `q` to quit.
+Destructive interactive operations require confirmation; blank input or EOF
+cancels. Existing non-interactive flags remain available for CI.
+`gh-cancel-queue.sh` is interactive by default.
+
+`cross.sh` checks native Rust targets before building. Missing targets prompt
+for installation in a terminal or interactive mode; `--install-targets` installs
+without prompting and `--no-install-targets` reports the missing target.
+Non-interactive CI retains automatic installation, and `--dry-run` never
+installs or builds. Failed target installation stops the build.
+
+`xcode-build.sh --clean` only clears selected projects under its configured
+derived-data root, not the user-wide Xcode cache. Fractal clone now refuses to
+replace existing outputs unless `--replace` or interactive confirmation is
+used; custom existing outputs must carry the script's output marker.
+`update` and `update_versions.sh --interactive` select release stages and crates
+for the current workspace version; synchronization still covers all managed
+manifests. Without interactive mode, the existing full release behavior remains.
+
+Shell menu regressions use mocked tools and do not perform real builds,
+publishes, workflow cancellation, or remote deletion:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/tests -p 'test_*.py' -v
+```
+
 ## Test wrappers
 
 The repo keeps a few shell wrappers for the most common test paths:
