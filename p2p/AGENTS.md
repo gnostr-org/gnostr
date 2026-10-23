@@ -215,3 +215,12 @@ Content-exchange helpers in `ipfs_bridge` (cfg `ipfs`):
   announce format for CID discovery.
 
 Subscribers can announce CIDs over gossipsub and fetch blocks via Kubo.
+
+## IPFS (Kubo) interop (Phase 5)
+
+Configuration & safety:
+
+- `--ipfs-disable` / `GNOSTR_P2P_IPFS_DISABLE=true` disables the embedded
+  Kubo node even with the `ipfs` feature enabled.
+- `ipfs_disabled()` helper checks the env var.
+- Tor paths remain compatible; no transport changes required.

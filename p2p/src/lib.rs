@@ -115,6 +115,12 @@ pub fn js_source_dir() -> PathBuf {
 pub fn swarm_key_from_nsec(nsec_or_hex: &str) -> Result<String, String> {
     kubo_ffi::nostr_nsec_to_swarm_key(nsec_or_hex)
 }
+#[cfg(feature = "ipfs")]
+pub fn ipfs_disabled() -> bool {
+    std::env::var("GNOSTR_P2P_IPFS_DISABLE")
+        .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+        .unwrap_or(false)
+}
 
 #[cfg(not(target_os = "tvos"))]
 pub fn keypair_from_seed(secret_key_seed: Option<String>) -> identity::Keypair {

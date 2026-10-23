@@ -38,6 +38,11 @@ pub struct NodeOpts {
     #[arg(long, env = "GNOSTR_P2P_IPFS_ONLINE", default_value_t = false)]
     pub ipfs_online: bool,
 
+    /// Disable the embedded Kubo (IPFS) node even when the `ipfs` feature is enabled.
+    #[cfg(feature = "ipfs")]
+    #[arg(long, env = "GNOSTR_P2P_IPFS_DISABLE", default_value_t = false)]
+    pub ipfs_disable: bool,
+
     /// Run the service in the background and exit the parent process.
     #[arg(long)]
     pub detach: bool,
