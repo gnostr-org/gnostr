@@ -24,3 +24,5 @@ pub use msg::{Msg, MsgKind, USER_NAME};
 pub use p2p::{evt_loop, global_rt};
 pub use session::{ChatNotification, ChatSession};
 pub use tui::run_chat_tui;
+
+pub use gnostr_p2p::perfect_ip;
