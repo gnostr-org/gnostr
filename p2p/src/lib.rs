@@ -164,7 +164,7 @@ pub use repo_state::{RepoStateQuorum, RepoStateRefs, RepoStateSnapshot};
 #[cfg(not(doc))]
 pub use relay_bridge::{RelayBridgeCommand, RelayBridgeNotification, RelayBridgeSession, NostrRelayConnection};
 #[cfg(not(target_os = "tvos"))]
-pub use fractal::{build_fractal_swarm, run_fractal_engine, FractalBehaviour, FractalBehaviourEvent, ProtocolSlice};
+pub use fractal::{build_fractal_swarm, run_fractal_engine, FractalBehaviour, FractalBehaviourEvent, FractalSlice};
 #[cfg(not(target_os = "tvos"))]
 pub use perfect_ip::*;
 #[cfg(not(target_os = "tvos"))]
