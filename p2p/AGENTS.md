@@ -204,3 +204,14 @@ exchange peer info with an embedded Kubo node:
 - `kubo_bootstrap_info(state)` — (peer_id, addrs) for seeding the swarm
 
 These allow p2p code to bootstrap from and dial into a Kubo node.
+
+## IPFS (Kubo) interop (Phase 4)
+
+Content-exchange helpers in `ipfs_bridge` (cfg `ipfs`):
+
+- `fetch_block(state, cid)` / `provide_block(state, data)` — blockstore access.
+- `fetch_via_gateway(gateway_url, cid)` — async HTTP fetch from a Kubo gateway.
+- `CID_ANNOUNCE_TOPIC` and `announce_message(cid, peer_id)` — gossipsub
+  announce format for CID discovery.
+
+Subscribers can announce CIDs over gossipsub and fetch blocks via Kubo.

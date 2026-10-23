@@ -48,3 +48,33 @@ pub fn connect_kubo(state: &IpfsState, addr: &str) -> bool {
 pub fn kubo_bootstrap_info(state: &IpfsState) -> (Option<String>, Vec<String>) {
     (kubo_peer_id(state), kubo_listening_addrs(state))
 }
+
+#[cfg(feature = "ipfs")]
+pub const CID_ANNOUNCE_TOPIC: &str = "gnostr/ipfs/cid-announce";
+
+#[cfg(feature = "ipfs")]
+pub fn announce_message(cid: &str, peer_id: &str) -> String {
+    format!(r#"{{"cid":"{cid}","peer":"{peer_id}"}}"#)
+}
+
+#[cfg(feature = "ipfs")]
+pub fn fetch_block(state: &IpfsState, cid: &str) -> Option<Vec<u8>> {
+    let guard = state.node.lock().ok()?;
+    guard.as_ref()?.unixfs_cat(cid).ok()
+}
+
+#[cfg(feature = "ipfs")]
+pub fn provide_block(state: &IpfsState, data: &[u8]) -> Option<String> {
+    let guard = state.node.lock().ok()?;
+    guard.as_ref()?.unixfs_add_bytes(data).ok()
+}
+
+#[cfg(feature = "ipfs")]
+pub async fn fetch_via_gateway(gateway_url: &str, cid: &str) -> Option<Vec<u8>> {
+    let url = format!("{}/ipfs/{}", gateway_url.trim_end_matches('/'), cid);
+    let resp = reqwest::get(&url).await.ok()?;
+    if !resp.status().is_success() {
+        return None;
+    }
+    resp.bytes().await.ok().map(|b| b.to_vec())
+}
