@@ -33,6 +33,7 @@
 //! `perfect_ip.rs` gist.
 
 use std::error::Error;
+use std::time::Duration;
 
 use futures::StreamExt;
 use libp2p::{
@@ -97,6 +98,7 @@ pub async fn build_fractal_swarm(
                 ),
             })
         })?
+        .with_swarm_config(|cfg| cfg.with_idle_connection_timeout(Duration::from_secs(60)))
         .build();
 
     #[cfg(not(target_os = "tvos"))]
@@ -114,6 +116,7 @@ pub async fn build_fractal_swarm(
                 ),
             })
         })?
+        .with_swarm_config(|cfg| cfg.with_idle_connection_timeout(Duration::from_secs(60)))
         .build();
 
     Ok(swarm)
@@ -194,11 +197,13 @@ mod tests {
             .join("../web/crlf.git")
             .canonicalize()
             .expect("locate web/crlf.git fixture");
+        println!("fixture: {}", fixture.display());
 
         let walk = run_directory_walk(&fixture, 3, false).expect("packetize fixture");
         let all_slices: Vec<ProtocolSlice> =
             walk.files.values().flat_map(|packets| packets.clone()).collect();
         let all_ids: Vec<String> = all_slices.iter().map(|s| s.id.clone()).collect();
+        println!("total slices to sync: {}", all_slices.len());
 
         let mut sender_manager = IntegrityManager::new(all_ids.clone());
         for slice in &all_slices {
@@ -213,14 +218,20 @@ mod tests {
             swarm
                 .listen_on("/ip4/127.0.0.1/udp/0/quic-v1".parse().unwrap())
                 .unwrap();
+            println!("[sender] listening");
 
             let mut addr_tx = Some(addr_tx);
+            let mut requests_served = 0usize;
             loop {
                 match swarm.select_next_some().await {
                     SwarmEvent::NewListenAddr { address, .. } => {
+                        println!("[sender] new listen addr: {address}");
                         if let Some(tx) = addr_tx.take() {
                             let _ = tx.send(address);
                         }
+                    }
+                    SwarmEvent::ConnectionEstablished { peer_id, .. } => {
+                        println!("[sender] connection established with {peer_id}");
                     }
                     SwarmEvent::Behaviour(FractalBehaviourEvent::RepairRpc(event)) => {
                         if let request_response::Event::Message { message, .. } = event {
@@ -228,6 +239,11 @@ mod tests {
                                 request, channel, ..
                             } = message
                             {
+                                requests_served += 1;
+                                println!(
+                                    "[sender] request {requests_served}: {} -> lookup",
+                                    request.id
+                                );
                                 let response = sender_manager
                                     .received_slices
                                     .get(&request.id)
@@ -238,6 +254,11 @@ mod tests {
                                         data: Vec::new(),
                                         is_parity: false,
                                     });
+                                println!(
+                                    "[sender] response: {} ({} bytes)",
+                                    response.id,
+                                    response.data.len()
+                                );
                                 let _ = swarm
                                     .behaviour_mut()
                                     .repair_rpc
@@ -245,7 +266,9 @@ mod tests {
                             }
                         }
                     }
-                    _ => {}
+                    other => {
+                        println!("[sender] event: {other:?}");
+                    }
                 }
             }
         });
@@ -254,11 +277,16 @@ mod tests {
             .await
             .expect("sender address timeout")
             .expect("sender address channel");
+        println!("[receiver] sender addr: {sender_addr}");
 
         // Receiver: dial sender, request every slice, and collect responses.
         let keypair = keypair_from_seed(Some("receiver".to_string()));
         let mut swarm = build_fractal_swarm(keypair).await.expect("receiver swarm");
+        swarm
+            .listen_on("/ip4/127.0.0.1/udp/0/quic-v1".parse().unwrap())
+            .unwrap();
         swarm.dial(sender_addr).unwrap();
+        println!("[receiver] dialing sender");
 
         let mut received_slices = HashMap::new();
 
@@ -266,6 +294,9 @@ mod tests {
             loop {
                 match swarm.select_next_some().await {
                     SwarmEvent::ConnectionEstablished { peer_id, .. } => {
+                        println!("[receiver] connected to {peer_id}");
+                        tokio::time::sleep(Duration::from_millis(100)).await;
+                        println!("[receiver] sending {} requests", all_slices.len());
                         for slice in &all_slices {
                             let request = ProtocolSlice {
                                 id: slice.id.clone(),
@@ -278,24 +309,41 @@ mod tests {
                                 .repair_rpc
                                 .send_request(&peer_id, request);
                         }
+                        println!("[receiver] all requests sent");
                     }
                     SwarmEvent::Behaviour(FractalBehaviourEvent::RepairRpc(event)) => {
                         if let request_response::Event::Message { message, .. } = event {
                             if let request_response::Message::Response { response, .. } = message {
-                                received_slices.insert(response.id.clone(), response);
+                                let prev = received_slices.len();
+                                let id = response.id.clone();
+                                let len = response.data.len();
+                                received_slices.insert(id.clone(), response);
+                                if received_slices.len() > prev {
+                                    println!(
+                                        "[receiver] response {}/{}: {} ({} bytes)",
+                                        received_slices.len(),
+                                        all_slices.len(),
+                                        id,
+                                        len
+                                    );
+                                }
                                 if received_slices.len() == all_slices.len() {
+                                    println!("[receiver] all responses received");
                                     break;
                                 }
                             }
                         }
                     }
-                    _ => {}
+                    other => {
+                        println!("[receiver] event: {other:?}");
+                    }
                 }
             }
         })
         .await
         .expect("p2p sync timed out");
 
+        println!("[test] aborting sender task");
         sender_handle.abort();
 
         // Verify every expected slice was received.
