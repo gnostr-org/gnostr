@@ -516,7 +516,12 @@ mod tests {
         let removed_ids: Vec<&String> = original_ids.difference(&modified_ids_set).collect();
         let common_ids: Vec<&String> = original_ids.intersection(&modified_ids_set).collect();
 
-        println!("\n=== perfect_ip packet diff (modified .git vs original .git) ===");
+        println!("\n");
+        println!("########################################################################");
+        println!("#                                                                      #");
+        println!("#           PERFECT_IP PACKET DIFF (modified .git vs original .git)    #");
+        println!("#                                                                      #");
+        println!("########################################################################");
         println!("original packets: {}", original_ids.len());
         println!("modified packets: {}", modified_ids_set.len());
         println!("added packets: {}", added_ids.len());
