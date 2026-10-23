@@ -1,5 +1,9 @@
 name: build-install-matrix
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 # Controls when the action will run.
 on:
   pull_request:
@@ -46,11 +50,6 @@ jobs:
           echo NOS=${{ env.NOS }}
         env:
           MEMPOOL: "mempool"
-      - uses: styfle/cancel-workflow-action@0.11.0
-        if: ${{ !env.ACT }}
-        with:
-          access_token: ${{ github.token }}
-
       - name: Restore rustup
         id: cache-rustup-restore
         uses: actions/cache/restore@v3
@@ -147,11 +146,6 @@ jobs:
           echo NOS=${{ env.NOS }}
         env:
           MEMPOOL: "mempool"
-      - uses: styfle/cancel-workflow-action@0.11.0
-        if: ${{ !env.ACT }}
-        with:
-          access_token: ${{ github.token }}
-
       - name: Restore rustup
         id: cache-rustup-restore
         uses: actions/cache/restore@v3
@@ -239,11 +233,6 @@ jobs:
           echo NOS=${{ env.NOS }}
         env:
           MEMPOOL: "mempool"
-      - uses: styfle/cancel-workflow-action@0.11.0
-        if: ${{ !env.ACT }}
-        with:
-          access_token: ${{ github.token }}
-
       - uses: cargo-bins/cargo-binstall@main
       - name: Restore rustup
         id: cache-rustup-restore

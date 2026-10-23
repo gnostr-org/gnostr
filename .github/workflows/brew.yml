@@ -1,5 +1,9 @@
 name: brew update
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ toJSON(inputs) }}
+  cancel-in-progress: true
+
 on:
   # only manually
   workflow_dispatch:

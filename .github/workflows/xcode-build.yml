@@ -34,7 +34,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref_name }}
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ toJSON(inputs) }}
   cancel-in-progress: true
 
 jobs:

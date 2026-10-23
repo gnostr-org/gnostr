@@ -1,7 +1,7 @@
 name: gnostr-bot-matrix
 
 concurrency:
-  group: gnostr-bot-matrix-${{ github.event.workflow_run.head_branch || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.head_branch || github.ref }}
   cancel-in-progress: true
 
 # Controls when the action will run.
@@ -88,11 +88,6 @@ jobs:
         run: |
           set -euxo pipefail
           cargo install cargo-binstall --locked
-
-      - uses: styfle/cancel-workflow-action@0.11.0
-        if: ${{ !env.ACT }}
-        with:
-          access_token: ${{ github.token }}
 
       - run: |
           rustup default ${{ matrix.toolchain }}

@@ -1,5 +1,9 @@
 name: cross-docker-actions
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ toJSON(inputs) }}
+  cancel-in-progress: true
+
 on:
   workflow_dispatch:
     inputs:

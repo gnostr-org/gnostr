@@ -1,6 +1,10 @@
 ---
 name: gnostr-chat.yml
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.head_branch || github.ref }}-${{ toJSON(inputs) }}
+  cancel-in-progress: true
+
 on:
   workflow_run:
     workflows:

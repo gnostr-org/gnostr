@@ -1,5 +1,9 @@
 name: cargo-cross
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ toJSON(inputs) }}
+  cancel-in-progress: true
+
 on:
   push:
     tags:

@@ -1,5 +1,9 @@
 name: Check UTC Hour Odd/Even
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   schedule:
     - cron: '*/30 * * * *' # run 30th minute

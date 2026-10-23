@@ -1,6 +1,10 @@
 name: publish to ghcr.io
 ##REF:https://github.com/docker/login-action
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   GNOSTR_COMMAND: 'gnostr tui'
 
