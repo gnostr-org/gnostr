@@ -10,8 +10,6 @@ use std::path::Path;
 use bincode;
 use serde::{Deserialize, Serialize};
 
-use crate::utils::file_slice::FileSliceReader as _; // keep utils module linked (no-op)
-
 /// Packet header metadata shared by all packet types in the tree.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Header {
