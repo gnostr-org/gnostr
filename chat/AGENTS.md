@@ -153,3 +153,14 @@ by normal chat sends.
 - Gossipsub message IDs are hashed from payload data; identical content from the
   same sender may be deduplicated.
 - Many chat integration tests are network-dependent and marked `#[ignore]`.
+
+## IPFS integration
+
+Chat can store attachments in IPFS when built with `--features ipfs`.
+
+- `Msg.attachments: Vec<Attachment>` carries content-addressed files.
+- `crate::ipfs::attach_file(path)` adds a file to an embedded Kubo node.
+- `ChatSession::send_text_with_attachment(text, path)` sends a message with an
+  attachment (used by `--oneshot --attach <path>`).
+- Tests: `cargo test -p gnostr-chat --features ipfs` (ignored tests require
+  the Go toolchain).
