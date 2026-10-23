@@ -3,6 +3,7 @@ EXPOSE 4000
 WORKDIR /app
 RUN apt-get update && apt-get install -y \
     build-essential \
+    golang-go \
     clang \
     curl \
     libclang-dev \
