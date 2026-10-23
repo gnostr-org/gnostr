@@ -13,16 +13,18 @@ cargo_paths() {
 }
 
 refresh_cargo_files() {
-    local path
-    CARGO_PATHS=()
-    while IFS= read -r -d '' path; do
-        CARGO_PATHS+=("$path")
-    done < <(cargo_paths)
-    local discovery_pid=$!
-    if ! wait "$discovery_pid"; then
+    local path listing
+    listing="$(mktemp "${TMPDIR:-/tmp}/gnostr-cargo-files.XXXXXX")" || return 1
+    if ! cargo_paths > "$listing"; then
+        rm -f -- "$listing"
         echo "Error: could not discover parent-repository Cargo files." >&2
         return 1
     fi
+    CARGO_PATHS=()
+    while IFS= read -r -d '' path; do
+        CARGO_PATHS+=("$path")
+    done < "$listing"
+    rm -f -- "$listing"
 }
 
 managed_manifests() {
