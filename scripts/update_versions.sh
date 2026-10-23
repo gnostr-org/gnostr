@@ -358,7 +358,9 @@ if [ "$DRY_RUN" = true ]; then
         done < <(versioned_path_dependencies "$manifest")
     done < <(managed_manifests)
     echo "  would run cargo update --workspace"
-    echo "  would create version commit/tag and publish crates"
+    [[ "$TAG" != true ]] || echo "  would create version commit/tag"
+    [[ "$PUBLISH" != true ]] || echo "  would publish crates"
+    [[ "$PUSH" != true ]] || echo "  would push version tags and notes"
     exit 0
 fi
 
@@ -511,7 +513,7 @@ for crate in "${PUBLISH_CRATES[@]}"; do
 done
 fi
 
-if [ -n "$(git status --porcelain -- . ':(exclude)vendor/**' 2>/dev/null | grep -E '(^|/)(Cargo\.toml|Cargo\.lock)$' || true)" ]; then
+if [[ "$PUBLISH" == true ]] && [ -n "$(git status --porcelain -- . ':(exclude)vendor/**' 2>/dev/null | grep -E '(^|/)(Cargo\.toml|Cargo\.lock)$' || true)" ]; then
     echo "Warning: Cargo manifests changed during publish; leaving tagged commits as-is."
 fi
 

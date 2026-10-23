@@ -151,3 +151,6 @@ act-cargo-cross:
 act-gnostr-act:
   @make act-gnostr-act
 
+script-list:
+  @make script-list
+

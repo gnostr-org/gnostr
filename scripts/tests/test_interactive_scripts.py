@@ -35,7 +35,17 @@ elif name == "uname":
 elif name == "cross":
     print("cross 0.2.5")
 elif name == "rustup":
-    if args[:2] == ["target", "list"]:
+    if args[:2] == ["show", "active-toolchain"]:
+        print("stable-aarch64-apple-darwin (default)")
+    elif args[:1] == ["which"]:
+        print(Path(sys.argv[0]).parent / "rustc")
+    elif args[:1] == ["run"]:
+        if args[2:] == ["rustc", "-vV"]:
+            print("host: aarch64-apple-darwin")
+        else:
+            import subprocess
+            sys.exit(subprocess.call(args[2:]))
+    elif args[:2] == ["target", "list"]:
         print(os.environ.get("INSTALLED_TARGETS", "aarch64-apple-darwin"))
     elif os.environ.get("INSTALL_FAIL") == "1":
         sys.exit(1)
@@ -224,7 +234,11 @@ class InteractiveScriptTests(unittest.TestCase):
     def test_cross_installs_before_building(self):
         result = self.run_script("cross.sh", args=("--target", "macos-x64"))
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn(["rustup", "target", "add", "x86_64-apple-darwin"], self.calls("rustup"))
+        self.assertIn(
+            ["rustup", "target", "add", "x86_64-apple-darwin",
+             "--toolchain", "stable-aarch64-apple-darwin"],
+            self.calls("rustup"),
+        )
         self.assertEqual(len(self.calls("cargo")), 1)
 
     def test_interactive_missing_target_decline_never_installs_or_builds(self):
@@ -243,8 +257,25 @@ class InteractiveScriptTests(unittest.TestCase):
             ("--interactive", "--target", "macos-x64"),
         )
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn(["rustup", "target", "add", "x86_64-apple-darwin"], self.calls("rustup"))
+        self.assertIn(
+            ["rustup", "target", "add", "x86_64-apple-darwin",
+             "--toolchain", "stable-aarch64-apple-darwin"],
+            self.calls("rustup"),
+        )
         self.assertEqual(len(self.calls("cargo")), 1)
+
+    def test_explicit_toolchain_pins_target_check_and_native_build(self):
+        result = self.run_script(
+            "cross.sh",
+            args=("--target", "macos-arm64", "--toolchain", "nightly", "--dry-run"),
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn(
+            ["rustup", "target", "list", "--installed", "--toolchain", "nightly"],
+            self.calls("rustup"),
+        )
+        self.assertIn("RUSTC=", result.stdout)
+        self.assertIn("rustup  run  nightly  cargo  build", result.stdout)
 
     def test_xcode_interactive_list_only_shows_selected_project(self):
         result = self.run_script("xcode-build.sh", "4\n3\n\n", ("--interactive",))
@@ -292,7 +323,7 @@ class InteractiveScriptTests(unittest.TestCase):
         selected = result.stdout.split("  2) ", 1)[1].splitlines()[0]
         self.assertEqual(
             cwd_log.read_text().splitlines(),
-            [str(Path(selected).parent)] * 2,
+            [str(Path(selected).parent.resolve())] * 2,
         )
 
     def test_install_selection_does_not_run_other_variants(self):

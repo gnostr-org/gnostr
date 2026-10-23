@@ -30,4 +30,4 @@ act -j gnostr-test \
   --matrix "os:${OS}" \
   --matrix "toolchain:${TOOLCHAIN}" \
   -P "${OS}=${RUNNER_IMAGE}" \
-  2>&1 | tee /tmp/act-gnostr-test-matrix.log
+  2>&1 | tee "${ACT_TEST_MATRIX_LOG:-${TMPDIR:-/tmp}/act-gnostr-test-matrix.log}"

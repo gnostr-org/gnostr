@@ -74,6 +74,7 @@ make script-gh-cancel-queue
 make script-gh-workflow ARGS='--interactive'
 make script-cross ARGS='--interactive --dry-run'
 make script-cross ARGS='--target macos-x64 --install-targets'
+make script-cross ARGS='--target macos-x64 --toolchain stable --install-targets'
 ```
 
 The GitHub workflow, Git ref/hook, build/install, Docker stack, cache, yank,
@@ -88,6 +89,9 @@ for installation in a terminal or interactive mode; `--install-targets` installs
 without prompting and `--no-install-targets` reports the missing target.
 Non-interactive CI retains automatic installation, and `--dry-run` never
 installs or builds. Failed target installation stops the build.
+Native builds pin both Cargo and rustc to the same rustup toolchain, avoiding
+Homebrew/rustup mismatches. `--toolchain NAME` overrides the repository's active
+toolchain and is also used for target installation.
 
 `xcode-build.sh --clean` only clears selected projects under its configured
 derived-data root, not the user-wide Xcode cache. Fractal clone now refuses to

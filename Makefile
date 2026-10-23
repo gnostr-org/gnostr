@@ -204,3 +204,19 @@ act-gnostr-act: 	## 	act-gnostr-act
 
 # vim: set noexpandtab:
 # vim: set setfiletype make
+
+# Script entry points are discovered without executing the scripts.
+SCRIPT_FILES := $(sort $(wildcard scripts/*.sh) $(wildcard scripts/update scripts/release))
+SCRIPT_TARGETS := $(addprefix script-,$(basename $(notdir $(SCRIPT_FILES))))
+ARGS ?=
+
+.PHONY: script-list $(SCRIPT_TARGETS)
+script-list: ## List script targets; pass options with ARGS='...'
+	@printf '%s\n' "Usage: make script-NAME ARGS='--interactive'" $(SCRIPT_TARGETS)
+
+define script_target
+.PHONY: script-$(basename $(notdir $(1)))
+script-$(basename $(notdir $(1))):
+	bash "$(1)" $$(ARGS)
+endef
+$(foreach script,$(SCRIPT_FILES),$(eval $(call script_target,$(script))))
