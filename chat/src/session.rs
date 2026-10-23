@@ -22,6 +22,7 @@ pub enum ChatNotification {
 
 pub struct ChatSession {
     topic: String,
+    relay: Option<String>,
     command_tx: mpsc::Sender<ChatEvent>,
     updates: broadcast::Sender<ChatNotification>,
     ready_rx: watch::Receiver<bool>,
@@ -31,8 +32,9 @@ pub struct ChatSession {
 }
 
 impl ChatSession {
-    pub async fn connect(topic: impl Into<String>) -> Result<Self> {
+    pub async fn connect(topic: impl Into<String>, relay: Option<String>) -> Result<Self> {
         let topic = topic.into();
+        let relay_for_loop = relay.clone();
         let relay_service = spawn_local_p2p_relay_service_async().await?;
         let (command_tx, command_rx) = mpsc::channel::<ChatEvent>(100);
         let (output_tx, output_rx) = mpsc::channel::<ChatEvent>(100);
@@ -41,7 +43,7 @@ impl ChatSession {
         let topic_handle = gossipsub::IdentTopic::new(topic.clone());
 
         let event_loop = tokio::spawn(async move {
-            let _ = evt_loop(command_rx, output_tx, topic_handle).await;
+            let _ = evt_loop(command_rx, output_tx, topic_handle, relay_for_loop).await;
         });
 
         let bridge_updates = updates.clone();
@@ -51,6 +53,7 @@ impl ChatSession {
 
         Ok(Self {
             topic,
+            relay,
             command_tx,
             updates,
             ready_rx,

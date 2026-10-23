@@ -31,6 +31,8 @@ pub struct ChatSubCommands {
     pub name: Option<String>,
     #[arg(long, global = true, default_value = "gnostr-dev")]
     pub topic: Option<String>,
+    #[arg(long, global = true, help = "External relay multiaddr for remote<->local hole punching")]
+    pub relay: Option<String>,
     #[arg(long, global = true)]
     pub hash: Option<String>,
     #[arg(long, default_value_t = false)]
@@ -144,7 +146,7 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<()> {
     tracing::info!("\n{:?}\n", &sub_command_args);
 
     let topic_name = chat_topic(sub_command_args);
-    let mut session = ChatSession::connect(topic_name.clone()).await?;
+    let mut session = ChatSession::connect(topic_name.clone(), sub_command_args.relay.clone()).await?;
     tracing::info!("local p2p relay service started for chat");
 
     if let Some(message_input) = sub_command_args.oneshot.clone() {

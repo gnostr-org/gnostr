@@ -425,6 +425,7 @@ pub async fn evt_loop(
     mut send: tokio::sync::mpsc::Receiver<ChatEvent>,
     recv: tokio::sync::mpsc::Sender<ChatEvent>,
     topic: gossipsub::IdentTopic,
+    relay: Option<String>,
 ) -> Result<()> {
     let reassembler = Arc::new(MessageReassembler::new()); // Create reassembler here
     let mut pending_crawler_search: HashMap<kad::QueryId, i32> = HashMap::new();
@@ -522,6 +523,13 @@ pub async fn evt_loop(
         let mut a = addr.clone();
         a.push(libp2p::multiaddr::Protocol::P2p(peer));
         let _ = swarm.dial(a);
+    }
+
+    // Dial an optional external relay for remote<->local hole punching.
+    if let Some(relay_addr) = relay {
+        if let Ok(ma) = relay_addr.parse::<libp2p::Multiaddr>() {
+            let _ = swarm.dial(ma);
+        }
     }
 
     // subscribes to our topic
