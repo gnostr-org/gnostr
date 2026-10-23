@@ -39,6 +39,18 @@ pub struct AddResponse {
 }
 
 #[cfg(feature = "ipfs")]
+#[derive(serde::Deserialize)]
+pub struct BatchAddRequest {
+    pub items: Vec<String>,
+}
+
+#[cfg(feature = "ipfs")]
+#[derive(Serialize)]
+pub struct BatchAddResponse {
+    pub cids: Vec<String>,
+}
+
+#[cfg(feature = "ipfs")]
 #[derive(Serialize)]
 pub struct GatewayResponse {
     pub url: String,
@@ -224,4 +236,35 @@ pub async fn publish_manifest(
         Ok(cid) => Json(AddResponse { cid }).into_response(),
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e).into_response(),
     }
+}
+
+
+#[cfg(feature = "ipfs")]
+pub async fn add_batch(
+    Extension(state): Extension<Arc<IpfsState>>,
+    Json(payload): Json<BatchAddRequest>,
+) -> impl IntoResponse {
+    let guard = state.node.lock().unwrap();
+    let Some(node) = guard.as_ref() else {
+        let err = state.last_error.lock().unwrap().clone();
+        return (StatusCode::SERVICE_UNAVAILABLE, err.unwrap_or_default()).into_response();
+    };
+    let mut cids = Vec::with_capacity(payload.items.len());
+    for item in &payload.items {
+        match node.unixfs_add_bytes(item.as_bytes()) {
+            Ok(cid) => cids.push(cid),
+            Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, e).into_response(),
+        }
+    }
+    Json(BatchAddResponse { cids }).into_response()
+}
+
+#[cfg(feature = "ipfs")]
+pub async fn peers(Extension(state): Extension<Arc<IpfsState>>) -> impl IntoResponse {
+    let guard = state.node.lock().unwrap();
+    let Some(node) = guard.as_ref() else {
+        let err = state.last_error.lock().unwrap().clone();
+        return (StatusCode::SERVICE_UNAVAILABLE, err.unwrap_or_default()).into_response();
+    };
+    Json(serde_json::json!({"peers": node.swarm_peers()})).into_response()
 }

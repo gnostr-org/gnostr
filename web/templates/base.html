@@ -30,66 +30,84 @@
         console.error("Failed to start Helia:", e);
       }
 
-      // Discover the embedded Kubo gateway.
-      let gatewayUrl = "";
+      // Check Kubo availability (graceful degradation).
+      let status = null;
       try {
-        const gwRes = await fetch("/api/ipfs/gateway");
-        if (gwRes.ok) {
-          const gw = await gwRes.json();
-          gatewayUrl = gw.url || "";
-        }
-      } catch (e) {
-        console.debug("No Kubo gateway", e);
+        const r = await fetch("/api/ipfs/status");
+        if (r.ok) status = await r.json();
+      } catch (e) {}
+      const healthEl = document.getElementById("ipfs-health-body");
+      if (!status || !status.enabled) {
+        if (healthEl) healthEl.textContent = "IPFS disabled";
+        return;
       }
 
-      // Traverse every repository/commit row and store it in Kubo (IPFS).
+      const gatewayUrl = status.gateway || "";
+
+      // Collect repository rows and their refs.
       const rows = Array.from(document.querySelectorAll("table.repositories tbody tr"));
-      const manifestEntries = [];
+      const refs = [];
+      const rowRefs = [];
       for (const row of rows) {
         const link = row.querySelector("td a");
         if (!link) continue;
         const repoRef = (link.getAttribute("href") || link.textContent || "").trim();
         if (!repoRef) continue;
-        try {
-          const res = await fetch("/api/ipfs/add", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ data: repoRef }),
-          });
-          if (!res.ok) throw new Error(await res.text());
-          const { cid } = await res.json();
-          manifestEntries.push({ repo: repoRef, cid });
-
-          const nameCell = link.parentElement;
-          if (nameCell && !nameCell.querySelector(".repo-cid")) {
-            const cidEl = document.createElement("a");
-            cidEl.className = "repo-cid";
-            cidEl.style.fontSize = "0.75rem";
-            cidEl.style.opacity = "0.7";
-            cidEl.style.display = "block";
-            cidEl.textContent = `CID: ${cid}`;
-            cidEl.href = gatewayUrl ? `${gatewayUrl}/ipfs/${cid}` : "#";
-            cidEl.target = "_blank";
-            cidEl.rel = "noopener noreferrer";
-            nameCell.appendChild(cidEl);
-          }
-
-          // Let Helia talk to gnostr-web by fetching the CID from the Kubo gateway.
-          if (helia) {
-            try {
-              const fs = unixfs(helia);
-              // Trigger a fetch so the browser node is aware of the content.
-              fetch(gatewayUrl ? `${gatewayUrl}/ipfs/${cid}` : "#").catch(() => {});
-            } catch (talkErr) {
-              console.debug("Helia/Kubo talk failed", talkErr);
-            }
-          }
-        } catch (e) {
-          console.error("Failed to store repo in IPFS", repoRef, e);
-        }
+        refs.push(repoRef);
+        rowRefs.push({ row, link, repoRef });
       }
 
-      // Publish the collected chain as a manifest.
+      // Batched store in Kubo.
+      let cids = [];
+      try {
+        const res = await fetch("/api/ipfs/add-batch", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ items: refs }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          cids = data.cids || [];
+        }
+      } catch (e) {
+        console.error("Batch IPFS add failed", e);
+      }
+
+      // Apply CIDs to rows and verify via /api/ipfs/cat.
+      const manifestEntries = [];
+      rowRefs.forEach((entry, idx) => {
+        const cid = cids[idx];
+        if (!cid) return;
+        manifestEntries.push({ repo: entry.repoRef, cid });
+        const nameCell = entry.link.parentElement;
+        if (nameCell && !nameCell.querySelector(".repo-cid")) {
+          const cidEl = document.createElement("a");
+          cidEl.className = "repo-cid";
+          cidEl.style.fontSize = "0.75rem";
+          cidEl.style.opacity = "0.7";
+          cidEl.style.display = "block";
+          cidEl.textContent = `CID: ${cid}`;
+          cidEl.href = gatewayUrl ? `${gatewayUrl}/ipfs/${cid}` : "#";
+          cidEl.target = "_blank";
+          cidEl.rel = "noopener noreferrer";
+          nameCell.appendChild(cidEl);
+        }
+        // Verify availability via axum proxy (Helia talks to Kubo).
+        fetch(`/api/ipfs/cat/${cid}`).catch(() => {});
+      });
+
+      // Publish manifest to Kubo too.
+      try {
+        await fetch("/api/ipfs/manifest", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ repos: manifestEntries }),
+        });
+      } catch (e) {
+        console.debug("Could not publish manifest to Kubo", e);
+      }
+
+      // Also keep the existing cid-manifest endpoint in sync.
       try {
         await fetch("/api/cid-manifest", {
           method: "POST",
@@ -98,6 +116,21 @@
         });
       } catch (e) {
         console.debug("Could not publish manifest", e);
+      }
+
+      // Health + peers (behind the <details> toggle).
+      try {
+        const peersRes = await fetch("/api/ipfs/peers");
+        const peers = peersRes.ok ? await peersRes.json() : { peers: [] };
+        if (healthEl) {
+          healthEl.textContent = `gateway: ${gatewayUrl}\npeers: ${(peers.peers || []).length}`;
+        }
+      } catch (e) {
+        if (healthEl) healthEl.textContent = `gateway: ${gatewayUrl}`;
+      }
+
+      if (helia) {
+        console.log("Helia node ready; Kubo gateway:", gatewayUrl);
       }
     }
 
@@ -128,6 +161,10 @@
       time::OffsetDateTime::now_utc()|format_time }} in {{
       "{:?}"|format(crate::layers::logger::REQ_TIMESTAMP.get().elapsed()) }}
     </footer>
+    <details id="ipfs-health" style="font-size:0.75rem;margin:0.5rem 0;">
+      <summary>IPFS health</summary>
+      <pre id="ipfs-health-body" style="white-space:pre-wrap;"></pre>
+    </details>
     {%- block scripts -%}{%- endblock %}
   </body>
 </html>
