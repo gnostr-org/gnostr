@@ -6894,7 +6894,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr"
-version = "972830.1842.835965"
+version = "972830.1842.836622"
 dependencies = [
  "actix-cors",
  "actix-http",
@@ -7147,7 +7147,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-asyncgit"
-version = "972830.1842.835965"
+version = "972830.1842.836622"
 dependencies = [
  "actix-test",
  "aes",
@@ -7299,7 +7299,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-bins"
-version = "972830.1842.835965"
+version = "972830.1842.836622"
 dependencies = [
  "actix-web",
  "anyhow",
@@ -7378,7 +7378,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-chat"
-version = "972830.1842.835965"
+version = "972830.1842.836622"
 dependencies = [
  "anyhow",
  "clap 4.6.7",
@@ -7412,7 +7412,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-crawler"
-version = "972830.1842.835965"
+version = "972830.1842.836622"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -7456,7 +7456,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-extensions"
-version = "972830.1842.835965"
+version = "972830.1842.836622"
 dependencies = [
  "actix-web",
  "gnostr-relay",
@@ -7467,7 +7467,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-filetreelist"
-version = "972830.1842.835965"
+version = "972830.1842.836622"
 dependencies = [
  "pretty_assertions",
  "thiserror 1.0.69",
@@ -7475,7 +7475,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-git-helpers"
-version = "972830.1842.835965"
+version = "972830.1842.836622"
 dependencies = [
  "anyhow",
  "bech32 0.11.1",
@@ -7497,7 +7497,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-git2-hooks"
-version = "972830.1842.835965"
+version = "972830.1842.836622"
 dependencies = [
  "git2 0.21.0",
  "gix-path 0.11.3",
@@ -7511,7 +7511,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-git2-testing"
-version = "972830.1842.835965"
+version = "972830.1842.836622"
 dependencies = [
  "env_logger 0.11.11",
  "git2 0.21.0",
@@ -7522,7 +7522,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-grammar"
-version = "972830.1842.835965"
+version = "972830.1842.836622"
 dependencies = [
  "anyhow",
  "cc",
@@ -7542,11 +7542,11 @@ dependencies = [
 
 [[package]]
 name = "gnostr-invalidstring"
-version = "972830.1842.835965"
+version = "972830.1842.836622"
 
 [[package]]
 name = "gnostr-js"
-version = "972830.1842.835965"
+version = "972830.1842.836622"
 dependencies = [
  "actix-web",
  "anyhow",
@@ -7577,7 +7577,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-legit"
-version = "972830.1842.835965"
+version = "972830.1842.836622"
 dependencies = [
  "argparse",
  "chrono",
@@ -7593,7 +7593,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-ngit"
-version = "972830.1842.835965"
+version = "972830.1842.836622"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -7643,7 +7643,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-p2p"
-version = "972830.1842.835965"
+version = "972830.1842.836622"
 dependencies = [
  "ansi_term",
  "anyhow",
@@ -7689,7 +7689,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-relay"
-version = "972830.1842.835965"
+version = "972830.1842.836622"
 dependencies = [
  "actix-http",
  "actix-web",
@@ -7706,7 +7706,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-scopetime"
-version = "972830.1842.835965"
+version = "972830.1842.836622"
 dependencies = [
  "log",
  "scopetime",
@@ -7714,7 +7714,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-types"
-version = "972830.1842.835965"
+version = "972830.1842.836622"
 dependencies = [
  "actix-test",
  "aes",
@@ -7838,7 +7838,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-web"
-version = "972830.1842.835965"
+version = "972830.1842.836622"
 dependencies = [
  "actix-http",
  "anyhow",
@@ -7910,7 +7910,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr_qr"
-version = "972830.1842.835965"
+version = "972830.1842.836622"
 dependencies = [
  "hex",
  "image",
@@ -12196,7 +12196,7 @@ dependencies = [
 
 [[package]]
 name = "nips"
-version = "972830.1842.835965"
+version = "972830.1842.836622"
 dependencies = [
  "axum 0.7.9",
  "bytes",
@@ -15714,7 +15714,7 @@ dependencies = [
 
 [[package]]
 name = "rust-libp2p-webrtc-peer"
-version = "972830.1842.835965"
+version = "972830.1842.836622"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -17769,7 +17769,7 @@ dependencies = [
 
 [[package]]
 name = "test_utils"
-version = "972830.1842.835965"
+version = "972830.1842.836622"
 dependencies = [
  "anyhow",
  "assert_cmd",
