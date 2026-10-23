@@ -1,9 +1,7 @@
-use std::{
-    collections::HashMap,
-    error::Error,
-    path::PathBuf,
-};
+use std::collections::HashMap;
+use std::error::Error;
 
+use gnostr_types::FileSliceReader;
 use futures::StreamExt;
 use libp2p::{
     gossipsub,
@@ -13,11 +11,7 @@ use libp2p::{
     PeerId, StreamProtocol,
 };
 use serde::{Deserialize, Serialize};
-use tokio::{
-    fs::File,
-    io::{AsyncReadExt, AsyncSeekExt, SeekFrom},
-    sync::oneshot,
-};
+use tokio::sync::oneshot;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ProtocolSlice {
@@ -60,25 +54,7 @@ impl From<gossipsub::Event> for FractalBehaviourEvent {
     }
 }
 
-pub struct FileSliceReader {
-    file_path: PathBuf,
-}
-
-impl FileSliceReader {
-    pub fn new(file_path: impl Into<PathBuf>) -> Self {
-        Self {
-            file_path: file_path.into(),
-        }
-    }
-
-    pub async fn read_slice(&self, offset: u64, len: usize) -> std::io::Result<Vec<u8>> {
-        let mut file = File::open(&self.file_path).await?;
-        file.seek(SeekFrom::Start(offset)).await?;
-        let mut buf = vec![0; len];
-        file.read_exact(&mut buf).await?;
-        Ok(buf)
-    }
-}
+// FileSliceReader moved to gnostr_types::utils::file_slice
 
 pub async fn build_fractal_swarm(
     local_key: libp2p::identity::Keypair,
