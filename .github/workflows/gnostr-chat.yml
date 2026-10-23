@@ -14,6 +14,11 @@ on:
         required: false
         default: gnostr-dev
         type: string
+      relay:
+        description: "Relay multiaddr for remote<->local hole punching"
+        required: false
+        default: ""
+        type: string
       detect_tag_as_topic:
         description: "Use the current Git tag as the chat topic"
         required: false
@@ -38,6 +43,7 @@ jobs:
       DAMUS: "wss://relay.damus.io"
       NOS: "wss://nos.lol"
       TOPIC: ${{ inputs.topic || 'gnostr-dev' }}
+      RELAY: ${{ inputs.relay || '' }}
       DETECT_TAG_AS_TOPIC: ${{ inputs.detect_tag_as_topic || 'false' }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     strategy:
