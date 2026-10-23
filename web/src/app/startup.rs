@@ -514,12 +514,12 @@ pub struct GnitArgs {
 
     /// Directory used to store the embedded Kubo (IPFS) repository.
     #[cfg(feature = "ipfs")]
-    #[arg(long)]
+    #[arg(long, env = "GNOSTR_IPFS_REPO")]
     pub ipfs_repo: Option<PathBuf>,
 
     /// Start the embedded Kubo node in online mode (swarm participation).
     #[cfg(feature = "ipfs")]
-    #[arg(long, default_value_t = false)]
+    #[arg(long, env = "GNOSTR_IPFS_ONLINE", default_value_t = false)]
     pub ipfs_online: bool,
     /// The path in which your bare Git repositories reside.
     ///

@@ -209,3 +209,33 @@ are currently exact copies), or refactor them to share server-building code.
 - Run IPFS-related tests with `--features ipfs`:
   `cargo test -p gnostr-web --features ipfs`
 - The `node_roundtrip` test is `#[ignore]`d because it requires the Go toolchain to build `kubo-ffi`; run it with `-- --ignored`.
+
+## IPFS / Helia interop
+
+`gnostr-web` can embed a Kubo (IPFS) node when built with `--features ipfs`.
+The node starts at process startup and exposes:
+
+- `GET /api/ipfs/status` — `{ enabled, gateway, error }`
+- `POST /api/ipfs/add` — add bytes, returns `{ cid }`
+- `POST /api/ipfs/add-batch` — add many items, returns `{ cids }`
+- `GET /api/ipfs/cat/:cid` — fetch stored bytes
+- `POST /api/ipfs/pin/:cid` — pin a CID
+- `GET /api/ipfs/ls` — list pinned CIDs
+- `POST /api/ipfs/manifest` — publish a manifest JSON, returns `{ cid }`
+- `GET /api/ipfs/peers` — list swarm peers
+- `GET /ipfs/:cid` — redirect to the Kubo gateway
+
+The browser Helia node talks to Kubo via these endpoints and the local gateway
+URL returned by `/api/ipfs/status`. CIDs are linked to the gateway so content
+can be retrieved directly.
+
+Configuration (only meaningful with `--features ipfs`):
+
+- `--ipfs-repo <path>` / `GNOSTR_IPFS_REPO` — Kubo repository location
+  (default: OS app data dir `…/gnostr/ipfs`).
+- `--ipfs-online` / `GNOSTR_IPFS_ONLINE=true` — enable swarm participation
+  (default: offline, local-only).
+
+The Kubo FFI lives in `../ipfs/ffi/rust` (`kubo-ffi`) and requires a Go
+toolchain at build time. The `ipfs` feature is off by default so a plain
+`cargo build -p gnostr-web` does not need Go.

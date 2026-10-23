@@ -371,3 +371,9 @@ Docker images are defined in `docker/` and composed via `docker-compose.yml`
 - `cargo metadata --no-deps` parses successfully and lists 29 workspace
   packages.
 - Rust toolchain on this machine: `cargo 1.99.0`, `rustc 1.99.0`.
+
+### IPFS (Kubo) integration in `gnostr-web`
+
+`gnostr-web` can embed a Kubo node when built with `--features ipfs`
+(requires Go toolchain for `ipfs/ffi/rust`). See `web/AGENTS.md` for endpoints,
+configuration (`GNOSTR_IPFS_REPO`, `GNOSTR_IPFS_ONLINE`), and interop details.
