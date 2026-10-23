@@ -175,7 +175,7 @@ ensure_rust_target() {
   fi
 
   if ! grep -Fxq "$triple" <<<"$installed"; then
-    if [[ "$INSTALL_TARGETS" != true ]]; then
+    if [[ "$INSTALL_TARGETS" == false ]]; then
       warn "missing Rust target $triple (core/std unavailable). Run: rustup target add $triple; or rerun with --install-targets"
       return 1
     fi

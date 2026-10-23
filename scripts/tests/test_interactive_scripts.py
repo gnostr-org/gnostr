@@ -74,6 +74,9 @@ elif name == "git":
     elif args[:1] == ["describe"]:
         print("test-tag")
 elif name == "cargo":
+    if os.environ.get("CARGO_CWD_LOG"):
+        with open(os.environ["CARGO_CWD_LOG"], "a") as log:
+            log.write(os.getcwd() + "\n")
     if os.environ.get("CARGO_FAIL") == "1":
         sys.exit(1)
 elif name == "pkg-config":
@@ -102,6 +105,7 @@ class InteractiveScriptTests(unittest.TestCase):
             **os.environ,
             "PATH": f"{self.bin}:{os.environ['PATH']}",
             "CALL_LOG": str(self.log),
+            "TMPDIR": str(self.directory),
         }
 
     def run_script(self, name, answers="", args=(), **env):
@@ -264,6 +268,73 @@ class InteractiveScriptTests(unittest.TestCase):
         result = self.run_script("sccache-clear-cache.sh", "1\n", ("--interactive",))
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(self.calls("sccache"), [["sccache", "--show-stats"]])
+
+    def test_cache_broad_directory_is_refused_before_stopping_server(self):
+        result = self.run_script(
+            "sccache-clear-cache.sh", args=("--cache-dir", str(ROOT))
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("refusing to clear a broad directory", result.stderr)
+        self.assertEqual(self.calls("sccache"), [])
+
+    def test_lockfile_selection_only_processes_chosen_manifest(self):
+        for name in ("one", "two"):
+            project = self.directory / name
+            project.mkdir()
+            (project / "Cargo.toml").write_text('[package]\nname = "fixture"\nversion = "0.1.0"\n')
+        cwd_log = self.directory / "cargo-directories"
+        result = self.run_script(
+            "cargo-generate-lockfiles.sh", "2\ny\n",
+            ("--interactive", str(self.directory)),
+            CARGO_CWD_LOG=str(cwd_log),
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        selected = result.stdout.split("  2) ", 1)[1].splitlines()[0]
+        self.assertEqual(
+            cwd_log.read_text().splitlines(),
+            [str(Path(selected).parent)] * 2,
+        )
+
+    def test_install_selection_does_not_run_other_variants(self):
+        result = self.run_script(
+            "cargo-install-feature-variants.sh", "3\n\ny\n", ("--interactive",)
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        installs = self.calls("cargo")
+        self.assertEqual(len(installs), 1)
+        self.assertIn("--no-default-features", installs[0])
+        self.assertNotIn("--all-features", installs[0])
+
+    def test_fractal_clone_decline_and_unrecognized_output_are_safe(self):
+        source = self.directory / "source"
+        source.mkdir()
+        output = self.directory / "output"
+        clone = self.directory / "clone"
+        args = (
+            "--source", str(source), "--output", str(output), "--clone", str(clone),
+        )
+        result = self.run_script(
+            "gnostr-p2p-fractal-clone.sh", "\n\n\nn\n", ("--interactive", *args)
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.calls("cargo"), [])
+        output.mkdir()
+        (output / "keep").write_text("do not remove")
+        result = self.run_script(
+            "gnostr-p2p-fractal-clone.sh", args=("--replace", *args)
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("unrecognized output directory", result.stderr)
+        self.assertTrue((output / "keep").exists())
+
+    def test_selected_publishing_failure_is_not_hidden(self):
+        result = self.run_script(
+            "update_versions.sh", "3\n1\ny\n", ("--interactive",),
+            CARGO_FAIL="1", CARGO_REGISTRY_TOKEN="mock-test-token",
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(len(self.calls("cargo")), 1)
+        self.assertFalse(any(call[1] == "push" for call in self.calls("git")))
 
     def test_local_act_menu_passes_selected_toolchain(self):
         result = self.run_script("act-test-matrix.sh", "1\n2\n\ny\n", ("--interactive",))
