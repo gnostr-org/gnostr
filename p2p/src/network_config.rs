@@ -170,7 +170,6 @@ mod tests {
     }
 
     #[test]
-    #[test]
     fn parse_nostr_envelope_works() {
         let (t, p, pl) = parse_nostr_envelope("kubo-hybrid|12D3KooW|{\"kind\":1}").unwrap();
         assert_eq!(t, "kubo-hybrid");
