@@ -13,6 +13,9 @@ WORKFLOW=""
 REPO=""
 STATUSES=("in_progress" "queued" "waiting" "requested" "pending" "action_required")
 STATUS_OVERRIDDEN=false
+INTERACTIVE=false
+# shellcheck source=scripts/lib/script-ui.sh
+source "$(dirname "${BASH_SOURCE[0]}")/lib/script-ui.sh"
 
 usage() {
   cat <<'EOF'
@@ -25,6 +28,7 @@ Options:
   -w, --workflow W    Limit to a workflow file/name/ID
   -r, --repo R        Target repo, e.g. owner/name (default: current repo)
   -s, --status S      Status to cancel; may be repeated
+  -i, --interactive   Select runs from a numbered list and confirm cancellation
   -h, --help          Show help
 
 Examples:
@@ -36,6 +40,10 @@ EOF
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    -i|--interactive)
+      INTERACTIVE=true
+      shift
+      ;;
     -d|--depth)
       DEPTH="${2:?missing value for --depth}"
       shift 2
@@ -68,10 +76,16 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+run_rows=()
 cancel_status() {
   local status="$1"
   local ids
-  local list_args=(-s "$status" -L "$DEPTH" --json databaseId --jq '.[] | .databaseId')
+  local list_args=(-s "$status" -L "$DEPTH")
+  if [[ "$INTERACTIVE" == true ]]; then
+    list_args+=(--json databaseId,status,workflowName,headBranch --jq '.[] | [.databaseId,.status,.workflowName,.headBranch] | @tsv')
+  else
+    list_args+=(--json databaseId --jq '.[] | .databaseId')
+  fi
 
   if [[ -n "$REPO" ]]; then
     list_args+=(-R "$REPO")
@@ -81,7 +95,13 @@ cancel_status() {
     list_args+=(-w "$WORKFLOW")
   fi
 
-  ids="$(gh run list "${list_args[@]}" | tr '\n' ' ')"
+  ids="$(gh run list "${list_args[@]}")"
+  if [[ "$INTERACTIVE" == true ]]; then
+    while IFS= read -r id; do
+      [[ -z "$id" ]] || run_rows+=("$id")
+    done <<<"$ids"
+    return
+  fi
   if [[ -z "${ids// }" ]]; then
     return 0
   fi
@@ -91,6 +111,28 @@ cancel_status() {
   done
 }
 
+if [[ "$INTERACTIVE" == true ]]; then
+  ui_prompt "Repository (empty uses current repository)" "$REPO"
+  REPO="$UI_VALUE"
+  ui_prompt "Workflow file/name/ID (empty includes all)" "$WORKFLOW"
+  WORKFLOW="$UI_VALUE"
+  ui_select "Run statuses" "${STATUSES[@]}"
+  STATUSES=("${UI_SELECTED[@]}")
+fi
+
 for status in "${STATUSES[@]}"; do
   cancel_status "$status"
 done
+
+if [[ "$INTERACTIVE" == true ]]; then
+  ui_select "Workflow runs: ID / status / workflow / branch" ${run_rows[@]+"${run_rows[@]}"}
+  ui_confirm "Cancel these ${#UI_SELECTED[@]} selected runs?"
+  failed=0
+  for row in "${UI_SELECTED[@]}"; do
+    if ! gh run cancel "${row%%$'\t'*}" ${REPO:+--repo "$REPO"}; then
+      printf 'Error: could not cancel run %s.\n' "${row%%$'\t'*}" >&2
+      failed=1
+    fi
+  done
+  exit "$failed"
+fi

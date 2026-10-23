@@ -16,6 +16,9 @@ FORCE=false
 UNINSTALL=false
 LIST=false
 SET_CORE_HOOKS_PATH=false
+INTERACTIVE=false
+# shellcheck source=scripts/lib/script-ui.sh
+source "$ROOT_DIR/scripts/lib/script-ui.sh"
 
 HOOK_NAMES=(
   applypatch-msg
@@ -52,12 +55,16 @@ Options:
   --uninstall                Remove installed stubs instead of creating them
   --list                     Print the standard hook names and exit
   --set-core-hooks-path      Set local core.hooksPath to the install directory
+  --interactive             Select hooks and confirm installation/removal
   --help                     Show this help
 EOF
 }
 
 hook_description() {
   case "$1" in
+    --interactive|-i)
+      INTERACTIVE=true
+      ;;
     applypatch-msg) echo "runs before a patch message is applied" ;;
     pre-applypatch) echo "runs before git am finalizes an applypatch" ;;
     post-applypatch) echo "runs after git am applies a patch" ;;
@@ -174,6 +181,15 @@ if [[ -z "$HOOKS_DIR" ]]; then
   HOOKS_DIR="$(resolve_git_dir)/hooks"
 fi
 
+if [[ "$INTERACTIVE" == true ]]; then
+  ui_choose "Hook operation" install uninstall
+  [[ "$UI_VALUE" != uninstall ]] || UNINSTALL=true
+  ui_select "Git hooks" "${HOOK_NAMES[@]}"
+  HOOK_NAMES=("${UI_SELECTED[@]}")
+  ui_prompt "Hooks directory" "$HOOKS_DIR"
+  HOOKS_DIR="$UI_VALUE"
+  ui_confirm "Apply changes to ${#HOOK_NAMES[@]} hooks in $HOOKS_DIR (overwrite=$FORCE, uninstall=$UNINSTALL)?"
+fi
 mkdir -p "$HOOKS_DIR"
 
 if [[ "$UNINSTALL" == true ]]; then

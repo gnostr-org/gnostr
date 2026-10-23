@@ -13,6 +13,9 @@ DELETE=false
 INCLUDE_LOCAL_BRANCHES=false
 KNOWN_COMMITS_ONLY=true
 COMMITS=()
+INTERACTIVE=false
+# shellcheck source=scripts/lib/script-ui.sh
+source "$ROOT_DIR/scripts/lib/script-ui.sh"
 
 KNOWN_BIG_COMMITS=(
   "57222ce14d61801b078af7243965bcec79ddd03c"
@@ -36,6 +39,7 @@ Options:
   --local-branches      Include local branches in the scan
   --remote NAME         Remote to inspect/delete on (default: origin)
   --delete              Delete matching refs instead of only listing them
+  --interactive         Select matching refs and confirm deletion
   --help                Show this help
 
 Examples:
@@ -70,6 +74,10 @@ validate_commit() {
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --interactive|-i)
+      INTERACTIVE=true
+      DELETE=true
+      ;;
     --commit)
       shift
       [[ $# -gt 0 ]] || { echo "--commit requires a value" >&2; exit 1; }
@@ -165,6 +173,15 @@ if [[ "$DELETE" != true ]]; then
   exit 0
 fi
 
+refs="$(cut -f2 "$matches_file" | sort -u)"
+if [[ "$INTERACTIVE" == true ]]; then
+  ref_choices=()
+  while IFS= read -r ref; do ref_choices+=("$ref"); done <<<"$refs"
+  ui_select "Refs to delete (remote deletions are included)" "${ref_choices[@]}"
+  refs="$(printf '%s\n' "${UI_SELECTED[@]}")"
+  ui_confirm "Delete these ${#UI_SELECTED[@]} refs on remote $REMOTE and locally?"
+fi
+
 current_branch="$(git symbolic-ref --quiet --short HEAD 2>/dev/null || true)"
 remote_exists=false
 if git remote get-url "$REMOTE" >/dev/null 2>&1; then
@@ -209,10 +226,10 @@ delete_ref() {
 }
 
 printf '\nDeleting matching refs...\n'
-cut -f2 "$matches_file" | sort -u | while IFS= read -r ref; do
+while IFS= read -r ref; do
   [[ -n "$ref" ]] || continue
   printf 'Deleting %s\n' "$ref"
   delete_ref "$ref"
-done
+done <<<"$refs"
 
 printf '\nDone.\n'
