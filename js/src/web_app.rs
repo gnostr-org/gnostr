@@ -479,6 +479,29 @@ pub async fn run(port: u16) -> anyhow::Result<()> {
         })
     };
 
+    let helia_route = {
+        warp::path("helia").and(warp::get()).map(|| {
+            warp::reply::html(r#"<!doctype html><html><head><meta charset='UTF-8'><title>Helia</title></head><body><div id='status'>Loading Helia...</div><script type='module'>
+import { createHelia } from "https://cdn.jsdelivr.net/npm/helia@latest/+esm";
+import { unixfs } from "https://cdn.jsdelivr.net/npm/@helia/unixfs@latest/+esm";
+(async () => {
+  try {
+    const helia = await createHelia();
+    const fs = unixfs(helia);
+    const cid = await fs.addBytes(new TextEncoder().encode("Hello from gnostr-js Helia"));
+    const el = document.getElementById("status");
+    if (el) el.innerText = "Helia running! CID: " + cid.toString();
+    console.log("Helia Node:", helia);
+  } catch (e) {
+    console.error(e);
+    const el = document.getElementById("status");
+    if (el) el.innerText = "Failed to load Helia.";
+  }
+})();
+</script></body></html>"#)
+        })
+    };
+
     let routes = shell
         .or(root_route)
         .or(messages_route)
@@ -502,7 +525,8 @@ pub async fn run(port: u16) -> anyhow::Result<()> {
         .or(css_route)
         .or(images_route)
         .or(pwa_route)
-        .or(shell_fallback);
+        .or(shell_fallback)
+        .or(helia_route);
 
     let _ = open("127.0.0.1", port.try_into().unwrap());
     println!("http://127.0.0.1:{}", port);
