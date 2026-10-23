@@ -198,3 +198,5 @@ pub fn init_tracing() -> Result<(), Box<dyn std::error::Error>> {
     }
     Ok(())
 }
+
+pub mod nostr_envelope;
