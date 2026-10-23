@@ -111,4 +111,45 @@ fn fractal_swarm_perfect_ip_reconstructs_git_repo() {
     );
     assert!(clone.join(".git").exists(), "cloned repo missing .git");
     println!("clone ok: {}", clone.display());
+
+    let reconstructed_head = git_output(&reconstructed, &["rev-parse", "HEAD"]);
+    let clone_head = git_output(&clone, &["rev-parse", "HEAD"]);
+    assert_eq!(
+        reconstructed_head, clone_head,
+        "clone HEAD does not match reconstructed repo HEAD"
+    );
+    println!("HEAD matches: {clone_head}");
+
+    let status = git_output(&clone, &["status", "--porcelain"]);
+    assert!(status.is_empty(), "cloned working tree is not clean:\n{status}");
+    println!("cloned working tree is clean");
+}
+
+fn git_output(repo: &Path, args: &[&str]) -> String {
+    let output = Command::new("git")
+        .arg("-C")
+        .arg(repo)
+        .args(args)
+        .output()
+        .expect("spawn git");
+
+    if !output.stdout.is_empty() {
+        println!(
+            "git -C {} {} stdout:\n{}",
+            repo.display(),
+            args.join(" "),
+            String::from_utf8_lossy(&output.stdout)
+        );
+    }
+    if !output.stderr.is_empty() {
+        println!(
+            "git -C {} {} stderr:\n{}",
+            repo.display(),
+            args.join(" "),
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+
+    assert!(output.status.success(), "git -C {} {} failed", repo.display(), args.join(" "));
+    String::from_utf8_lossy(&output.stdout).trim().to_string()
 }
