@@ -3,10 +3,10 @@
 //! These are the pure data types and helpers exchanged on the wire (serialized
 //! as JSON). Networking/behaviour code lives in `gnostr-p2p`.
 
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::fs;
 use std::io;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use bincode;
 use log::{debug, info};
@@ -277,11 +277,25 @@ pub fn sha256_hex(bytes: &[u8]) -> String {
     format!("{:x}", Sha256::digest(bytes))
 }
 
+/// Result of packetizing a directory tree.
+///
+/// `files` maps relative file paths to their slices. `empty_dirs` lists
+/// directories whose entire subtree contained no files; these must be recreated
+/// on the receiving side to produce a byte-for-byte directory match.
+#[derive(Debug, Clone)]
+pub struct DirectoryWalk {
+    pub files: BTreeMap<String, Vec<ProtocolSlice>>,
+    pub empty_dirs: BTreeSet<String>,
+}
+
 /// Recursively list a directory tree and packetize every file found.
 ///
 /// `lines` receives a human-readable tree representation, while `all_packets`
 /// receives a map from relative file path to the [`ProtocolSlice`]s produced for
-/// that file. Directories are visited unconditionally up to `depth`.
+/// that file. Empty directories are recorded in `empty_dirs`. Directories are
+/// visited unconditionally up to `depth`.
+///
+/// Returns `true` if the visited subtree contains at least one file.
 pub fn list_directory(
     root: &Path,
     current: &Path,
@@ -290,11 +304,13 @@ pub fn list_directory(
     logging: bool,
     lines: &mut Vec<String>,
     all_packets: &mut BTreeMap<String, Vec<ProtocolSlice>>,
-) -> io::Result<()> {
+    empty_dirs: &mut BTreeSet<String>,
+) -> io::Result<bool> {
     if level == 0 {
         lines.push(".".to_string());
     }
 
+    let mut has_file_in_subtree = false;
     let mut entries = Vec::new();
     for entry in fs::read_dir(current)? {
         entries.push(entry?);
@@ -312,8 +328,12 @@ pub fn list_directory(
 
         if metadata.is_dir() {
             lines.push(format!("{indent}{}/", relative.display()));
-            list_directory(root, &path, depth, level + 1, logging, lines, all_packets)?;
+            let child_has_file = list_directory(
+                root, &path, depth, level + 1, logging, lines, all_packets, empty_dirs,
+            )?;
+            has_file_in_subtree = has_file_in_subtree || child_has_file;
         } else if metadata.is_file() {
+            has_file_in_subtree = true;
             let bytes = fs::read(&path)?;
             lines.push(format!(
                 "{indent}{} ({}B sha256:{})",
@@ -345,38 +365,43 @@ pub fn list_directory(
         }
     }
 
-    Ok(())
+    if !has_file_in_subtree && level > 0 {
+        let rel_path = current
+            .strip_prefix(root)
+            .unwrap_or(current)
+            .to_string_lossy()
+            .into_owned();
+        empty_dirs.insert(rel_path);
+    }
+
+    Ok(has_file_in_subtree)
 }
 
 /// Walk a directory and return all packetized file slices grouped by path.
 ///
 /// This is a convenience wrapper around [`list_directory`] that prints the
-/// generated tree lines and returns a map from relative file path to the
-/// packets for that file.
-pub fn run_directory_walk(
-    path: &Path,
-    depth: usize,
-    logging: bool,
-) -> io::Result<BTreeMap<String, Vec<ProtocolSlice>>> {
+/// generated tree lines and returns a [`DirectoryWalk`] describing the files
+/// and empty directories found.
+pub fn run_directory_walk(path: &Path, depth: usize, logging: bool) -> io::Result<DirectoryWalk> {
     let mut lines = Vec::new();
-    let mut all_packets = BTreeMap::new();
-    list_directory(path, path, depth, 0, logging, &mut lines, &mut all_packets)?;
+    let mut files = BTreeMap::new();
+    let mut empty_dirs = BTreeSet::new();
+    list_directory(path, path, depth, 0, logging, &mut lines, &mut files, &mut empty_dirs)?;
     for line in lines {
         println!("{line}");
     }
-    Ok(all_packets)
+    Ok(DirectoryWalk {
+        files,
+        empty_dirs,
+    })
 }
 
 /// Reconstruct a packetized directory tree under `out_path`.
 ///
-/// The map keys are treated as relative file paths; each entry is reconstructed
-/// and written to `out_path/<key>`. Missing parent directories are created
-/// automatically.
-pub fn reconstruct_directory(
-    packets_by_path: BTreeMap<String, Vec<ProtocolSlice>>,
-    out_path: &Path,
-) -> io::Result<()> {
-    for (rel_path, packets) in packets_by_path {
+/// Files are written to `out_path/<key>` and empty directories are recreated.
+/// Missing parent directories are created automatically.
+pub fn reconstruct_directory(walk: DirectoryWalk, out_path: &Path) -> io::Result<()> {
+    for (rel_path, packets) in walk.files {
         let file_path = out_path.join(&rel_path);
         if let Some(parent) = file_path.parent() {
             fs::create_dir_all(parent)?;
@@ -384,6 +409,12 @@ pub fn reconstruct_directory(
         let reconstructed = reconstruct_payload(&packets);
         fs::write(&file_path, &reconstructed)?;
     }
+
+    for rel_path in walk.empty_dirs {
+        let dir_path = out_path.join(&rel_path);
+        fs::create_dir_all(&dir_path)?;
+    }
+
     Ok(())
 }
 
