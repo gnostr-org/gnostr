@@ -17,85 +17,91 @@
   <body>
         <!-- Notice type="module" is mandatory for modern CDN usage -->
   <script type="module">
-    // 1. Import Helia core and UnixFS file system helpers directly from jsDelivr ESM builds
     import { createHelia } from "https://cdn.jsdelivr.net/npm/helia@latest/+esm";
     import { unixfs } from "https://cdn.jsdelivr.net/npm/@helia/unixfs@latest/+esm";
-    import { CID } from "https://cdn.jsdelivr.net/npm/multiformats@latest/+esm";
 
-    async function startIpfs() {
+    async function start() {
+      // Keep Helia running so the browser node and gnostr-web (Kubo) can talk.
+      let helia = null;
       try {
-        // 2. Instantiate the core Helia engine
-        const helia = await createHelia();
+        helia = await createHelia();
+        console.log("Helia Node:", helia);
+      } catch (e) {
+        console.error("Failed to start Helia:", e);
+      }
 
-        // 3. Attach UnixFS capabilities to handle data streams and files
-        const fs = unixfs(helia);
-        const encoder = new TextEncoder();
-
-        // 4. Traverse every repository rendered on the page and compute a
-        //    content identifier (CID) for it, building a CID merkle chain.
-        const rows = Array.from(document.querySelectorAll("table.repositories tbody tr"));
-        const cidChain = [];
-        const manifestEntries = [];
-        for (const row of rows) {
-          const link = row.querySelector("td a");
-          if (!link) continue;
-          const repoRef = (link.getAttribute("href") || link.textContent || "").trim();
-          if (!repoRef) continue;
-          try {
-            const bytes = encoder.encode(repoRef);
-            const cid = await fs.addBytes(bytes);
-            const cidStr = cid.toString();
-            cidChain.push(cidStr);
-            manifestEntries.push({ repo: repoRef, cid: cidStr });
-
-            // Display the CID alongside the repository name.
-            const nameCell = link.parentElement;
-            if (nameCell && !nameCell.querySelector(".repo-cid")) {
-              const cidEl = document.createElement("a");
-              cidEl.className = "repo-cid";
-              cidEl.style.fontSize = "0.75rem";
-              cidEl.style.opacity = "0.7";
-              cidEl.style.display = "block";
-              cidEl.textContent = `CID: ${cidStr}`;
-              cidEl.href = `https://ipfs.io/ipfs/${cidStr}`;
-              cidEl.target = "_blank";
-              cidEl.rel = "noopener noreferrer";
-              nameCell.appendChild(cidEl);
-            }
-
-
-            // Broadcast / announce the CID to the network when possible.
-            try {
-              if (helia.routing && typeof helia.routing.provide === "function") {
-                await helia.routing.provide(cid);
-              }
-            } catch (announceErr) {
-              console.debug("Could not announce CID", cidStr, announceErr);
-            }
-          } catch (repoErr) {
-            console.error("Failed to compute CID for repo", repoRef, repoErr);
-          }
+      // Discover the embedded Kubo gateway.
+      let gatewayUrl = "";
+      try {
+        const gwRes = await fetch("/api/ipfs/gateway");
+        if (gwRes.ok) {
+          const gw = await gwRes.json();
+          gatewayUrl = gw.url || "";
         }
+      } catch (e) {
+        console.debug("No Kubo gateway", e);
+      }
 
-        // Publish the collected CID merkle chain as a manifest to the server.
+      // Traverse every repository/commit row and store it in Kubo (IPFS).
+      const rows = Array.from(document.querySelectorAll("table.repositories tbody tr"));
+      const manifestEntries = [];
+      for (const row of rows) {
+        const link = row.querySelector("td a");
+        if (!link) continue;
+        const repoRef = (link.getAttribute("href") || link.textContent || "").trim();
+        if (!repoRef) continue;
         try {
-          await fetch("/api/cid-manifest", {
+          const res = await fetch("/api/ipfs/add", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ repos: manifestEntries }),
+            body: JSON.stringify({ data: repoRef }),
           });
-        } catch (publishErr) {
-          console.debug("Could not publish manifest", publishErr);
-        }
+          if (!res.ok) throw new Error(await res.text());
+          const { cid } = await res.json();
+          manifestEntries.push({ repo: repoRef, cid });
 
-        console.log("Helia Node:", helia);
-        console.log("CID merkle chain:", cidChain);
-      } catch (error) {
-        console.error("Failed to start Helia:", error);
+          const nameCell = link.parentElement;
+          if (nameCell && !nameCell.querySelector(".repo-cid")) {
+            const cidEl = document.createElement("a");
+            cidEl.className = "repo-cid";
+            cidEl.style.fontSize = "0.75rem";
+            cidEl.style.opacity = "0.7";
+            cidEl.style.display = "block";
+            cidEl.textContent = `CID: ${cid}`;
+            cidEl.href = gatewayUrl ? `${gatewayUrl}/ipfs/${cid}` : "#";
+            cidEl.target = "_blank";
+            cidEl.rel = "noopener noreferrer";
+            nameCell.appendChild(cidEl);
+          }
+
+          // Let Helia talk to gnostr-web by fetching the CID from the Kubo gateway.
+          if (helia) {
+            try {
+              const fs = unixfs(helia);
+              // Trigger a fetch so the browser node is aware of the content.
+              fetch(gatewayUrl ? `${gatewayUrl}/ipfs/${cid}` : "#").catch(() => {});
+            } catch (talkErr) {
+              console.debug("Helia/Kubo talk failed", talkErr);
+            }
+          }
+        } catch (e) {
+          console.error("Failed to store repo in IPFS", repoRef, e);
+        }
+      }
+
+      // Publish the collected chain as a manifest.
+      try {
+        await fetch("/api/cid-manifest", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ repos: manifestEntries }),
+        });
+      } catch (e) {
+        console.debug("Could not publish manifest", e);
       }
     }
 
-    startIpfs();
+    start();
   </script>
     <header>
       <h1>
