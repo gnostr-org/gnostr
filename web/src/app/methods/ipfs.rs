@@ -11,6 +11,7 @@ use kubo_ffi::{self, Node};
 
 #[cfg(feature = "ipfs")]
 pub struct IpfsState {
+    pub repo_path: String,
     pub node: Mutex<Option<Node>>,
     pub gateway: Mutex<Option<String>>,
     pub enabled: bool,
@@ -46,15 +47,16 @@ pub struct GatewayResponse {
 #[cfg(feature = "ipfs")]
 impl IpfsState {
     pub fn init(repo_path: &str, online: bool) -> Arc<Self> {
-        let _ = std::fs::create_dir_all(repo_path);
+        let repo_path = repo_path.to_string();
+        let _ = std::fs::create_dir_all(&repo_path);
         // Best-effort init; ignore "already initialized" errors.
-        let _ = kubo_ffi::init_repo(repo_path);
+        let _ = kubo_ffi::init_repo(&repo_path);
 
         let mut node_opt = None;
         let mut gw_opt = None;
         let mut err_opt = None;
 
-        match Node::start(repo_path, online) {
+        match Node::start(&repo_path, online) {
             Ok(node) => match node.start_gateway("/ip4/127.0.0.1/tcp/0") {
                 Some(ma) => {
                     let port = parse_port(&ma).unwrap_or(0);
@@ -72,6 +74,7 @@ impl IpfsState {
 
         let enabled = node_opt.is_some();
         Arc::new(Self {
+            repo_path: repo_path.clone(),
             node: Mutex::new(node_opt),
             gateway: Mutex::new(gw_opt),
             enabled,
@@ -128,4 +131,97 @@ pub async fn status(Extension(state): Extension<Arc<IpfsState>>) -> impl IntoRes
         gateway: gw,
         error: err,
     })
+}
+
+#[cfg(feature = "ipfs")]
+use axum::extract::Path as AxumPath;
+
+#[cfg(feature = "ipfs")]
+pub async fn cat(
+    Extension(state): Extension<Arc<IpfsState>>,
+    AxumPath(cid): AxumPath<String>,
+) -> impl IntoResponse {
+    let guard = state.node.lock().unwrap();
+    let Some(node) = guard.as_ref() else {
+        let err = state.last_error.lock().unwrap().clone();
+        return (StatusCode::SERVICE_UNAVAILABLE, err.unwrap_or_default()).into_response();
+    };
+    match node.unixfs_cat(&cid) {
+        Ok(bytes) => {
+            let mut resp = axum::response::Response::new(axum::body::Body::from(bytes));
+            resp.headers_mut().insert(
+                axum::http::header::CONTENT_TYPE,
+                axum::http::HeaderValue::from_static("application/octet-stream"),
+            );
+            resp
+        }
+        Err(e) => (StatusCode::NOT_FOUND, e).into_response(),
+    }
+}
+
+#[cfg(feature = "ipfs")]
+pub async fn pin(
+    Extension(state): Extension<Arc<IpfsState>>,
+    AxumPath(cid): AxumPath<String>,
+) -> impl IntoResponse {
+    let guard = state.node.lock().unwrap();
+    let Some(node) = guard.as_ref() else {
+        let err = state.last_error.lock().unwrap().clone();
+        return (StatusCode::SERVICE_UNAVAILABLE, err.unwrap_or_default()).into_response();
+    };
+    let repo = state.repo_path.clone();
+    match node.run_on_node(&repo, &["pin", "add", &cid]) {
+        Ok(out) => Json(serde_json::json!({"cid": cid, "output": out})).into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e).into_response(),
+    }
+}
+
+#[cfg(feature = "ipfs")]
+pub async fn ls(Extension(state): Extension<Arc<IpfsState>>) -> impl IntoResponse {
+    let guard = state.node.lock().unwrap();
+    let Some(node) = guard.as_ref() else {
+        let err = state.last_error.lock().unwrap().clone();
+        return (StatusCode::SERVICE_UNAVAILABLE, err.unwrap_or_default()).into_response();
+    };
+    let repo = state.repo_path.clone();
+    match node.run_on_node(&repo, &["pin", "ls"]) {
+        Ok(out) => Json(serde_json::json!({"output": out})).into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e).into_response(),
+    }
+}
+
+#[cfg(feature = "ipfs")]
+pub async fn ipfs_proxy(
+    Extension(state): Extension<Arc<IpfsState>>,
+    AxumPath(cid): AxumPath<String>,
+) -> impl IntoResponse {
+    let gw = state.gateway.lock().unwrap().clone();
+    let Some(base) = gw else {
+        return (StatusCode::SERVICE_UNAVAILABLE, "no gateway").into_response();
+    };
+    // Redirect to the Kubo gateway (avoids streaming through axum).
+    axum::response::Redirect::temporary(&format!("{base}/ipfs/{cid}")).into_response()
+}
+
+#[cfg(feature = "ipfs")]
+#[derive(serde::Deserialize, serde::Serialize)]
+pub struct ManifestPublishRequest {
+    pub repos: Vec<serde_json::Value>,
+}
+
+#[cfg(feature = "ipfs")]
+pub async fn publish_manifest(
+    Extension(state): Extension<Arc<IpfsState>>,
+    Json(payload): Json<ManifestPublishRequest>,
+) -> impl IntoResponse {
+    let guard = state.node.lock().unwrap();
+    let Some(node) = guard.as_ref() else {
+        let err = state.last_error.lock().unwrap().clone();
+        return (StatusCode::SERVICE_UNAVAILABLE, err.unwrap_or_default()).into_response();
+    };
+    let data = serde_json::to_vec(&payload).unwrap_or_default();
+    match node.unixfs_add_bytes(&data) {
+        Ok(cid) => Json(AddResponse { cid }).into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e).into_response(),
+    }
 }

@@ -256,6 +256,11 @@ async fn main() -> Result<(), anyhow::Error> {
     #[cfg(feature = "ipfs")]
     let ipfs_routes = Router::new()
         .route("/api/ipfs/add", axum::routing::post(methods::ipfs::add))
+        .route("/api/ipfs/cat/:cid", get(methods::ipfs::cat))
+        .route("/api/ipfs/pin/:cid", axum::routing::post(methods::ipfs::pin))
+        .route("/api/ipfs/ls", get(methods::ipfs::ls))
+        .route("/api/ipfs/manifest", axum::routing::post(methods::ipfs::publish_manifest))
+        .route("/ipfs/:cid", get(methods::ipfs::ipfs_proxy))
         .route("/api/ipfs/gateway", get(methods::ipfs::gateway))
         .route("/api/ipfs/status", get(methods::ipfs::status));
     #[cfg(not(feature = "ipfs"))]
