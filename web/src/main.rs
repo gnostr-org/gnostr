@@ -234,20 +234,30 @@ async fn main() -> Result<(), anyhow::Error> {
     init_static_asset_hashes();
 
     #[cfg(feature = "ipfs")]
-    {
-        // Start an embedded Kubo (IPFS) node + gateway so Helia and gnostr-web can talk.
-        let kubo_repo = std::env::temp_dir().join("gnostr-kubo-repo");
-        let _ = std::fs::remove_dir_all(&kubo_repo);
-        match gnostr_web::app::methods::ipfs::init(&kubo_repo.to_string_lossy()) {
-            Ok(url) => info!("Kubo gateway listening at {url}"),
-            Err(e) => tracing::warn!("Kubo node not started: {e}"),
+    let ipfs_state = {
+        let repo = args.ipfs_repo.clone().unwrap_or_else(|| {
+            dirs::data_dir()
+                .unwrap_or_else(std::env::temp_dir)
+                .join("gnostr")
+                .join("ipfs")
+        });
+        let _ = std::fs::create_dir_all(&repo);
+        let state = gnostr_web::app::methods::ipfs::IpfsState::init(&repo.to_string_lossy(), args.ipfs_online);
+        if state.enabled {
+            if let Some(url) = state.gateway.lock().unwrap().clone() {
+                info!("Kubo gateway listening at {url}");
+            }
+        } else {
+            tracing::warn!("Kubo node not started: {:?}", state.last_error.lock().unwrap().clone());
         }
-    }
+        state
+    };
 
     #[cfg(feature = "ipfs")]
     let ipfs_routes = Router::new()
         .route("/api/ipfs/add", axum::routing::post(methods::ipfs::add))
-        .route("/api/ipfs/gateway", get(methods::ipfs::gateway));
+        .route("/api/ipfs/gateway", get(methods::ipfs::gateway))
+        .route("/api/ipfs/status", get(methods::ipfs::status));
     #[cfg(not(feature = "ipfs"))]
     let ipfs_routes = Router::new();
 
@@ -515,7 +525,11 @@ async fn main() -> Result<(), anyhow::Error> {
             get(static_svg(SIGN_OUT_SVG)),
         )
         .fallback(methods::index::handle_spa)
-        .fallback(methods::repo::service)
+        .fallback(methods::repo::service);
+    #[cfg(feature = "ipfs")]
+    let app = app.layer(Extension(ipfs_state));
+
+    let app = app
         .layer(TimeoutLayer::new(args.request_timeout.into()))
         .layer(layer_fn(LoggingMiddleware))
         .layer(Extension(Arc::new(Git::new())))

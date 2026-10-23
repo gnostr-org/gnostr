@@ -511,6 +511,16 @@ pub struct GnitArgs {
     /// The socket port to bind to (e.g., 3333).
     #[arg(short, long, default_value_t = DEFAULT_BIND_PORT, env = "GNOSTR_GNIT_BIND_PORT")]
     pub bind_port: u16,
+
+    /// Directory used to store the embedded Kubo (IPFS) repository.
+    #[cfg(feature = "ipfs")]
+    #[arg(long)]
+    pub ipfs_repo: Option<PathBuf>,
+
+    /// Start the embedded Kubo node in online mode (swarm participation).
+    #[cfg(feature = "ipfs")]
+    #[arg(long, default_value_t = false)]
+    pub ipfs_online: bool,
     /// The path in which your bare Git repositories reside.
     ///
     /// This directory will be scanned recursively for Git repositories.

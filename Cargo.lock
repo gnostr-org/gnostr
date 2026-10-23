@@ -7845,6 +7845,7 @@ dependencies = [
  "comrak",
  "const-hex",
  "const_format",
+ "dirs 5.0.1",
  "flate2",
  "futures",
  "futures-util",
