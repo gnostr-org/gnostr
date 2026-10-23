@@ -36,6 +36,7 @@ gix = { version = "0.66", default-features = false, features = [
 gnostr-asyncgit = { workspace = true, features = ["vendor-openssl"] }
 gnostr-grammar = { workspace = true }
 gnostr-js = { workspace = true }
+gnostr-p2p = { path = "../p2p", optional = true }
 kubo-ffi = { path = "../ipfs/ffi/rust", optional = true }
 dirs = { version = "5", optional = true }
 handlebars = { workspace = true }
@@ -89,6 +90,7 @@ yoke = { version = "0.7.1", features = ["derive"] }
 [features]
 default = []
 ipfs = ["dep:kubo-ffi", "dep:dirs"]
+p2p = ["dep:gnostr-p2p"]
 
 [build-dependencies]
 anyhow = "1.0.100"

@@ -268,6 +268,13 @@ async fn main() -> Result<(), anyhow::Error> {
     #[cfg(not(feature = "ipfs"))]
     let ipfs_routes = Router::new();
 
+    #[cfg(feature = "p2p")]
+    {
+        let status = gnostr_p2p::embedded_network::start();
+        info!("Embedded p2p network: {status}");
+        gnostr_p2p::embedded_network::register_chat_topic("gnostr-dev".to_string());
+    }
+
     info!("Server starting up...");
 
     #[allow(deprecated)]
