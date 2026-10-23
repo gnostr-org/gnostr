@@ -43,8 +43,9 @@ use libp2p::{
 
 pub use gnostr_types::{
     calculate_parity, generate_manifest, list_directory, packetize, process_slice,
-    reconstruct_payload, recover_missing_data, recover_missing_slice, run_directory_walk,
-    sha256_hex, summarize_packets, Header, IntegrityManager, MTU_PAYLOAD, PacketBatch, ProtocolSlice,
+    reconstruct_directory, reconstruct_payload, recover_missing_data, recover_missing_slice,
+    run_directory_walk, sha256_hex, summarize_packets, Header, IntegrityManager, MTU_PAYLOAD,
+    PacketBatch, ProtocolSlice,
 };
 
 /// libp2p repair behaviour for exchanging packet slices.

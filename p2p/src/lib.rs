@@ -170,8 +170,9 @@ pub use gnostr_types::perfect_ip::*;
 #[cfg(not(target_os = "tvos"))]
 pub use fractal::fractal_ip_core::{
     calculate_parity, generate_manifest, list_directory, packetize, process_slice,
-    reconstruct_payload, recover_missing_data, recover_missing_slice, run_directory_walk,
-    sha256_hex, summarize_packets, Header, IntegrityManager, MTU_PAYLOAD, PacketBatch, ProtocolSlice,
+    reconstruct_directory, reconstruct_payload, recover_missing_data, recover_missing_slice,
+    run_directory_walk, sha256_hex, summarize_packets, Header, IntegrityManager, MTU_PAYLOAD,
+    PacketBatch, ProtocolSlice,
 };
 #[cfg(not(target_os = "tvos"))]
 pub use fractal::fractal_ip as perfect_ip;

@@ -9,9 +9,9 @@ use log::{debug, info};
 use crate::keypair_from_seed;
 // pub use crate::perfect_ip_core::*;
 use crate::fractal::fractal_ip_core::{
-    build_fractal_swarm, generate_manifest, list_directory, packetize, reconstruct_payload,
-    run_directory_walk, sha256_hex, summarize_packets, FractalBehaviourEvent, IntegrityManager,
-    ProtocolSlice,
+    build_fractal_swarm, generate_manifest, list_directory, packetize, reconstruct_directory,
+    reconstruct_payload, run_directory_walk, sha256_hex, summarize_packets, FractalBehaviourEvent,
+    IntegrityManager, ProtocolSlice,
 };
 use crate::message::{EventBuilder, EventKind, PrivateKey, Tag};
 use libp2p::{request_response, swarm::SwarmEvent};
@@ -163,13 +163,11 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         info!("logging flag is: {:?}", logging);
         let all_packets = run_directory_walk(root, depth, logging.is_some())?;
         if let Some(ref out_path) = out {
-            let reconstructed = reconstruct_payload(&all_packets);
-            fs::write(out_path, &reconstructed)?;
-            println!("recursively reconstructed {} bytes to {}", reconstructed.len(), out_path.display());
+            reconstruct_directory(all_packets, out_path)?;
+            println!("recursively reconstructed directory to {}", out_path.display());
             return Ok(());
         }
-        // Commented out to allow the P2P service to start when --recursive is used:
-        // return Ok(());
+        return Ok(());
     }
 
     // Commented out the old check to allow --depth when --recursive is used:
