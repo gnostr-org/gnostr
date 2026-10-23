@@ -294,7 +294,7 @@ fn update_repository_metadata(scan_path: &Path, db: &rocksdb::DB) {
         let mut git_repository: gix::Repository = match gix::open::Options::isolated().open(&repository_path) {
             Ok(v) => v.into(),
             Err(error) => {
-                warn!(%error, "Failed to open repository {} to update metadata, skipping", relative.display());
+                debug!(%error, "Skipping non-repository path {}", relative.display());
                 continue;
             }
         };
@@ -636,7 +636,7 @@ fn open_repo<P: AsRef<Path> + Debug>(
             Some(v)
         }
         Err(error) => {
-            warn!(%error, "Failed to open repository {}, removing from db", full_path.display());
+            debug!(%error, "Removing stale repository entry {}", full_path.display());
 
             if let Err(error) = db_repository.delete(db, relative_path) {
                 warn!(%error, "Failed to delete dangling index");
