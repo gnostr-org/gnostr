@@ -1,6 +1,6 @@
 xcode/swift-universal/rustylib/rustylib_framework.xcframework/Info.plist
 xcode/swift-universal/swiftyapp/Shared/Lib/swiftyrustlib/artifacts/RustyCore.xcframework/Info.plist
-
+gnostr-app/build/
 libp2p-app-template/libp2p-app-template.xcodeproj.bak2/
 
 **/librustylib.a
