@@ -4,11 +4,14 @@
 //! as JSON). Networking/behaviour code lives in `gnostr-p2p`.
 
 use std::collections::{HashMap, HashSet};
+use std::fs;
 use std::io;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use bincode;
+use log::{debug, info};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 /// Packet header metadata shared by all packet types in the tree.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -256,6 +259,24 @@ pub fn summarize_packets(packets: &[ProtocolSlice]) -> Vec<String> {
         .collect()
 }
 
+/// Reconstruct the original payload from a collection of non-parity packets.
+///
+/// Leaves are sorted by sequence number and concatenated. This is the inverse
+/// of [`packetize`] for callers that already have every data slice.
+pub fn reconstruct_payload(packets: &[ProtocolSlice]) -> Vec<u8> {
+    let mut leaves: Vec<_> = packets.iter().filter(|packet| !packet.is_parity).collect();
+    leaves.sort_by_key(|packet| packet.header.seq_num);
+    leaves
+        .into_iter()
+        .flat_map(|packet| packet.data.clone())
+        .collect()
+}
+
+/// Hex-encode a SHA-256 digest of the given bytes.
+pub fn sha256_hex(bytes: &[u8]) -> String {
+    format!("{:x}", Sha256::digest(bytes))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -492,15 +513,6 @@ mod tests {
 
     #[test]
     fn dump_full_protocol_for_nocapture() {
-        fn reconstruct_payload_for_test(packets: &[ProtocolSlice]) -> Vec<u8> {
-            let mut leaves: Vec<_> = packets.iter().filter(|packet| !packet.is_parity).collect();
-            leaves.sort_by_key(|packet| packet.header.seq_num);
-            leaves
-                .into_iter()
-                .flat_map(|packet| packet.data.clone())
-                .collect()
-        }
-
         let payload = vec![0xAB; 3000];
         let batch = packetize("ROOT".to_string(), payload.clone());
         let manifest = generate_manifest("ROOT".to_string(), payload.len());
@@ -542,7 +554,7 @@ mod tests {
         println!("perfect_ip missing nodes: {:?}", manager.get_missing_nodes());
         println!("perfect_ip integrity verified: {}", manager.verify_integrity());
 
-        let reconstructed = reconstruct_payload_for_test(&batch.packets);
+        let reconstructed = reconstruct_payload(&batch.packets);
         let reconstructed_sha256 = format!("{:x}", Sha256::digest(&reconstructed));
         let sender_sha256 = format!("{:x}", Sha256::digest(&payload));
         println!("perfect_ip reconstructed sha256: {reconstructed_sha256}");
