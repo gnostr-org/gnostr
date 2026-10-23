@@ -234,7 +234,8 @@ Configuration (only meaningful with `--features ipfs`):
 - `--ipfs-repo <path>` / `GNOSTR_IPFS_REPO` — Kubo repository location
   (default: OS app data dir `…/gnostr/ipfs`).
 - `--ipfs-online` / `GNOSTR_IPFS_ONLINE=true` — enable swarm participation
-  (default: offline, local-only).
+  (default: offline, local-only). When enabled together with the embedded node,
+  `start_api` is invoked so the full Kubo RPC API + WebUI are available.
 
 The Kubo FFI lives in `../ipfs/ffi/rust` (`kubo-ffi`) and requires a Go
 toolchain at build time. The `ipfs` feature is off by default so a plain

@@ -69,16 +69,21 @@ impl IpfsState {
         let mut err_opt = None;
 
         match Node::start(&repo_path, online) {
-            Ok(node) => match node.start_gateway("/ip4/127.0.0.1/tcp/0") {
-                Some(ma) => {
-                    let port = parse_port(&ma).unwrap_or(0);
-                    gw_opt = Some(format!("http://127.0.0.1:{port}"));
-                    node_opt = Some(node);
+            Ok(node) => {
+                // Full daemon API (CoreAPI + WebUI) for trusted/local use.
+                let _ = node.start_api("/ip4/127.0.0.1/tcp/0");
+                // Keep a public-safe gateway for /ipfs/:cid retrieval.
+                match node.start_gateway("/ip4/127.0.0.1/tcp/0") {
+                    Some(ma) => {
+                        let port = parse_port(&ma).unwrap_or(0);
+                        gw_opt = Some(format!("http://127.0.0.1:{port}"));
+                        node_opt = Some(node);
+                    }
+                    None => {
+                        err_opt = kubo_ffi::last_error();
+                    }
                 }
-                None => {
-                    err_opt = kubo_ffi::last_error();
-                }
-            },
+            }
             Err(e) => {
                 err_opt = Some(e);
             }
