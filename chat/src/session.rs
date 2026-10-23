@@ -1,3 +1,4 @@
+#[cfg(feature = "fractal")]
 use std::path::Path;
 use std::time::Duration;
 
@@ -5,6 +6,8 @@ use anyhow::{Context, Result};
 use libp2p::gossipsub;
 use tokio::sync::{broadcast, mpsc, watch};
 
+#[cfg(feature = "fractal")]
+use crate::fractal::LocalFractalRepairService;
 use crate::{
     event::ChatEvent,
     msg::{Msg, MsgKind},
@@ -16,17 +19,32 @@ pub enum ChatNotification {
     ChatMessage(Msg),
     Info(String),
     Error(String),
-    Connected { peer_id: String, endpoint: String },
+    Connected {
+        peer_id: String,
+        endpoint: String,
+    },
     MessagePublished,
+    #[cfg(feature = "fractal")]
+    PerfectIpProgress {
+        root: String,
+        received: usize,
+        total: usize,
+    },
+    #[cfg(feature = "fractal")]
+    PerfectIpComplete {
+        root: String,
+        output_path: std::path::PathBuf,
+    },
 }
 
 pub struct ChatSession {
     topic: String,
-    relay: Option<String>,
     command_tx: mpsc::Sender<ChatEvent>,
     updates: broadcast::Sender<ChatNotification>,
     ready_rx: watch::Receiver<bool>,
     _relay_service: LocalP2pRelayService,
+    #[cfg(feature = "fractal")]
+    fractal_service: LocalFractalRepairService,
     event_loop: tokio::task::JoinHandle<()>,
     bridge: tokio::task::JoinHandle<()>,
 }
@@ -36,6 +54,8 @@ impl ChatSession {
         let topic = topic.into();
         let relay_for_loop = relay.clone();
         let relay_service = spawn_local_p2p_relay_service_async().await?;
+        #[cfg(feature = "fractal")]
+        let fractal_service = LocalFractalRepairService::new(&topic).await?;
         let (command_tx, command_rx) = mpsc::channel::<ChatEvent>(100);
         let (output_tx, output_rx) = mpsc::channel::<ChatEvent>(100);
         let (updates, _) = broadcast::channel::<ChatNotification>(256);
@@ -53,11 +73,12 @@ impl ChatSession {
 
         Ok(Self {
             topic,
-            relay,
             command_tx,
             updates,
             ready_rx,
             _relay_service: relay_service,
+            #[cfg(feature = "fractal")]
+            fractal_service,
             event_loop,
             bridge,
         })
@@ -120,6 +141,48 @@ impl ChatSession {
     pub async fn send_crawler_search(&self, nip: i32) -> Result<()> {
         self.send_event(ChatEvent::CrawlerSearch { nip }).await
     }
+
+    #[cfg(feature = "fractal")]
+    pub async fn send_perfect_ip_file(
+        &self,
+        path: &Path,
+        recursive: bool,
+        depth: usize,
+    ) -> Result<()> {
+        let (walk, slices, sha256) = crate::fractal::packetize_path(path, recursive, depth)?;
+        self.fractal_service.publish_slices(slices);
+
+        let manifest = crate::fractal::build_manifest(
+            &walk,
+            self.fractal_service.peer_id().to_string(),
+            self.fractal_service.repair_addr().to_string(),
+            sha256,
+        );
+        let manifest_json = serde_json::to_string(&manifest)?;
+        let summary = format!(
+            "perfect_ip manifest: {} file(s), {} slice(s), root={}",
+            manifest.file_count(),
+            manifest.total_slices(),
+            manifest.root
+        );
+        let msg = crate::msg::Msg::default()
+            .set_kind(crate::msg::MsgKind::PerfectIpManifest)
+            .set_content(summary, 0)
+            .set_perfect_ip_manifest(manifest_json);
+        self.send_event(ChatEvent::ChatMessage(msg)).await
+    }
+
+    #[cfg(feature = "fractal")]
+    pub fn fractal_repair_addr(&self) -> libp2p::Multiaddr {
+        self.fractal_service.repair_addr()
+    }
+
+    #[cfg(feature = "fractal")]
+    pub fn fractal_manager(
+        &self,
+    ) -> std::sync::Arc<parking_lot::Mutex<gnostr_p2p::perfect_ip_core::IntegrityManager>> {
+        self.fractal_service.manager()
+    }
 }
 
 impl Drop for ChatSession {
@@ -153,6 +216,20 @@ async fn forward_updates(
             }
             ChatEvent::CrawlerSearch { .. } => continue,
             ChatEvent::MessagePublished => ChatNotification::MessagePublished,
+            #[cfg(feature = "fractal")]
+            ChatEvent::PerfectIpProgress {
+                root,
+                received,
+                total,
+            } => ChatNotification::PerfectIpProgress {
+                root,
+                received,
+                total,
+            },
+            #[cfg(feature = "fractal")]
+            ChatEvent::PerfectIpComplete { root, output_path } => {
+                ChatNotification::PerfectIpComplete { root, output_path }
+            }
         };
 
         let _ = updates.send(notification);

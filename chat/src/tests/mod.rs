@@ -1,3 +1,5 @@
+#[cfg(feature = "fractal")]
+mod fractal_integration_tests;
 mod p2p_chat_integration_tests;
 
 #[test]
@@ -26,7 +28,7 @@ fn shared_packets_roundtrip_through_chat_repair_api() {
     let packets: Vec<crate::perfect_ip_core::ProtocolSlice> =
         serde_json::from_slice(&encoded).expect("deserialize repair packets");
     println!("decoded {} canonical repair packets", packets.len());
-    let reconstructed = crate::fractal::fractal_ip_core::reconstruct_payload(&packets);
+    let reconstructed = crate::perfect_ip_core::reconstruct_payload(&packets);
     println!("reconstructed payload: {} bytes", reconstructed.len());
     println!(
         "reconstructed sha256: {}",
@@ -47,7 +49,7 @@ fn shared_packets_roundtrip_through_chat_repair_api() {
 
 #[test]
 fn fractal_slices_roundtrip_through_chat_facade() {
-    let slice = crate::fractal::FractalSlice {
+    let slice = crate::p2p_fractal::FractalSlice {
         block_id: "chat-block".into(),
         id: "CHAT.0".into(),
         offset: 0,

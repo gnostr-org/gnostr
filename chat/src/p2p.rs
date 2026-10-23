@@ -417,6 +417,95 @@ pub async fn async_prompt(mempool_url: String) -> String {
 //    .unwrap() // Handle potential join errors
 //}
 
+#[cfg(feature = "fractal")]
+async fn handle_perfect_ip_manifest(
+    recv: &tokio::sync::mpsc::Sender<ChatEvent>,
+    msg: Msg,
+) -> Result<()> {
+    use crate::fractal::{request_slices, PerfectIpManifest};
+    use anyhow::Context;
+
+    // Forward the manifest announcement to the UI so it appears in chat history.
+    recv.send(ChatEvent::ChatMessage(msg.clone())).await?;
+
+    let manifest_json = msg
+        .perfect_ip_manifest
+        .clone()
+        .ok_or_else(|| anyhow!("PerfectIpManifest message missing manifest payload"))?;
+    let manifest: PerfectIpManifest = serde_json::from_str(&manifest_json)
+        .context("failed to deserialize perfect_ip manifest")?;
+    let total = manifest.total_slices();
+    let root = manifest.root.clone();
+
+    recv.send(ChatEvent::PerfectIpProgress {
+        root: root.clone(),
+        received: 0,
+        total,
+    })
+    .await?;
+
+    let recv_clone = recv.clone();
+    tokio::spawn(async move {
+        let repair_addr = match manifest.repair_addr.parse() {
+            Ok(addr) => addr,
+            Err(error) => {
+                let _ = recv_clone
+                    .send(ChatEvent::ShowErrorMsg(format!(
+                        "invalid fractal repair address: {error}"
+                    )))
+                    .await;
+                return;
+            }
+        };
+
+        let ids = manifest.all_slice_ids();
+        match request_slices(repair_addr, ids.clone(), Duration::from_secs(120)).await {
+            Ok(manager) => {
+                let output_dir = std::env::temp_dir().join(format!(
+                    "gnostr-chat-fractal-{}",
+                    crate::perfect_ip_core::sha256_hex(manifest_json.as_bytes())
+                        .chars()
+                        .take(16)
+                        .collect::<String>()
+                ));
+                let _ = recv_clone
+                    .send(ChatEvent::PerfectIpProgress {
+                        root: root.clone(),
+                        received: ids.len(),
+                        total,
+                    })
+                    .await;
+                match crate::fractal::reconstruct_from_manager(&manager, &manifest, &output_dir) {
+                    Ok(()) => {
+                        let _ = recv_clone
+                            .send(ChatEvent::PerfectIpComplete {
+                                root,
+                                output_path: output_dir,
+                            })
+                            .await;
+                    }
+                    Err(error) => {
+                        let _ = recv_clone
+                            .send(ChatEvent::ShowErrorMsg(format!(
+                                "fractal reconstruction failed: {error}"
+                            )))
+                            .await;
+                    }
+                }
+            }
+            Err(error) => {
+                let _ = recv_clone
+                    .send(ChatEvent::ShowErrorMsg(format!(
+                        "fractal slice download failed: {error}"
+                    )))
+                    .await;
+            }
+        }
+    });
+
+    Ok(())
+}
+
 /// Run the chat swarm event loop.
 ///
 /// This bootstraps the transport stack, subscribes to the requested topic, and
@@ -629,6 +718,10 @@ pub async fn evt_loop(
                         recv.send(ChatEvent::ShowInfoMsg(format!("searching crawler bucket {nip} providers"))).await?;
                     }
                     ChatEvent::ShowErrorMsg(_) | ChatEvent::ShowInfoMsg(_) | ChatEvent::PeerConnected { .. } | ChatEvent::MessagePublished => {}
+                    #[cfg(feature = "fractal")]
+                    ChatEvent::PerfectIpProgress { .. } => {}
+                    #[cfg(feature = "fractal")]
+                    ChatEvent::PerfectIpComplete { .. } => {}
                 }
             }
             event = swarm.select_next_some() => match event {
@@ -741,6 +834,12 @@ pub async fn evt_loop(
                     );
                     match serde_json::from_slice::<Msg>(&message.data) {
                         Ok(msg) => {
+                            #[cfg(feature = "fractal")]
+                            if msg.kind == MsgKind::PerfectIpManifest {
+                                handle_perfect_ip_manifest(&recv, msg).await?;
+                                continue;
+                            }
+
                             if msg.message_id.is_some() && msg.sequence_num.is_some() && msg.total_chunks.is_some() {
                                                                 if let Some(mut reassembled_msg) = reassembler.add_chunk_and_reassemble(msg) {
                                                                     let terminal_width = terminal_size().map(|(Width(w), _)| w as usize).unwrap_or(80);

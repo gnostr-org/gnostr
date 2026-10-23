@@ -164,3 +164,44 @@ Chat can store attachments in IPFS when built with `--features ipfs`.
   attachment (used by `--oneshot --attach <path>`).
 - Tests: `cargo test -p gnostr-chat --features ipfs` (ignored tests require
   the Go toolchain).
+
+## Fractal / `perfect_ip` integration
+
+Chat can send and receive packetized, parity-protected files and directory
+ trees when built with `--features fractal`.
+
+- `crate::fractal::LocalFractalRepairService` spawns a dedicated libp2p
+  request/response swarm on `/fractal/repair/1.0.0/json`.
+- `ChatSession::send_perfect_ip_file(path, recursive, depth)` packetizes the
+  payload, publishes the slices to the local repair service, and announces a
+  `MsgKind::PerfectIpManifest` over the chat gossipsub topic.
+- Receivers parse the manifest, dial the advertised repair address, request
+  missing slices, and reconstruct the original file/directory to a temp path.
+- Progress and completion are delivered as `ChatNotification::PerfectIpProgress`
+  and `ChatNotification::PerfectIpComplete`.
+- CLI entry point: `gnostr chat --fractal <path> [--recursive] [--depth N]`.
+
+### Adding a new perfect_ip event type
+
+1. Add the variant to `ChatEvent` in `src/event.rs`.
+2. Convert it to a `ChatNotification` in `forward_updates` (`src/session.rs`).
+3. Handle the notification in `spawn_notification_printer` (`src/command.rs`)
+   and the TUI's `drain_incoming` (`src/tui.rs`).
+
+### Tests
+
+- `cargo test -p gnostr-chat --features fractal` runs unit tests.
+- `cargo test -p gnostr-chat --features fractal -- --ignored --nocapture` runs
+  the networked integration tests locally.
+
+### Source map
+
+| File | Purpose |
+|------|---------|
+| `src/fractal.rs` | `LocalFractalRepairService`, `request_slices`, `PerfectIpManifest`, packetize/reconstruct helpers |
+| `src/event.rs` | `ChatEvent::PerfectIpProgress`, `ChatEvent::PerfectIpComplete` |
+| `src/session.rs` | `ChatSession::send_perfect_ip_file`, `ChatNotification` variants |
+| `src/p2p.rs` | `handle_perfect_ip_manifest` receiver task |
+| `src/msg.rs` | `MsgKind::PerfectIpManifest`, `Msg::perfect_ip_manifest` |
+| `src/command.rs` | `--fractal`, `--recursive`, `--depth` CLI flags and `run_fractal_oneshot` |
+| `src/tui.rs` | TUI rendering for progress/completion notifications |

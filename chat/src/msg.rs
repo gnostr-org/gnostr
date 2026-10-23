@@ -41,6 +41,7 @@ pub enum MsgKind {
     GitDiff,
     OneShot,
     Debug,
+    PerfectIpManifest,
 }
 
 /// A content-addressed attachment carried by a chat message.
@@ -77,6 +78,9 @@ pub struct Msg {
     /// Content-addressed attachments (IPFS CIDs).
     #[serde(default)]
     pub attachments: Vec<Attachment>,
+    /// JSON-encoded `perfect_ip` manifest when `kind` is `PerfectIpManifest`.
+    #[serde(default)]
+    pub perfect_ip_manifest: Option<String>,
 }
 
 impl Default for Msg {
@@ -91,6 +95,7 @@ impl Default for Msg {
             sequence_num: None,
             total_chunks: None,
             attachments: Vec::new(),
+            perfect_ip_manifest: None,
         }
     }
 }
@@ -157,6 +162,12 @@ impl Msg {
     /// Attach a content-addressed attachment (IPFS CID).
     pub fn add_attachment(mut self, attachment: Attachment) -> Self {
         self.attachments.push(attachment);
+        self
+    }
+
+    /// Attach a JSON-encoded perfect_ip manifest.
+    pub fn set_perfect_ip_manifest(mut self, manifest: String) -> Self {
+        self.perfect_ip_manifest = Some(manifest);
         self
     }
 
@@ -413,6 +424,22 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 }
                 Line::from(spans)
             }
+            PerfectIpManifest => {
+                let mut spans = Vec::new();
+                let purple_style = Style::default().fg(Color::Magenta);
+
+                if let Some(first_line) = m.content.first() {
+                    spans.push(Span::styled(
+                        format!("[FRACTAL] {}: {}", m.from, first_line),
+                        purple_style,
+                    ));
+                }
+
+                for line in m.content.iter().skip(1) {
+                    spans.push(Span::styled(line.clone(), purple_style));
+                }
+                Line::from(spans)
+            }
         }
     }
 }
@@ -505,6 +532,9 @@ impl Display for Msg {
             }
             MsgKind::OneShot => {
                 write!(f, "[ONESHOT] {}: {}", self.from, self.content[0])
+            }
+            MsgKind::PerfectIpManifest => {
+                write!(f, "[FRACTAL] {}: {}", self.from, self.content[0])
             }
         }
     }

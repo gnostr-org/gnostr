@@ -135,6 +135,21 @@ impl ChatTui {
                     self.status = format!("connected to peer {peer_id} via {endpoint}");
                 }
                 ChatNotification::MessagePublished => {}
+                #[cfg(feature = "fractal")]
+                ChatNotification::PerfectIpProgress {
+                    root,
+                    received,
+                    total,
+                } => {
+                    self.status = format!("{root}: {received}/{total} slices received");
+                }
+                #[cfg(feature = "fractal")]
+                ChatNotification::PerfectIpComplete { root, output_path } => {
+                    self.status = format!(
+                        "{root}: reconstruction complete at {}",
+                        output_path.display()
+                    );
+                }
             }
         }
     }

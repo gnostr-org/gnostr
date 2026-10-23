@@ -20,6 +20,7 @@ path = "src/lib.rs"
 [features]
 long_tests = []
 ipfs = ["gnostr-p2p/ipfs"]
+fractal = []
 
 [dependencies]
 anyhow = "1.0.98"
