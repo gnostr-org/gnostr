@@ -3,7 +3,7 @@
 //! These are the pure data types and helpers exchanged on the wire (serialized
 //! as JSON). Networking/behaviour code lives in `gnostr-p2p`.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
@@ -280,8 +280,8 @@ pub fn sha256_hex(bytes: &[u8]) -> String {
 /// Recursively list a directory tree and packetize every file found.
 ///
 /// `lines` receives a human-readable tree representation, while `all_packets`
-/// receives the concatenated [`ProtocolSlice`]s for every file. Directories are
-/// visited unconditionally up to `depth`.
+/// receives a map from relative file path to the [`ProtocolSlice`]s produced for
+/// that file. Directories are visited unconditionally up to `depth`.
 pub fn list_directory(
     root: &Path,
     current: &Path,
@@ -289,7 +289,7 @@ pub fn list_directory(
     level: usize,
     logging: bool,
     lines: &mut Vec<String>,
-    all_packets: &mut Vec<ProtocolSlice>,
+    all_packets: &mut BTreeMap<String, Vec<ProtocolSlice>>,
 ) -> io::Result<()> {
     if level == 0 {
         lines.push(".".to_string());
@@ -321,8 +321,12 @@ pub fn list_directory(
                 bytes.len(),
                 sha256_hex(&bytes)
             ));
-            let batch = packetize(relative.to_string_lossy().into_owned(), bytes);
-            all_packets.extend(batch.packets.clone());
+            let rel_path = relative.to_string_lossy().into_owned();
+            let batch = packetize(rel_path.clone(), bytes);
+            all_packets
+                .entry(rel_path)
+                .or_default()
+                .extend(batch.packets.clone());
             if logging {
                 info!("File: {}", relative.display());
                 info!("Batch size: {} packets", batch.total_packets);
@@ -344,18 +348,43 @@ pub fn list_directory(
     Ok(())
 }
 
-/// Walk a directory and return all packetized file slices.
+/// Walk a directory and return all packetized file slices grouped by path.
 ///
 /// This is a convenience wrapper around [`list_directory`] that prints the
-/// generated tree lines and returns the collected packets.
-pub fn run_directory_walk(path: &Path, depth: usize, logging: bool) -> io::Result<Vec<ProtocolSlice>> {
+/// generated tree lines and returns a map from relative file path to the
+/// packets for that file.
+pub fn run_directory_walk(
+    path: &Path,
+    depth: usize,
+    logging: bool,
+) -> io::Result<BTreeMap<String, Vec<ProtocolSlice>>> {
     let mut lines = Vec::new();
-    let mut all_packets = Vec::new();
+    let mut all_packets = BTreeMap::new();
     list_directory(path, path, depth, 0, logging, &mut lines, &mut all_packets)?;
     for line in lines {
         println!("{line}");
     }
     Ok(all_packets)
+}
+
+/// Reconstruct a packetized directory tree under `out_path`.
+///
+/// The map keys are treated as relative file paths; each entry is reconstructed
+/// and written to `out_path/<key>`. Missing parent directories are created
+/// automatically.
+pub fn reconstruct_directory(
+    packets_by_path: BTreeMap<String, Vec<ProtocolSlice>>,
+    out_path: &Path,
+) -> io::Result<()> {
+    for (rel_path, packets) in packets_by_path {
+        let file_path = out_path.join(&rel_path);
+        if let Some(parent) = file_path.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        let reconstructed = reconstruct_payload(&packets);
+        fs::write(&file_path, &reconstructed)?;
+    }
+    Ok(())
 }
 
 #[cfg(test)]
