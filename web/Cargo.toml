@@ -10,6 +10,11 @@ repository = "https://github.com/gnostr-org/gnostr.git"
 exclude.workspace = true
 build = "build.rs"
 
+[features]
+default = []
+ipfs = ["dep:kubo-ffi", "dep:dirs"]
+p2p = ["dep:gnostr-p2p"]
+
 [dependencies]
 actix-http = { version = "3.9.0" }
 anyhow = "1.0.100"
@@ -23,6 +28,7 @@ clap = { workspace = true }
 comrak = { version = "0.28.0", default-features = false }
 const-hex = "1.12"
 const_format = { workspace = true }
+dirs = { version = "5", optional = true }
 flate2 = "1"
 futures = "0.3"
 futures-util = "0.3.31"
@@ -37,14 +43,13 @@ gnostr-asyncgit = { workspace = true, features = ["vendor-openssl"] }
 gnostr-grammar = { workspace = true }
 gnostr-js = { workspace = true }
 gnostr-p2p = { path = "../p2p", optional = true }
-kubo-ffi = { path = "../ipfs/ffi/rust", optional = true }
-dirs = { version = "5", optional = true }
 handlebars = { workspace = true }
 httparse = "1.7"
 humantime = "2.1"
 ignore = "0.4"
 ini = { package = "rust-ini", version = "0.21.1" }
 itertools = "0.14.0"
+kubo-ffi = { path = "../ipfs/ffi/rust", optional = true }
 lazy_static = "1.5.0"
 log = "0.4"
 md5 = "0.7"
@@ -86,11 +91,6 @@ warp = { workspace = true }
 webbrowser = { workspace = true }
 xxhash-rust = { version = "0.8.12", features = ["const_xxh3"] }
 yoke = { version = "0.7.1", features = ["derive"] }
-
-[features]
-default = []
-ipfs = ["dep:kubo-ffi", "dep:dirs"]
-p2p = ["dep:gnostr-p2p"]
 
 [build-dependencies]
 anyhow = "1.0.100"
