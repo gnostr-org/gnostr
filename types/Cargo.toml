@@ -17,6 +17,7 @@ aes = "0.8"
 anyhow = "1.0.100"
 ascii = { workspace = true }
 base64 = { workspace = true }
+bincode = { workspace = true }
 bech32 = { workspace = true }
 bip32 = { workspace = true }
 bip39 = { workspace = true }

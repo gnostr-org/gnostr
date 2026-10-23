@@ -32,10 +32,7 @@
 //! The layout intentionally mirrors the packet-tree sketch in the
 //! `perfect_ip.rs` gist.
 
-use std::collections::{HashMap, HashSet};
 use std::error::Error;
-use std::io;
-use std::path::Path;
 
 use futures::StreamExt;
 use libp2p::{
@@ -73,104 +70,7 @@ impl From<request_response::Event<ProtocolSlice, ProtocolSlice>> for FractalBeha
     }
 }
 
-/// Tracks the expected manifest and the packets that have arrived so far.
-///
-/// The manager is deliberately simple: it stores the expected ids, the received
-/// slices, and exposes helpers for missing-node inspection, parity validation,
-/// and persistence.
-#[derive(Debug, Clone, Default)]
-pub struct IntegrityManager {
-    manifest: HashSet<String>,
-    pub received_slices: HashMap<String, ProtocolSlice>,
-}
-
-impl IntegrityManager {
-    /// Create a manager from the set of expected packet ids.
-    ///
-    /// The manifest is stored as a set so lookups stay cheap even for larger
-    /// packet trees.
-    pub fn new(expected_ids: Vec<String>) -> Self {
-        Self {
-            manifest: expected_ids.into_iter().collect(),
-            received_slices: HashMap::new(),
-        }
-    }
-
-    /// Record a received packet by id, replacing any prior packet with the same id.
-    ///
-    /// Re-recording a slice is allowed and simply overwrites the previous
-    /// entry. That makes repair retries and late arrivals idempotent.
-    pub fn record_slice(&mut self, slice: ProtocolSlice) {
-        self.received_slices.insert(slice.id.clone(), slice);
-    }
-
-    /// Persist the received packet map to disk using bincode.
-    ///
-    /// This writes only the received slice map. The caller supplies the
-    /// manifest again on load so persisted state stays lightweight and portable.
-    pub fn persist(&self, path: impl AsRef<Path>) -> io::Result<()> {
-        let encoded = bincode::serialize(&self.received_slices)
-            .map_err(|error| io::Error::new(io::ErrorKind::Other, error))?;
-        std::fs::write(path, encoded)
-    }
-
-    /// Load a persisted packet map from disk and attach it to the given manifest.
-    ///
-    /// The manifest is not persisted with the slice data; callers are expected
-    /// to regenerate or reload it independently.
-    pub fn load_from_disk(
-        path: impl AsRef<Path>,
-        manifest: HashSet<String>,
-    ) -> io::Result<Self> {
-        let bytes = std::fs::read(path)?;
-        let received_slices: HashMap<String, ProtocolSlice> =
-            bincode::deserialize(&bytes).map_err(|error| io::Error::new(io::ErrorKind::Other, error))?;
-        Ok(Self {
-            manifest,
-            received_slices,
-        })
-    }
-
-    /// Return the packet ids from the manifest that are still missing.
-    ///
-    /// The returned ids preserve the manifest set's iteration order only in the
-    /// sense that they are collected into a vector; callers should sort if they
-    /// need deterministic display order.
-    pub fn get_missing_nodes(&self) -> Vec<String> {
-        self.manifest
-            .iter()
-            .filter(|id| !self.received_slices.contains_key(*id))
-            .cloned()
-            .collect()
-    }
-
-    /// Verify that every parity slice matches the XOR of its sibling data slices.
-    ///
-    /// If a parity node's siblings are both present, the check recomputes the
-    /// XOR and compares it with the stored parity bytes. Missing siblings are
-    /// ignored so partial downloads can still pass for the fragments they have.
-    pub fn verify_integrity(&self) -> bool {
-        for (id, slice) in &self.received_slices {
-            if !slice.is_parity {
-                continue;
-            }
-
-            let Some(base_id) = id.strip_suffix(".P") else {
-                return false;
-            };
-            let left = self.received_slices.get(&format!("{}.0", base_id));
-            let right = self.received_slices.get(&format!("{}.1", base_id));
-
-            if let (Some(left), Some(right)) = (left, right) {
-                if calculate_parity(&left.data, &right.data) != slice.data {
-                    return false;
-                }
-            }
-        }
-
-        true
-    }
-}
+pub use gnostr_types::perfect_ip::IntegrityManager;
 
 /// Build the repair swarm used to exchange packet slices with peers.
 ///
@@ -263,21 +163,7 @@ pub async fn run_fractal_engine(
 pub const MTU_PAYLOAD: usize = 1460;
 const MAX_LEAF_PAYLOAD: usize = MTU_PAYLOAD / 2;
 
-/// XOR two payloads into a parity buffer.
-///
-/// Missing bytes are treated as zero so the returned buffer is as long as the
-/// larger input. This is the core repair primitive used at every branch in the
-/// recursive packet tree.
-pub fn calculate_parity(left: &[u8], right: &[u8]) -> Vec<u8> {
-    let max_len = left.len().max(right.len());
-    let mut parity = vec![0; max_len];
-    for i in 0..max_len {
-        let l = if i < left.len() { left[i] } else { 0 };
-        let r = if i < right.len() { right[i] } else { 0 };
-        parity[i] = l ^ r;
-    }
-    parity
-}
+pub use gnostr_types::perfect_ip::calculate_parity;
 
 /// Generate the expected packet ids for a recursive packet tree.
 ///
