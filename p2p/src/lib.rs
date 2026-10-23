@@ -44,6 +44,8 @@ pub mod embedded_network;
 #[cfg(not(target_os = "tvos"))]
 pub mod fractal;
 #[cfg(not(target_os = "tvos"))]
+pub mod perfect_ip_core;
+#[cfg(not(target_os = "tvos"))]
 pub mod perfect_ip;
 #[cfg(not(target_os = "tvos"))]
 pub mod command_handler;
@@ -163,7 +165,7 @@ pub use relay_bridge::{RelayBridgeCommand, RelayBridgeNotification, RelayBridgeS
 #[cfg(not(target_os = "tvos"))]
 pub use fractal::{build_fractal_swarm, run_fractal_engine, FractalBehaviour, FractalBehaviourEvent, IntegrityManager, ProtocolSlice};
 #[cfg(not(target_os = "tvos"))]
-pub use perfect_ip::{calculate_parity, process_slice, Header, ProtocolSlice as PerfectProtocolSlice, MTU_PAYLOAD};
+pub use perfect_ip_core::{calculate_parity, process_slice, Header, ProtocolSlice as PerfectProtocolSlice, MTU_PAYLOAD};
 #[cfg(all(not(doc), feature = "js", not(target_os = "tvos")))]
 pub use template_html::{get_template_assets, TemplateHtml};
 
