@@ -277,6 +277,87 @@ pub fn sha256_hex(bytes: &[u8]) -> String {
     format!("{:x}", Sha256::digest(bytes))
 }
 
+/// Recursively list a directory tree and packetize every file found.
+///
+/// `lines` receives a human-readable tree representation, while `all_packets`
+/// receives the concatenated [`ProtocolSlice`]s for every file. Directories are
+/// visited unconditionally up to `depth`.
+pub fn list_directory(
+    root: &Path,
+    current: &Path,
+    depth: usize,
+    level: usize,
+    logging: bool,
+    lines: &mut Vec<String>,
+    all_packets: &mut Vec<ProtocolSlice>,
+) -> io::Result<()> {
+    if level == 0 {
+        lines.push(".".to_string());
+    }
+
+    let mut entries = Vec::new();
+    for entry in fs::read_dir(current)? {
+        entries.push(entry?);
+    }
+    entries.sort_by_key(|entry| entry.file_name());
+
+    for entry in entries {
+        let path = entry.path();
+        let relative = path
+            .strip_prefix(root)
+            .unwrap_or(&path)
+            .to_path_buf();
+        let indent = "  ".repeat(level + 1);
+        let metadata = entry.metadata()?;
+
+        if metadata.is_dir() {
+            lines.push(format!("{indent}{}/", relative.display()));
+            list_directory(root, &path, depth, level + 1, logging, lines, all_packets)?;
+        } else if metadata.is_file() {
+            let bytes = fs::read(&path)?;
+            lines.push(format!(
+                "{indent}{} ({}B sha256:{})",
+                relative.display(),
+                bytes.len(),
+                sha256_hex(&bytes)
+            ));
+            let batch = packetize(relative.to_string_lossy().into_owned(), bytes);
+            all_packets.extend(batch.packets.clone());
+            if logging {
+                info!("File: {}", relative.display());
+                info!("Batch size: {} packets", batch.total_packets);
+
+                lines.push(format!(
+                    "{indent}  perfect_ip packet batch: {} packets",
+                    batch.total_packets
+                ));
+                for line in summarize_packets(&batch.packets) {
+                    debug!("{line}");
+                    lines.push(format!("{indent}  {line}"));
+                }
+            }
+        } else {
+            lines.push(format!("{indent}{} [special]", relative.display()));
+        }
+    }
+
+    Ok(())
+}
+
+/// Walk a directory and return all packetized file slices.
+///
+/// This is a convenience wrapper around [`list_directory`] that prints the
+/// generated tree lines and returns the collected packets.
+pub fn run_directory_walk(path: &Path, depth: usize, logging: bool) -> io::Result<Vec<ProtocolSlice>> {
+    let mut lines = Vec::new();
+    let mut all_packets = Vec::new();
+    list_directory(path, path, depth, 0, logging, &mut lines, &mut all_packets)?;
+    for line in lines {
+        println!("{line}");
+    }
+    Ok(all_packets)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
