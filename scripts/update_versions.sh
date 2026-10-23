@@ -34,9 +34,6 @@ while (($#)); do
         -n|--dry-run)
             DRY_RUN=true
             ;;
-        --dry-run)
-            DRY_RUN=true
-            ;;
         *)
             POSITIONAL_ARGS+=("$1")
             ;;
@@ -446,7 +443,7 @@ tag_package_versions() {
     local tree
     local commit
 
-    tree="$(git rev-parse HEAD^{tree})"
+    tree="$(git rev-parse 'HEAD^{tree}')"
     for crate in "${PUBLISH_CRATES[@]}"; do
         if [ "$crate" = "." ]; then
             tag="v$version"
@@ -507,7 +504,10 @@ for crate in "${PUBLISH_CRATES[@]}"; do
     if should_skip_verify "$crate"; then
         publish_args=(--no-verify "${publish_args[@]}")
     fi
-    sleep 1 && pushd "$crate" >/dev/null && cargo publish "${publish_args[@]}" || true && popd >/dev/null
+    (
+        cd "$crate"
+        cargo publish "${publish_args[@]}"
+    )
 done
 fi
 
@@ -516,6 +516,16 @@ if [ -n "$(git status --porcelain -- . ':(exclude)vendor/**' 2>/dev/null | grep 
 fi
 
 if [[ "$PUSH" == true ]]; then
+if [[ "$INTERACTIVE" == true ]]; then
+    for crate in "${PUBLISH_CRATES[@]}"; do
+        if [[ "$crate" == . ]]; then
+            tag="v$WORKSPACE_VERSION"
+        else
+            tag="$crate/v$WORKSPACE_VERSION"
+        fi
+        git push origin "$tag:$tag" -f
+    done
+else
 ##git notes
 git config --get-all remote.origin.push | grep -qxF '+refs/notes/*:refs/notes/*' || \
     git config --add remote.origin.push "+refs/notes/*:refs/notes/*"
@@ -528,5 +538,6 @@ for crate in "${PUBLISH_CRATES[@]}"; do
 done
 git push origin "gnostr/v$WORKSPACE_VERSION:gnostr/v$WORKSPACE_VERSION" -f
 echo;
-git push origin v$WORKSPACE_VERSION:v$WORKSPACE_VERSION -f
+git push origin "v$WORKSPACE_VERSION:v$WORKSPACE_VERSION" -f
+fi
 fi

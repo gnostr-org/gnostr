@@ -24,9 +24,6 @@ while (($#)); do
         -n|--dry-run)
             DRY_RUN=true
             ;;
-        --dry-run)
-            DRY_RUN=true
-            ;;
         *)
             POSITIONAL_ARGS+=("$1")
             ;;

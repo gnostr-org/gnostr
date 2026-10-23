@@ -36,6 +36,25 @@ if [[ "$INTERACTIVE" == true ]]; then
   ui_prompt "Fractal output directory" "$OUTPUT"; OUTPUT="$UI_VALUE"
   ui_prompt "Git clone directory" "$CLONE"; CLONE="$UI_VALUE"
 fi
+SOURCE="$(cd "$SOURCE" && pwd -P)"
+resolve_output() {
+  local path="$1"
+  if [[ -L "$path" ]]; then
+    echo "Error: refusing a symlinked output: $path" >&2
+    return 1
+  fi
+  if [[ -d "$path" ]]; then
+    (cd "$path" && pwd -P)
+  else
+    (cd "$(dirname "$path")" && printf '%s/%s\n' "$PWD" "$(basename "$path")")
+  fi
+}
+OUTPUT="$(resolve_output "$OUTPUT")"
+CLONE="$(resolve_output "$CLONE")"
+if [[ "$OUTPUT" == "$CLONE" || "$OUTPUT/" == "$CLONE/"* || "$CLONE/" == "$OUTPUT/"* ]]; then
+  echo "Error: output and clone directories must not overlap." >&2
+  exit 1
+fi
 for path in "$OUTPUT" "$CLONE"; do
   if [[ -e "$path" || -L "$path" ]]; then
     echo "Error: output already exists: $path" >&2
@@ -47,19 +66,24 @@ for path in "$OUTPUT" "$CLONE"; do
       echo "Error: refusing to replace a symlink or non-directory: $path" >&2
       exit 1
     fi
-    resolved="$(cd "$path" && pwd -P)"
-    # Only replace a direct child of this repository, never a parent or source.
-    if [[ "$(dirname "$resolved")" != "$ROOT_DIR" ||
-      "$resolved" == "$(cd "$SOURCE" && pwd -P)" ]]; then
-      echo "Error: refusing replacement outside repository output directories: $path" >&2
+    if [[ "$SOURCE/" == "$path/"* || "$ROOT_DIR/" == "$path/"* ||
+      "$HOME/" == "$path/"* ]]; then
+      echo "Error: refusing to replace a source or parent directory: $path" >&2
       exit 1
     fi
+    case "$path" in
+      "$ROOT_DIR/gnostr_web_crlf"|"$ROOT_DIR/gnostr_web_crlf_repo") ;;
+      *)
+        if [[ ! -f "$path/.gnostr-fractal-output" ||
+          -L "$path/.gnostr-fractal-output" ||
+          "$(cat "$path/.gnostr-fractal-output")" != gnostr-p2p-fractal-clone ]]; then
+          echo "Error: refusing to replace an unrecognized output directory: $path" >&2
+          exit 1
+        fi
+        ;;
+    esac
   fi
 done
-if [[ "$OUTPUT" == "$CLONE" ]]; then
-  echo "Error: output and clone directories must differ." >&2
-  exit 1
-fi
 if [[ "$INTERACTIVE" == true ]]; then
   ui_confirm "Create $OUTPUT and $CLONE from $SOURCE, replacing existing output directories?"
 fi
@@ -70,4 +94,6 @@ for path in "$OUTPUT" "$CLONE"; do
 done
 cd "$ROOT_DIR"
 cargo run -p gnostr-p2p --example fractal_swarm_perfect_ip -- --recursive "$SOURCE" --logging --out "$OUTPUT"
+printf '%s\n' gnostr-p2p-fractal-clone > "$OUTPUT/.gnostr-fractal-output"
 git clone "$OUTPUT" "$CLONE"
+printf '%s\n' gnostr-p2p-fractal-clone > "$CLONE/.gnostr-fractal-output"

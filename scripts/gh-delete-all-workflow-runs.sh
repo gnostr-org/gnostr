@@ -90,8 +90,8 @@ if [[ "$INTERACTIVE" == true ]]; then
   ui_prompt "Newest pages to keep (100 runs per page)" "$LIMIT"
   LIMIT="$UI_VALUE"
 fi
-if [[ ! "$LIMIT" =~ ^[0-9]+$ || ! "$THREADS" =~ ^[1-9][0-9]*$ ]]; then
-  echo "Error: --limit must be nonnegative and --threads must be positive." >&2
+if [[ ! "$LIMIT" =~ ^[0-9]{1,9}$ || ! "$THREADS" =~ ^[1-9][0-9]{0,8}$ ]]; then
+  echo "Error: --limit must be nonnegative and --threads positive (at most 9 digits)." >&2
   exit 1
 fi
 LIMIT=$((10#$LIMIT))
@@ -130,11 +130,10 @@ cleanup() {
 
 on_interrupt() {
   echo "Cancelled by user." >&2
-  local pids
-  pids="$(jobs -pr || true)"
-  if [[ -n "$pids" ]]; then
-    kill $pids 2>/dev/null || true
-  fi
+  local pid
+  while IFS= read -r pid; do
+    [[ -z "$pid" ]] || kill "$pid" 2>/dev/null || true
+  done < <(jobs -pr)
   exit 130
 }
 
