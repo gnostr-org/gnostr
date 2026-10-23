@@ -24,6 +24,7 @@ path = "src/lib.rs"
 [dependencies]
 ## TODO align with workspace deps
 anyhow = "1.0.100"
+dirs = "5"
 assert_cmd = "2.0.17"
 axum = "0.7"
 chrono = "0.4.41"

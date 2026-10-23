@@ -97,6 +97,7 @@ pub mod ipfs;
 pub mod ipfs_bridge;
 #[cfg(not(target_os = "tvos"))]
 pub mod utils;
+pub mod peer_registry;
 #[cfg(not(target_os = "tvos"))]
 pub use crawler_broadcast as relay_buckets;
 

@@ -1902,6 +1902,7 @@ where
         .route("/api/buckets/file", get(get_bucket_file))
         .route("/api/health", get(get_health))
         .route("/api/stats", get(get_stats))
+        .route("/api/p2p/peers", get(get_p2p_peers))
         .route("/api/sniper/logs", get(get_sniper_logs))
         .route("/relays.yaml", get(get_relays_yaml))
         .route("/relays.json", get(get_relays_json))
@@ -1981,4 +1982,14 @@ pub fn run_api_server_detached(
         child.id()
     );
     Ok(())
+}
+
+
+async fn get_p2p_peers() -> impl IntoResponse {
+    let peers: Vec<String> = dirs::data_dir()
+        .map(|d| d.join("gnostr").join("p2p-peers.json"))
+        .and_then(|p| std::fs::read_to_string(p).ok())
+        .and_then(|c| serde_json::from_str(&c).ok())
+        .unwrap_or_default();
+    axum::Json(peers)
 }

@@ -34,3 +34,28 @@ mod tests {
         assert!(parse_envelope("||").is_none());
     }
 }
+
+/// Extract `ipfs://<cid>` references from a text.
+pub fn extract_ipfs_cids(text: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    for token in text.split_whitespace() {
+        if let Some(rest) = token.strip_prefix("ipfs://") {
+            let cid = rest.trim_end_matches(|c: char| !c.is_alphanumeric());
+            if !cid.is_empty() {
+                out.push(cid.to_string());
+            }
+        }
+    }
+    out
+}
+
+#[cfg(test)]
+mod cid_tests {
+    use super::*;
+    #[test]
+    fn extracts_cid() {
+        let t = "see ipfs://QmTest123 and ipfs://bafyABC";
+        let c = extract_ipfs_cids(t);
+        assert_eq!(c, vec!["QmTest123", "bafyABC"]);
+    }
+}
