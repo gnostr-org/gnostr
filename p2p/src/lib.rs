@@ -43,10 +43,10 @@ pub mod embedded_network;
 pub mod embedded_network;
 #[cfg(not(target_os = "tvos"))]
 pub mod fractal;
-#[cfg(not(target_os = "tvos"))]
-pub mod perfect_ip_core;
-#[cfg(not(target_os = "tvos"))]
-pub mod perfect_ip;
+// moved to mod fractal #[cfg(not(target_os = "tvos"))]
+// moved to mod fractal pub mod perfect_ip_core;
+// moved to mod fractal #[cfg(not(target_os = "tvos"))]
+// moved to mod fractal pub mod perfect_ip;
 #[cfg(not(target_os = "tvos"))]
 pub mod command_handler;
 #[cfg(not(target_os = "tvos"))]
@@ -166,9 +166,17 @@ pub use relay_bridge::{RelayBridgeCommand, RelayBridgeNotification, RelayBridgeS
 #[cfg(not(target_os = "tvos"))]
 pub use fractal::{build_fractal_swarm, run_fractal_engine, FractalBehaviour, FractalBehaviourEvent, FractalSlice};
 #[cfg(not(target_os = "tvos"))]
-pub use perfect_ip::*;
+pub use gnostr_types::perfect_ip::*;
 #[cfg(not(target_os = "tvos"))]
-pub use perfect_ip_core::{calculate_parity, process_slice, Header, ProtocolSlice as PerfectProtocolSlice, MTU_PAYLOAD};
+pub use fractal::fractal_ip_core::{
+    calculate_parity, generate_manifest, list_directory, packetize, process_slice,
+    reconstruct_payload, recover_missing_data, recover_missing_slice, run_directory_walk,
+    sha256_hex, summarize_packets, Header, IntegrityManager, MTU_PAYLOAD, PacketBatch, ProtocolSlice,
+};
+#[cfg(not(target_os = "tvos"))]
+pub use fractal::fractal_ip as perfect_ip;
+#[cfg(not(target_os = "tvos"))]
+pub use fractal::fractal_ip_core as perfect_ip_core;
 #[cfg(all(not(doc), feature = "js", not(target_os = "tvos")))]
 pub use template_html::{get_template_assets, TemplateHtml};
 

@@ -8,7 +8,7 @@ use futures::StreamExt;
 use log::{debug, info};
 use crate::keypair_from_seed;
 // pub use crate::perfect_ip_core::*;
-use crate::perfect_ip_core::{
+use crate::fractal::fractal_ip_core::{
     build_fractal_swarm, generate_manifest, list_directory, packetize, reconstruct_payload,
     run_directory_walk, sha256_hex, summarize_packets, FractalBehaviourEvent, IntegrityManager,
     ProtocolSlice,

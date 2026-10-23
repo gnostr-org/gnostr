@@ -1,6 +1,9 @@
 use std::collections::HashMap;
 use std::error::Error;
 
+pub mod fractal_ip;
+pub mod fractal_ip_core;
+
 use gnostr_types::FileSliceReader;
 use futures::StreamExt;
 use libp2p::{
