@@ -119,8 +119,7 @@ impl Repository {
 impl ArchivedRepository {
     pub fn delete<P: AsRef<Path>>(&self, database: &rocksdb::DB, path: P) -> Result<()> {
         let start_id = self.id.0.to_native().to_be_bytes();
-        let mut end_id = start_id;
-        *end_id.last_mut().unwrap() += 1;
+        let end_id = self.id.0.to_native().saturating_add(1).to_be_bytes();
 
         // delete commits
         let commit_cf = database

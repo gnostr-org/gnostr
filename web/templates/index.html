@@ -401,23 +401,23 @@
         {%- for repository in repositories %} {% set repository = repository.get() %}
         <tr>
           <td>
-            <a href="{{ base_href }}{% if let Some(path) = path %}{% if path == "." %}about{% else %}{{ path }}/{% endif %}{% endif %}{{ repository.name }}">
+            <a href="{{ base_href }}{% if let Some(path) = path %}{% if path == "." %}about{% else %}{{ path }}/{{ repository.name }}{% endif %}{% else %}{{ repository.name }}{% endif %}">
               {{- repository.name -}}
             </a>
           </td>
           <td>
-            <a href="{{ base_href }}{% if let Some(path) = path %}{% if path == "." %}about{% else %}{{ path }}/{% endif %}{% endif %}{{ repository.name }}">
+            <a href="{{ base_href }}{% if let Some(path) = path %}{% if path == "." %}about{% else %}{{ path }}/{{ repository.name }}{% endif %}{% else %}{{ repository.name }}{% endif %}">
               {%- if let Some(description) = repository.description.as_ref() -%} {{- description -}} {%- else -%}
               Unnamed repository; edit this file 'description' to name the repository. {%- endif -%}
             </a>
           </td>
           <td>
-            <a href="{{ base_href }}{% if let Some(path) = path %}{% if path == "." %}about{% else %}{{ path }}/{% endif %}{% endif %}{{ repository.name }}">
+            <a href="{{ base_href }}{% if let Some(path) = path %}{% if path == "." %}about{% else %}{{ path }}/{{ repository.name }}{% endif %}{% else %}{{ repository.name }}{% endif %}">
               {%- if let Some(owner) = repository.owner.as_ref() -%} {{- owner -}} {%- endif -%}
             </a>
           </td>
           <td>
-            <a href="{{ base_href }}{% if let Some(path) = path %}{% if path == "." %}about{% else %}{{ path }}/{% endif %}{% endif %}{{ repository.name }}">
+            <a href="{{ base_href }}{% if let Some(path) = path %}{% if path == "." %}about{% else %}{{ path }}/{{ repository.name }}{% endif %}{% else %}{{ repository.name }}{% endif %}">
               <time
                 datetime="{{ repository.last_modified|format_time }}"
                 title="{{ repository.last_modified|format_time }}"

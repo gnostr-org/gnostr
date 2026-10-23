@@ -676,12 +676,20 @@ fn discover_repositories(scan_path: &Path, discovered_repos: &mut Vec<PathBuf>) 
     let discovered = Arc::new(Mutex::new(Vec::new()));
     let discovered_filter = Arc::clone(&discovered);
 
+    if is_bare_repository(scan_path) || is_git_worktree(scan_path) {
+        discovered.lock().unwrap().push(scan_path.to_path_buf());
+    }
+
+    let scan_path_owned = scan_path.to_path_buf();
     let mut walker = ignore::WalkBuilder::new(scan_path)
         .git_ignore(true)
         .git_global(false)
         .git_exclude(false)
         .filter_entry(move |entry| {
             let path = entry.path();
+            if path == scan_path_owned {
+                return true;
+            }
             let is_dir = entry.file_type().map(|ft| ft.is_dir()).unwrap_or(false);
             if !is_dir {
                 return true;

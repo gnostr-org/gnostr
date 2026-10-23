@@ -13,7 +13,7 @@ use crate::app::{
 #[derive(Template)]
 #[template(path = "index.html")]
 pub struct View {
-    pub repositories: BTreeMap<Option<String>, Vec<YokedRepository>>,
+    pub repositories: Vec<(Option<String>, Vec<YokedRepository>)>,
     pub base_href: String,
     pub title: String,
     pub segments: Vec<(String, String)>,
@@ -22,7 +22,7 @@ pub struct View {
 pub async fn handle(
     Extension(db): Extension<Arc<rocksdb::DB>>,
 ) -> Result<impl IntoResponse, super::repo::Error> {
-    let mut repositories: BTreeMap<Option<String>, Vec<YokedRepository>> = BTreeMap::new();
+    let mut grouped: BTreeMap<Option<String>, Vec<YokedRepository>> = BTreeMap::new();
 
     let fetched = tokio::task::spawn_blocking(move || Repository::fetch_all(&db))
         .await
@@ -31,7 +31,7 @@ pub async fn handle(
     for (k, v) in fetched {
         // TODO: fixme
         if k == "." {
-            repositories.entry(Some(".".to_string())).or_default().push(v);
+            grouped.entry(Some(".".to_string())).or_default().push(v);
             continue;
         }
 
@@ -39,8 +39,17 @@ pub async fn handle(
         split.pop();
         let key = Some(split.join("/")).filter(|v| !v.is_empty());
 
-        let k = repositories.entry(key).or_default();
+        let k = grouped.entry(key).or_default();
         k.push(v);
+    }
+
+    // Surface the repository root first, then the remaining groups in sorted order.
+    let mut repositories: Vec<(Option<String>, Vec<YokedRepository>)> = Vec::new();
+    if let Some(root) = grouped.remove(&Some(".".to_string())) {
+        repositories.push((Some(".".to_string()), root));
+    }
+    for (key, repos) in grouped {
+        repositories.push((key, repos));
     }
 
     Ok(into_response(View {
@@ -61,7 +70,7 @@ pub async fn render_prefix(
         return handle(Extension(db)).await.map(|r| r.into_response());
     }
 
-    let mut repositories: BTreeMap<Option<String>, Vec<YokedRepository>> = BTreeMap::new();
+    let mut grouped: BTreeMap<Option<String>, Vec<YokedRepository>> = BTreeMap::new();
     let fetched = tokio::task::spawn_blocking(move || Repository::fetch_all(&db))
         .await
         .context("Failed to join Tokio task")??;
@@ -79,8 +88,10 @@ pub async fn render_prefix(
         split.pop();
         let key = Some(split.join("/")).filter(|v| !v.is_empty());
 
-        repositories.entry(key).or_default().push(v);
+        grouped.entry(key).or_default().push(v);
     }
+
+    let repositories: Vec<(Option<String>, Vec<YokedRepository>)> = grouped.into_iter().collect();
 
     if repositories.is_empty() {
         return Ok(super::repo::RepositoryNotFound.into_response());
@@ -117,10 +128,8 @@ fn path_segments(prefix: &str) -> Vec<(String, String)> {
 
 pub async fn handle_spa() -> impl IntoResponse {
     // For SPA routes, we don't need repositories data, just serve the template
-    let empty_repositories: BTreeMap<
-        Option<String>,
-        Vec<crate::app::database::schema::repository::YokedRepository>,
-    > = BTreeMap::new();
+    let empty_repositories: Vec<(Option<String>, Vec<crate::app::database::schema::repository::YokedRepository>)> =
+        Vec::new();
     into_response(View {
         repositories: empty_repositories,
         base_href: "/".to_string(),
