@@ -73,13 +73,10 @@ impl IntegrityManager {
         std::fs::write(path, encoded)
     }
 
-    pub fn load_from_disk(
-        path: impl AsRef<Path>,
-        manifest: HashSet<String>,
-    ) -> io::Result<Self> {
+    pub fn load_from_disk(path: impl AsRef<Path>, manifest: HashSet<String>) -> io::Result<Self> {
         let bytes = std::fs::read(path)?;
-        let received_slices: HashMap<String, ProtocolSlice> =
-            bincode::deserialize(&bytes).map_err(|error| io::Error::new(io::ErrorKind::Other, error))?;
+        let received_slices: HashMap<String, ProtocolSlice> = bincode::deserialize(&bytes)
+            .map_err(|error| io::Error::new(io::ErrorKind::Other, error))?;
         Ok(Self {
             manifest,
             received_slices,
@@ -166,7 +163,10 @@ pub fn recover_missing_slice(
 ) -> ProtocolSlice {
     let header = Header {
         seq_num: *seq,
-        total_packets: sibling.header.total_packets.max(parity.header.total_packets),
+        total_packets: sibling
+            .header
+            .total_packets
+            .max(parity.header.total_packets),
     };
     *seq += 1;
 
@@ -319,17 +319,21 @@ pub fn list_directory(
 
     for entry in entries {
         let path = entry.path();
-        let relative = path
-            .strip_prefix(root)
-            .unwrap_or(&path)
-            .to_path_buf();
+        let relative = path.strip_prefix(root).unwrap_or(&path).to_path_buf();
         let indent = "  ".repeat(level + 1);
         let metadata = entry.metadata()?;
 
         if metadata.is_dir() {
             lines.push(format!("{indent}{}/", relative.display()));
             let child_has_file = list_directory(
-                root, &path, depth, level + 1, logging, lines, all_packets, empty_dirs,
+                root,
+                &path,
+                depth,
+                level + 1,
+                logging,
+                lines,
+                all_packets,
+                empty_dirs,
             )?;
             has_file_in_subtree = has_file_in_subtree || child_has_file;
         } else if metadata.is_file() {
@@ -390,14 +394,20 @@ pub fn run_directory_walk(path: &Path, depth: usize, logging: bool) -> io::Resul
     let mut lines = Vec::new();
     let mut files = BTreeMap::new();
     let mut empty_dirs = BTreeSet::new();
-    list_directory(path, path, depth, 0, logging, &mut lines, &mut files, &mut empty_dirs)?;
+    list_directory(
+        path,
+        path,
+        depth,
+        0,
+        logging,
+        &mut lines,
+        &mut files,
+        &mut empty_dirs,
+    )?;
     for line in lines {
         println!("{line}");
     }
-    Ok(DirectoryWalk {
-        files,
-        empty_dirs,
-    })
+    Ok(DirectoryWalk { files, empty_dirs })
 }
 
 /// Reconstruct a packetized directory tree under `out_path`.
@@ -436,12 +446,26 @@ mod tests {
         assert!(!packets.is_empty());
         assert!(packets.iter().any(|packet| packet.is_parity));
         assert!(packets.iter().any(|packet| packet.id == "ROOT.P"));
-        assert!(packets.iter().any(|packet| packet.id.starts_with("ROOT.0.")));
-        assert!(packets.iter().any(|packet| packet.id.starts_with("ROOT.1.")));
-        assert!(packets.iter().all(|packet| packet.data.len() <= MTU_PAYLOAD));
-        assert!(packets
-            .iter()
-            .all(|packet| packet.header.total_packets == batch.total_packets));
+        assert!(
+            packets
+                .iter()
+                .any(|packet| packet.id.starts_with("ROOT.0."))
+        );
+        assert!(
+            packets
+                .iter()
+                .any(|packet| packet.id.starts_with("ROOT.1."))
+        );
+        assert!(
+            packets
+                .iter()
+                .all(|packet| packet.data.len() <= MTU_PAYLOAD)
+        );
+        assert!(
+            packets
+                .iter()
+                .all(|packet| packet.header.total_packets == batch.total_packets)
+        );
     }
 
     #[test]
@@ -458,7 +482,10 @@ mod tests {
         assert!(manifest.contains(&"ROOT.P".to_string()));
         assert!(manifest.iter().any(|id| id.starts_with("ROOT.0.")));
         assert!(manifest.iter().any(|id| id.starts_with("ROOT.1.")));
-        assert_eq!(manifest.len(), packetize("ROOT".to_string(), vec![0xAB; 2000]).total_packets as usize);
+        assert_eq!(
+            manifest.len(),
+            packetize("ROOT".to_string(), vec![0xAB; 2000]).total_packets as usize
+        );
     }
 
     #[test]
@@ -649,9 +676,11 @@ mod tests {
 
         assert_eq!(lines.len(), batch.total_packets as usize);
         assert!(lines.iter().any(|line| line.contains("ID: ROOT.P")));
-        assert!(lines
-            .iter()
-            .any(|line| line.contains(&format!("Seq: {:>2}/{}", 0, batch.total_packets))));
+        assert!(
+            lines
+                .iter()
+                .any(|line| line.contains(&format!("Seq: {:>2}/{}", 0, batch.total_packets)))
+        );
         assert!(lines.iter().any(|line| line.contains("Type: DATA")));
         assert!(lines.iter().any(|line| line.contains("Type: PARITY")));
     }
@@ -668,7 +697,10 @@ mod tests {
             println!("  {id}");
         }
 
-        println!("perfect_ip packet inventory ({} packets):", batch.total_packets);
+        println!(
+            "perfect_ip packet inventory ({} packets):",
+            batch.total_packets
+        );
         for line in summarize_packets(&batch.packets) {
             println!("{line}");
         }
@@ -696,8 +728,14 @@ mod tests {
         for slice in batch.packets.clone() {
             manager.record_slice(slice);
         }
-        println!("perfect_ip missing nodes: {:?}", manager.get_missing_nodes());
-        println!("perfect_ip integrity verified: {}", manager.verify_integrity());
+        println!(
+            "perfect_ip missing nodes: {:?}",
+            manager.get_missing_nodes()
+        );
+        println!(
+            "perfect_ip integrity verified: {}",
+            manager.verify_integrity()
+        );
 
         let reconstructed = reconstruct_payload(&batch.packets);
         let reconstructed_sha256 = format!("{:x}", Sha256::digest(&reconstructed));
