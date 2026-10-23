@@ -62,9 +62,6 @@ EOF
 
 hook_description() {
   case "$1" in
-    --interactive|-i)
-      INTERACTIVE=true
-      ;;
     applypatch-msg) echo "runs before a patch message is applied" ;;
     pre-applypatch) echo "runs before git am finalizes an applypatch" ;;
     post-applypatch) echo "runs after git am applies a patch" ;;
@@ -140,6 +137,9 @@ resolve_git_dir() {
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --interactive|-i)
+      INTERACTIVE=true
+      ;;
     --hooks-dir)
       shift
       [[ $# -gt 0 ]] || { echo "--hooks-dir requires a value" >&2; exit 1; }

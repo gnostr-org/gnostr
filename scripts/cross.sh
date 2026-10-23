@@ -23,7 +23,7 @@ LIST_ONLY=false
 VERBOSE=false
 FORCE_BROKEN_CROSS=${GNOSTR_CROSS_FORCE:-false}
 INTERACTIVE=false
-INSTALL_TARGETS=true
+INSTALL_TARGETS=auto
 # shellcheck source=scripts/lib/script-ui.sh
 source "$SCRIPT_DIR/lib/script-ui.sh"
 
@@ -83,7 +83,7 @@ Options:
   --force-broken-cross   Attempt known-broken Apple Silicon cross targets anyway.
   --list                 List the targets this host can attempt, then exit.
   --interactive          Select available targets, package, and profile.
-  --install-targets      Install missing Rust targets before native Cargo builds (default).
+  --install-targets      Install missing Rust targets without prompting.
   --no-install-targets   Report missing targets without installing them.
   --dry-run              Print commands without executing them.
   --help                 Show this help.
@@ -93,6 +93,9 @@ Examples:
   $0 --profile dist --target linux-arm64 --target linux-arm64-musl
   $0 --workspace --all-features --dry-run
   $0 --package gnostr-bins --features chat,p2p,blossom --dry-run
+
+Missing native targets prompt for installation in a terminal or --interactive
+mode. Non-interactive CI keeps automatic installation. Dry runs never install.
 EOF
 }
 
@@ -179,6 +182,10 @@ ensure_rust_target() {
     if [[ "$DRY_RUN" == true ]]; then
       log "would run: rustup target add $triple"
     else
+      if [[ "$INSTALL_TARGETS" == auto ]] &&
+        [[ "$INTERACTIVE" == true || -t 0 ]]; then
+        ui_confirm "Rust target $triple is missing (core/std unavailable). Run rustup target add $triple?"
+      fi
       log "installing rust target: $triple"
       if ! rustup target add "$triple"; then
         warn "failed to install $triple; no build will be attempted. Retry: rustup target add $triple"
