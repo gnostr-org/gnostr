@@ -24,9 +24,9 @@ actix-web = { workspace = true }
 anyhow = { workspace = true }
 clap = { workspace = true }
 directories = { workspace = true }
+kubo-ffi = { path = "../ipfs/ffi/rust", optional = true }
 nostr-relay = { version = "0.4.8", default-features = false }
 num_cpus = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
-kubo-ffi = { path = "../ipfs/ffi/rust", optional = true }
 tracing-subscriber = { workspace = true }
