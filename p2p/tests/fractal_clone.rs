@@ -80,12 +80,15 @@ fn fractal_swarm_perfect_ip_reconstructs_git_repo() {
     let reconstructed = temp.path().join("gnostr_web_crlf");
     let clone = temp.path().join("gnostr_web_crlf_repo");
 
-    let packets = run_directory_walk(&fixture, 3, false).expect("packetize fixture");
-    let file_count = packets.len();
-    let total_packets: usize = packets.values().map(|v| v.len()).sum();
-    println!("packetized {file_count} files into {total_packets} slices");
+    let walk = run_directory_walk(&fixture, 3, false).expect("packetize fixture");
+    let file_count = walk.files.len();
+    let total_packets: usize = walk.files.values().map(|v| v.len()).sum();
+    let empty_dir_count = walk.empty_dirs.len();
+    println!(
+        "packetized {file_count} files into {total_packets} slices ({empty_dir_count} empty dirs)"
+    );
 
-    reconstruct_directory(packets, &reconstructed).expect("reconstruct directory");
+    reconstruct_directory(walk, &reconstructed).expect("reconstruct directory");
     println!("reconstructed: {}", reconstructed.display());
 
     assert_dirs_equal(&fixture, &reconstructed);

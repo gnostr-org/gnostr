@@ -1,7 +1,6 @@
 use std::{
     fs,
-    io,
-    path::{Path, PathBuf},
+    path::PathBuf,
 };
 
 use futures::StreamExt;
@@ -9,9 +8,9 @@ use log::{debug, info};
 use crate::keypair_from_seed;
 // pub use crate::perfect_ip_core::*;
 use crate::fractal::fractal_ip_core::{
-    build_fractal_swarm, generate_manifest, list_directory, packetize, reconstruct_directory,
-    reconstruct_payload, run_directory_walk, sha256_hex, summarize_packets, FractalBehaviourEvent,
-    IntegrityManager, ProtocolSlice,
+    build_fractal_swarm, generate_manifest, packetize, reconstruct_directory, reconstruct_payload,
+    run_directory_walk, sha256_hex, summarize_packets, FractalBehaviourEvent, IntegrityManager,
+    ProtocolSlice,
 };
 use crate::message::{EventBuilder, EventKind, PrivateKey, Tag};
 use libp2p::{request_response, swarm::SwarmEvent};
@@ -161,9 +160,9 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         info!("recursive walk root: {}", root.display());
         info!("recursive depth: {}", depth);
         info!("logging flag is: {:?}", logging);
-        let all_packets = run_directory_walk(root, depth, logging.is_some())?;
+        let walk = run_directory_walk(root, depth, logging.is_some())?;
         if let Some(ref out_path) = out {
-            reconstruct_directory(all_packets, out_path)?;
+            reconstruct_directory(walk, out_path)?;
             println!("recursively reconstructed directory to {}", out_path.display());
             return Ok(());
         }
