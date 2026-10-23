@@ -274,7 +274,7 @@ dependencies = [
  "serde_urlencoded",
  "smallvec",
  "socket2 0.6.5",
- "time 0.3.47",
+ "time 0.3.55",
  "tracing",
  "url",
 ]
@@ -792,7 +792,7 @@ dependencies = [
  "num-traits",
  "rusticata-macros",
  "thiserror 1.0.69",
- "time 0.3.47",
+ "time 0.3.55",
 ]
 
 [[package]]
@@ -808,7 +808,7 @@ dependencies = [
  "num-traits",
  "rusticata-macros",
  "thiserror 2.0.21",
- "time 0.3.47",
+ "time 0.3.55",
 ]
 
 [[package]]
@@ -2894,7 +2894,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e859cd57d0710d9e06c381b550c06e76992472a8c6d527aecd2fc673dcc231fb"
 dependencies = [
  "percent-encoding",
- "time 0.3.47",
+ "time 0.3.55",
  "version_check",
 ]
 
@@ -2905,7 +2905,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1a373e3602691c3cdea496d2f0ee5935151e6168fe87739483c463db1b2f2f87"
 dependencies = [
  "percent-encoding",
- "time 0.3.47",
+ "time 0.3.55",
  "version_check",
 ]
 
@@ -3673,7 +3673,6 @@ version = "0.5.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7cd812cc2bc1d69d4764bd80df88b4317eaef9e773c75226407d9bc0876b211c"
 dependencies = [
- "powerfmt",
  "serde_core",
 ]
 
@@ -7100,7 +7099,7 @@ dependencies = [
  "thiserror 1.0.69",
  "thread-priority",
  "threadpool",
- "time 0.3.47",
+ "time 0.3.55",
  "timeago",
  "tiny_http",
  "tmux_interface",
@@ -7263,7 +7262,7 @@ dependencies = [
  "tempfile",
  "thiserror 1.0.69",
  "thread-priority",
- "time 0.3.47",
+ "time 0.3.55",
  "timeago",
  "tiny-bip39",
  "tiny_http",
@@ -7359,7 +7358,7 @@ dependencies = [
  "structopt",
  "tempfile",
  "thiserror 1.0.69",
- "time 0.3.47",
+ "time 0.3.55",
  "tokio",
  "tokio-stream",
  "tokio-tungstenite 0.26.2",
@@ -7444,7 +7443,7 @@ dependencies = [
  "serde_yaml",
  "sha2 0.10.9",
  "time 0.1.45",
- "time 0.3.47",
+ "time 0.3.55",
  "tokio",
  "tokio-tungstenite 0.26.2",
  "tower-http 0.5.2",
@@ -7588,7 +7587,7 @@ dependencies = [
  "gnostr-types",
  "log",
  "rust-crypto",
- "time 0.3.47",
+ "time 0.3.55",
  "tokio",
 ]
 
@@ -7635,7 +7634,7 @@ dependencies = [
  "serial_test 3.5.0",
  "tempfile",
  "test_utils",
- "time 0.3.47",
+ "time 0.3.55",
  "tokio",
  "tokio-tungstenite 0.26.2",
  "urlencoding",
@@ -7675,7 +7674,7 @@ dependencies = [
  "sha2 0.10.9",
  "tempfile",
  "thiserror 1.0.69",
- "time 0.3.47",
+ "time 0.3.55",
  "tokio",
  "tokio-tungstenite 0.26.2",
  "tor-cell",
@@ -7797,7 +7796,7 @@ dependencies = [
  "tempfile",
  "thiserror 1.0.69",
  "thread-priority",
- "time 0.3.47",
+ "time 0.3.55",
  "timeago",
  "tiny-bip39",
  "tiny_http",
@@ -7883,7 +7882,7 @@ dependencies = [
  "simdutf8",
  "tar",
  "tempfile",
- "time 0.3.47",
+ "time 0.3.55",
  "timeago",
  "tokio",
  "tokio-stream",
@@ -13689,7 +13688,7 @@ dependencies = [
  "indexmap 2.14.2",
  "quick-xml 0.42.0",
  "serde",
- "time 0.3.47",
+ "time 0.3.55",
 ]
 
 [[package]]
@@ -14823,7 +14822,7 @@ dependencies = [
  "ratatui-core",
  "serde",
  "strum 0.28.0",
- "time 0.3.47",
+ "time 0.3.55",
  "unicode-segmentation",
  "unicode-width 0.2.0",
 ]
@@ -14921,7 +14920,7 @@ checksum = "52c4f3084aa3bc7dfbba4eff4fab2a54db4324965d8872ab933565e6fbd83bc6"
 dependencies = [
  "pem",
  "ring 0.16.20",
- "time 0.3.47",
+ "time 0.3.55",
  "yasna 0.5.2",
 ]
 
@@ -14934,7 +14933,7 @@ dependencies = [
  "pem",
  "ring 0.17.14",
  "rustls-pki-types",
- "time 0.3.47",
+ "time 0.3.55",
  "x509-parser 0.16.0",
  "yasna 0.5.2",
 ]
@@ -15331,7 +15330,7 @@ dependencies = [
  "serde",
  "state",
  "tempfile",
- "time 0.3.47",
+ "time 0.3.55",
  "tokio",
  "tokio-stream",
  "tokio-util",
@@ -15379,7 +15378,7 @@ dependencies = [
  "smallvec",
  "stable-pattern",
  "state",
- "time 0.3.47",
+ "time 0.3.55",
  "tokio",
  "uncased",
 ]
@@ -15566,7 +15565,7 @@ dependencies = [
  "hashlink 0.9.1",
  "libsqlite3-sys",
  "smallvec",
- "time 0.3.47",
+ "time 0.3.55",
 ]
 
 [[package]]
@@ -16344,7 +16343,7 @@ dependencies = [
  "serde_core",
  "serde_json",
  "serde_with_macros",
- "time 0.3.47",
+ "time 0.3.55",
 ]
 
 [[package]]
@@ -16773,7 +16772,7 @@ dependencies = [
  "num-bigint",
  "num-traits",
  "thiserror 2.0.21",
- "time 0.3.47",
+ "time 0.3.55",
 ]
 
 [[package]]
@@ -16784,7 +16783,7 @@ checksum = "8e7e46c8c90251d47d08b28b8a419ffb4aede0f87c2eea95e17d1d5bacbf3ef1"
 dependencies = [
  "colored",
  "log",
- "time 0.3.47",
+ "time 0.3.55",
  "windows-sys 0.48.0",
 ]
 
@@ -16796,7 +16795,7 @@ checksum = "16257adbfaef1ee58b1363bdc0664c9b8e1e30aed86049635fb5f147d065a9c0"
 dependencies = [
  "log",
  "termcolor",
- "time 0.3.47",
+ "time 0.3.55",
 ]
 
 [[package]]
@@ -17929,10 +17928,11 @@ dependencies = [
 
 [[package]]
 name = "time"
-version = "0.3.47"
+version = "0.3.55"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cdb87b95ec50ddfa440816d227a17b2ccbdda963a316a727fda0fc4334f7d134"
 dependencies = [
  "deranged",
- "itoa",
  "libc",
  "num-conv",
  "num_threads",
@@ -17944,15 +17944,15 @@ dependencies = [
 
 [[package]]
 name = "time-core"
-version = "0.1.8"
+version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7694e1cfe791f8d31026952abf09c69ca6f6fa4e1a1229e18988f06a04a12dca"
+checksum = "9e1c906769ad99c88eaa54e728060edef082f8e358ff32030cb7c7d315e81109"
 
 [[package]]
 name = "time-macros"
-version = "0.2.27"
+version = "0.2.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2e70e4c5a0e0a8a4823ad65dfe1a6930e4f4d756dcd9dd7939022b5e8c501215"
+checksum = "7e689342a48d2ea927c87ea50cabf8594854bf940e9310208848d680d668ed85"
 dependencies = [
  "num-conv",
  "time-core",
@@ -18558,7 +18558,7 @@ dependencies = [
  "signature 2.2.0",
  "strum 0.26.3",
  "thiserror 1.0.69",
- "time 0.3.47",
+ "time 0.3.55",
  "tor-async-utils",
  "tor-basic-utils",
  "tor-checkable",
@@ -18880,7 +18880,7 @@ dependencies = [
  "static_assertions",
  "strum 0.26.3",
  "thiserror 1.0.69",
- "time 0.3.47",
+ "time 0.3.55",
  "tor-basic-utils",
  "tor-error",
  "tor-hscrypto",
@@ -18919,7 +18919,7 @@ dependencies = [
  "smallvec",
  "subtle",
  "thiserror 1.0.69",
- "time 0.3.47",
+ "time 0.3.55",
  "tinystr 0.7.6",
  "tor-basic-utils",
  "tor-bytes",
@@ -21246,7 +21246,7 @@ dependencies = [
  "ring 0.17.14",
  "rusticata-macros",
  "thiserror 1.0.69",
- "time 0.3.47",
+ "time 0.3.55",
 ]
 
 [[package]]
@@ -21263,7 +21263,7 @@ dependencies = [
  "oid-registry 0.8.1",
  "rusticata-macros",
  "thiserror 2.0.21",
- "time 0.3.47",
+ "time 0.3.55",
 ]
 
 [[package]]
@@ -21280,7 +21280,7 @@ dependencies = [
  "oid-registry 0.8.1",
  "rusticata-macros",
  "thiserror 2.0.21",
- "time 0.3.47",
+ "time 0.3.55",
 ]
 
 [[package]]
@@ -21414,7 +21414,7 @@ checksum = "e17bb3549cc1321ae1296b9cdc2698e2b6cb1992adfa19a8c72e5b7a738f44cd"
 dependencies = [
  "bit-vec 0.6.3",
  "num-bigint",
- "time 0.3.47",
+ "time 0.3.55",
 ]
 
 [[package]]
