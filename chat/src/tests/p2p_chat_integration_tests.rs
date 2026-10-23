@@ -640,8 +640,8 @@ mod tests {
         let topic = gossipsub::IdentTopic::new("test-p2p-topic-two-nodes");
 
         // Spawn the event loops for two peers
-        tokio::spawn(evt_loop(send_rx1, recv_tx1, topic.clone()));
-        tokio::spawn(evt_loop(send_rx2, recv_tx2, topic.clone()));
+        tokio::spawn(evt_loop(send_rx1, recv_tx1, topic.clone(), None));
+        tokio::spawn(evt_loop(send_rx2, recv_tx2, topic.clone(), None));
 
         // Give some time for peers to discover each other via mDNS.
         tokio::time::sleep(Duration::from_secs(5)).await;
@@ -710,8 +710,8 @@ mod tests {
 
         let topic = gossipsub::IdentTopic::new("test-p2p-topic-two-nodes-relay");
 
-        tokio::spawn(evt_loop(send_rx1, recv_tx1, topic.clone()));
-        tokio::spawn(evt_loop(send_rx2, recv_tx2, topic.clone()));
+        tokio::spawn(evt_loop(send_rx1, recv_tx1, topic.clone(), None));
+        tokio::spawn(evt_loop(send_rx2, recv_tx2, topic.clone(), None));
 
         tokio::time::sleep(Duration::from_secs(8)).await;
 
@@ -776,8 +776,8 @@ mod tests {
 
         let topic = gossipsub::IdentTopic::new("test-p2p-topic-two-nodes-relay-nip34");
 
-        tokio::spawn(evt_loop(send_rx1, recv_tx1, topic.clone()));
-        tokio::spawn(evt_loop(send_rx2, recv_tx2, topic.clone()));
+        tokio::spawn(evt_loop(send_rx1, recv_tx1, topic.clone(), None));
+        tokio::spawn(evt_loop(send_rx2, recv_tx2, topic.clone(), None));
 
         tokio::time::sleep(Duration::from_secs(8)).await;
 
@@ -828,8 +828,8 @@ mod tests {
 
         let topic = gossipsub::IdentTopic::new("test-p2p-topic-two-nodes-relay-nip34-matrix");
 
-        tokio::spawn(evt_loop(send_rx1, recv_tx1, topic.clone()));
-        tokio::spawn(evt_loop(send_rx2, recv_tx2, topic.clone()));
+        tokio::spawn(evt_loop(send_rx1, recv_tx1, topic.clone(), None));
+        tokio::spawn(evt_loop(send_rx2, recv_tx2, topic.clone(), None));
 
         tokio::time::sleep(Duration::from_secs(8)).await;
 
@@ -1377,9 +1377,9 @@ mod tests {
         let topic = gossipsub::IdentTopic::new("test-p2p-topic-three-nodes");
 
         // Spawn the event loops for three peers
-        tokio::spawn(evt_loop(send_rx1, recv_tx1, topic.clone()));
-        tokio::spawn(evt_loop(send_rx2, recv_tx2, topic.clone()));
-        tokio::spawn(evt_loop(send_rx3, recv_tx3, topic.clone()));
+        tokio::spawn(evt_loop(send_rx1, recv_tx1, topic.clone(), None));
+        tokio::spawn(evt_loop(send_rx2, recv_tx2, topic.clone(), None));
+        tokio::spawn(evt_loop(send_rx3, recv_tx3, topic.clone(), None));
 
         // Give some time for peers to discover each other.
         tokio::time::sleep(Duration::from_secs(5)).await;
