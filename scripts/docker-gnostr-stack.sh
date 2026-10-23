@@ -13,15 +13,19 @@ CONTAINER="${GNOSTR_STACK_CONTAINER:-gnostr-stack}"
 TOPIC="${GNOSTR_STACK_TOPIC:-gnostr-dev}"
 BUILD_ONLY="${GNOSTR_STACK_BUILD_ONLY:-false}"
 FOLLOW_LOGS="${GNOSTR_STACK_FOLLOW:-false}"
-COMMAND="${1:-up}"
-if [[ $# -gt 0 ]]; then
+INTERACTIVE=false
+if [[ "${1:-}" == --interactive || "${1:-}" == -i ]]; then
+  INTERACTIVE=true
   shift
 fi
+COMMAND="${1:-up}"
+if [[ $# -gt 0 ]]; then shift; fi
 CHAT_ARGS=("$@")
 
 usage() {
   cat <<'EOF'
 Usage: docker-gnostr-stack.sh [up|down|logs|status|shell|restart]
+       docker-gnostr-stack.sh --interactive [command] [chat arguments...]
 
 Environment:
   GNOSTR_STACK_CHAT_IMAGE   Docker image tag to build from docker/Dockerfile.gnostr-chat
@@ -33,6 +37,23 @@ Environment:
 Any arguments after `up` or `restart` are forwarded to `gnostr chat ...`.
 EOF
 }
+
+if [[ "$INTERACTIVE" == true ]]; then
+  # shellcheck source=scripts/lib/script-ui.sh
+  source "$ROOT_DIR/scripts/lib/script-ui.sh"
+  ui_choose "Docker stack operation" status logs shell up restart down
+  COMMAND="$UI_VALUE"
+  ui_prompt "Container name" "$CONTAINER"; CONTAINER="$UI_VALUE"
+  if [[ "$COMMAND" == up || "$COMMAND" == restart ]]; then
+    ui_prompt "Chat image" "$CHAT_IMAGE"; CHAT_IMAGE="$UI_VALUE"
+    ui_prompt "Chat topic" "$TOPIC"; TOPIC="$UI_VALUE"
+  fi
+  case "$COMMAND" in
+    up|restart|down)
+      ui_confirm "Run $COMMAND for container $CONTAINER (existing container may be removed)?"
+      ;;
+  esac
+fi
 
 build_image() {
   docker build -t "$CHAT_IMAGE" -f docker/Dockerfile.gnostr-chat .

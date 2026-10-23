@@ -9,9 +9,28 @@ if ! bash -n "${BASH_SOURCE[0]}"; then
 fi
 
 DRY_RUN=false
+INTERACTIVE=false
+SYNC=true
+TAG=true
+PUBLISH=true
+PUSH=true
 POSITIONAL_ARGS=()
 while (($#)); do
     case "$1" in
+        --interactive|-i)
+            INTERACTIVE=true
+            ;;
+        --sync-only)
+            TAG=false
+            PUBLISH=false
+            PUSH=false
+            ;;
+        --help|-h)
+            echo "Usage: update_versions.sh [--interactive] [--dry-run] [--sync-only]"
+            echo "Interactive mode selects crates and synchronize/tag/publish/push stages."
+            echo "Push includes forced version tags. Non-interactive defaults preserve the full release."
+            exit 0
+            ;;
         -n|--dry-run)
             DRY_RUN=true
             ;;
@@ -292,6 +311,36 @@ fi
 
 echo "Workspace version found: $WORKSPACE_VERSION"
 
+PUBLISH_CRATES=(
+    filetreelist git-helpers git2-hooks grammar invalidstring relay scopetime
+    types qr relay/extensions asyncgit crawler legit js ngit p2p web chat . nips bins
+)
+if [[ "$INTERACTIVE" == true && "$DRY_RUN" != true ]]; then
+    # shellcheck source=scripts/lib/script-ui.sh
+    source "$(dirname "${BASH_SOURCE[0]}")/lib/script-ui.sh"
+    ui_select "Release stages for $WORKSPACE_VERSION" synchronize tag publish push
+    SYNC=false
+    TAG=false
+    PUBLISH=false
+    PUSH=false
+    for stage in "${UI_SELECTED[@]}"; do
+        case "$stage" in
+            synchronize) SYNC=true ;;
+            tag) TAG=true ;;
+            publish) PUBLISH=true ;;
+            push) PUSH=true ;;
+        esac
+    done
+    if [[ "$TAG" == true || "$PUBLISH" == true || "$PUSH" == true ]]; then
+        echo "Choose crates in dependency order; omitted dependencies must already be published."
+        ui_select "Release crates (synchronization always covers all managed manifests)" "${PUBLISH_CRATES[@]}"
+        PUBLISH_CRATES=("${UI_SELECTED[@]}")
+    fi
+    printf 'Version: %s; synchronize=%s tag=%s publish=%s push=%s\n' "$WORKSPACE_VERSION" "$SYNC" "$TAG" "$PUBLISH" "$PUSH"
+    printf 'Crates: %s\n' "${PUBLISH_CRATES[*]}"
+    ui_confirm "Proceed? Publishing changes crates.io; pushing force-updates version tags on origin."
+fi
+
 if [ "$DRY_RUN" = true ]; then
     echo "Dry run: would synchronize workspace package versions and local path dependency versions."
     while read -r manifest; do
@@ -316,6 +365,7 @@ if [ "$DRY_RUN" = true ]; then
     exit 0
 fi
 
+if [[ "$SYNC" == true ]]; then
 ensure_taplo_installed
 
 sync_root_package_to_workspace
@@ -359,38 +409,17 @@ while read -r manifest; do
 done < <(managed_manifests)
 
 echo "Local path dependency versions synchronized."
+fi
 
 # Publish order is a topological sort of workspace crates by their
 # path/normal/build dependencies. Crates must be published before any
 # crate that depends on them. Dev-dependency cycles (e.g. asyncgit <-> ngit)
 # cannot be resolved by ordering alone and are left to --no-verify / retry.
-PUBLISH_CRATES=(
-    filetreelist
-    git-helpers
-    git2-hooks
-    grammar
-    invalidstring
-    relay
-    scopetime
-    types
-    qr
-    relay/extensions
-    asyncgit
-    crawler
-    legit
-    js
-    ngit
-    p2p
-    web
-    chat
-    .
-    nips
-    bins
-)
-
+if [[ "$SYNC" == true ]]; then
 for crate in "${PUBLISH_CRATES[@]}"; do
     sleep 1 && pushd "$crate" >/dev/null && cargo sort || true && popd >/dev/null || true
 done
+fi
 
 PUBLISH_NO_VERIFY_CRATES=(
     asyncgit
@@ -429,6 +458,7 @@ tag_package_versions() {
     done
 }
 
+if [[ "$TAG" == true ]]; then
 manifest_paths=()
 while IFS= read -r -d '' manifest_path; do
     manifest_paths+=("$manifest_path")
@@ -460,7 +490,9 @@ elif [ "${SKIP_VERSION_COMMIT:-0}" != "1" ]; then
     gnostr legit -m "v$WORKSPACE_VERSION" --prefix 000000
     tag_package_versions "$WORKSPACE_VERSION"
 fi
+fi
 
+if [[ "$PUBLISH" == true ]]; then
 if [ -z "${CARGO_REGISTRY_TOKEN:-}" ]; then
     echo "Error: CARGO_REGISTRY_TOKEN is not set."
     echo "Please set the CARGO_REGISTRY_TOKEN environment variable before running this script."
@@ -477,11 +509,13 @@ for crate in "${PUBLISH_CRATES[@]}"; do
     fi
     sleep 1 && pushd "$crate" >/dev/null && cargo publish "${publish_args[@]}" || true && popd >/dev/null
 done
+fi
 
 if [ -n "$(git status --porcelain -- . ':(exclude)vendor/**' 2>/dev/null | grep -E '(^|/)(Cargo\.toml|Cargo\.lock)$' || true)" ]; then
     echo "Warning: Cargo manifests changed during publish; leaving tagged commits as-is."
 fi
 
+if [[ "$PUSH" == true ]]; then
 ##git notes
 git config --get-all remote.origin.push | grep -qxF '+refs/notes/*:refs/notes/*' || \
     git config --add remote.origin.push "+refs/notes/*:refs/notes/*"
@@ -495,3 +529,4 @@ done
 git push origin "gnostr/v$WORKSPACE_VERSION:gnostr/v$WORKSPACE_VERSION" -f
 echo;
 git push origin v$WORKSPACE_VERSION:v$WORKSPACE_VERSION -f
+fi

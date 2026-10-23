@@ -9,9 +9,18 @@ if ! bash -n "${BASH_SOURCE[0]}"; then
 fi
 
 DRY_RUN=false
+INTERACTIVE=false
 POSITIONAL_ARGS=()
 while (($#)); do
     case "$1" in
+        --interactive|-i)
+            INTERACTIVE=true
+            ;;
+        --help|-h)
+            echo "Usage: scripts/update [--interactive] [--dry-run] [version arguments...]"
+            echo "Interactive mode selects crates and synchronize/tag/publish/push stages."
+            exit 0
+            ;;
         -n|--dry-run)
             DRY_RUN=true
             ;;
@@ -44,6 +53,12 @@ workspace_version() {
 }
 
 cd "$REPO_ROOT"
+
+if [[ "$INTERACTIVE" == true ]]; then
+    args=(--interactive)
+    [[ "$DRY_RUN" != true ]] || args+=(--dry-run)
+    exec "$SCRIPT_DIR/update_versions.sh" "${args[@]}" ${POSITIONAL_ARGS[@]+"${POSITIONAL_ARGS[@]}"}
+fi
 
 stage_cargo_files() {
     local paths=()

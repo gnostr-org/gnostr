@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 BASH_VERSION_CURRENT="${BASH_VERSION:-unknown}"
 BASH_MAJOR="${BASH_VERSINFO[0]:-0}"
 BASH_MINOR="${BASH_VERSINFO[1]:-0}"
@@ -8,14 +9,36 @@ fi
 
 # Configuration with Argument Support
 # Usage: ./yank_crate.sh <CRATE_NAME> <VERSION> <CREDENTIALS_FILE>
-CRATE_NAME="${1:-"gnostr-dummy-crate"}"
-VERSION="${2:-"0.0.0"}"
-CREDENTIALS_FILE="${3:-"$HOME/.cargo/credentials.toml"}"
+INTERACTIVE=false
+POSITIONAL=()
+for arg in "$@"; do
+    case "$arg" in
+        --interactive|-i) INTERACTIVE=true ;;
+        --help|-h)
+            echo "Usage: cargo-yank.sh [--interactive] [crate] [version] [credentials_file]"
+            echo "Interactive mode prompts for crate/version and confirms the yank."
+            exit 0
+            ;;
+        *) POSITIONAL+=("$arg") ;;
+    esac
+done
+CRATE_NAME="${POSITIONAL[0]:-gnostr-dummy-crate}"
+VERSION="${POSITIONAL[1]:-0.0.0}"
+CREDENTIALS_FILE="${POSITIONAL[2]:-$HOME/.cargo/credentials.toml}"
+if [[ "$INTERACTIVE" == true ]]; then
+    # shellcheck source=scripts/lib/script-ui.sh
+    source "$(dirname "${BASH_SOURCE[0]}")/lib/script-ui.sh"
+    ui_prompt "Crate to yank" "$CRATE_NAME"
+    CRATE_NAME="$UI_VALUE"
+    ui_prompt "Version to yank" "$VERSION"
+    VERSION="$UI_VALUE"
+    ui_confirm "Yank $CRATE_NAME@$VERSION from crates.io?"
+fi
 
 echo "--- Pre-flight check: Detecting Cargo Authentication ---"
 
 # 1. Check for Environment Variable (Highest Priority)
-if [ -n "$CARGO_REGISTRY_TOKEN" ]; then
+if [ -n "${CARGO_REGISTRY_TOKEN:-}" ]; then
     echo "Status: Using CARGO_REGISTRY_TOKEN environment variable."
     AUTH_METHOD="env"
 
