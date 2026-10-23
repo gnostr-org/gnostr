@@ -236,3 +236,13 @@ Other consumers:
 - Many crawler tests are network-dependent and marked `#[ignore]`.
 - The API server auto-starts sidecar tasks; ensure port `3000` is free or use
   `--port`.
+
+## IPFS / P2P awareness
+
+The crawler can discover p2p nodes via a shared peer registry file
+(`$DATA_DIR/gnostr/p2p-peers.json`, written by `gnostr-p2p`) and exposes them
+at `GET /api/p2p/peers`. It also parses `ipfs://<cid>` references from text
+via `nostr_envelope::extract_ipfs_cids`.
+
+Environment/config:
+- `GNOSTR_CRAWLER_IPFS` (planned) to enable richer IPFS integration.
