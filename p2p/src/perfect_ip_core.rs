@@ -40,7 +40,7 @@ use libp2p::{
     swarm::{NetworkBehaviour, Swarm, SwarmEvent},
     StreamProtocol,
 };
-pub use gnostr_types::perfect_ip::{Header, PacketBatch, ProtocolSlice};
+pub use gnostr_types::{Header, PacketBatch, ProtocolSlice};
 
 /// libp2p repair behaviour for exchanging packet slices.
 ///
@@ -70,7 +70,7 @@ impl From<request_response::Event<ProtocolSlice, ProtocolSlice>> for FractalBeha
     }
 }
 
-pub use gnostr_types::perfect_ip::IntegrityManager;
+pub use gnostr_types::IntegrityManager;
 
 /// Build the repair swarm used to exchange packet slices with peers.
 ///
@@ -163,7 +163,7 @@ pub async fn run_fractal_engine(
 pub const MTU_PAYLOAD: usize = 1460;
 const MAX_LEAF_PAYLOAD: usize = MTU_PAYLOAD / 2;
 
-pub use gnostr_types::perfect_ip::calculate_parity;
+pub use gnostr_types::calculate_parity;
 
 /// Generate the expected packet ids for a recursive packet tree.
 ///
