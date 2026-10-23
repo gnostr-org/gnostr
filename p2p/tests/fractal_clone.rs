@@ -58,7 +58,8 @@ fn assert_dirs_equal(left: &Path, right: &Path) {
             let left_bytes = fs::read(&left_path).expect("read left file");
             let right_bytes = fs::read(&right_path).expect("read right file");
             assert_eq!(
-                left_bytes, right_bytes,
+                left_bytes,
+                right_bytes,
                 "payload mismatch for {} ({} bytes vs {} bytes)",
                 left_path.display(),
                 left_bytes.len(),
@@ -102,10 +103,16 @@ fn fractal_swarm_perfect_ip_reconstructs_git_repo() {
         .expect("spawn git clone");
 
     if !output.stdout.is_empty() {
-        println!("git clone stdout:\n{}", String::from_utf8_lossy(&output.stdout));
+        println!(
+            "git clone stdout:\n{}",
+            String::from_utf8_lossy(&output.stdout)
+        );
     }
     if !output.stderr.is_empty() {
-        println!("git clone stderr:\n{}", String::from_utf8_lossy(&output.stderr));
+        println!(
+            "git clone stderr:\n{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
     }
 
     assert!(
@@ -124,7 +131,10 @@ fn fractal_swarm_perfect_ip_reconstructs_git_repo() {
     println!("HEAD matches: {clone_head}");
 
     let status = git_output(&clone, &["status", "--porcelain"]);
-    assert!(status.is_empty(), "cloned working tree is not clean:\n{status}");
+    assert!(
+        status.is_empty(),
+        "cloned working tree is not clean:\n{status}"
+    );
     println!("cloned working tree is clean");
 }
 
@@ -153,6 +163,11 @@ fn git_output(repo: &Path, args: &[&str]) -> String {
         );
     }
 
-    assert!(output.status.success(), "git -C {} {} failed", repo.display(), args.join(" "));
+    assert!(
+        output.status.success(),
+        "git -C {} {} failed",
+        repo.display(),
+        args.join(" ")
+    );
     String::from_utf8_lossy(&output.stdout).trim().to_string()
 }

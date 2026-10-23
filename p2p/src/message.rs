@@ -22,7 +22,14 @@ mod tests {
     };
 
     use super::*;
+    use crate::crawler_broadcast::{
+        bootstrap_crawler_relay_buckets, bucket_topic, load_relay_buckets,
+    };
+    use crate::time::{ClockStatus, Estimation, SyncState};
+    use futures_util::StreamExt;
+    use gnostr_asyncgit::git2::Oid;
     use gnostr_asyncgit::{
+        profiles::{bitcoindev_1, bitcoindev_2, bitcoindev_3},
         sync::{
             add_note, append_public_attestation_log, commit, default_notes_ref, mine_note,
             show_note, stage_add_file, CommitMineOptions, RepoPath,
@@ -32,19 +39,12 @@ mod tests {
             nip3::create_attestation_with_pow, ClientMessage, EventKind, Id, MilliSatoshi,
             Nip34Kind, PrivateKey, PublicKey, RelayMessage, Unixtime,
         },
-        profiles::{bitcoindev_1, bitcoindev_2, bitcoindev_3},
     };
-    use gnostr_asyncgit::git2::Oid;
-    use futures_util::StreamExt;
-    use crate::time::{ClockStatus, Estimation, SyncState};
-    use crate::crawler_broadcast::{
-        bootstrap_crawler_relay_buckets, bucket_topic, load_relay_buckets,
-    };
-    use tokio::{net::TcpListener, time::timeout};
-    use tokio_tungstenite::{accept_async, tungstenite::Message};
     use serde_json;
     use tempfile::{tempdir, NamedTempFile};
     use time::OffsetDateTime;
+    use tokio::{net::TcpListener, time::timeout};
+    use tokio_tungstenite::{accept_async, tungstenite::Message};
 
     static TEST_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
 
@@ -59,7 +59,10 @@ mod tests {
             unsafe {
                 std::env::set_var(key, value);
             }
-            Self { key, value: previous }
+            Self {
+                key,
+                value: previous,
+            }
         }
     }
 
@@ -81,23 +84,20 @@ mod tests {
             .unwrap_or_else(|poisoned| poisoned.into_inner())
     }
 
-
     fn real_trace_fixture() -> (GitNote, Event, SubscriptionId, Filter) {
         let temp_dir = tempdir().expect("temp repo");
         let repo = gnostr_asyncgit::git2::Repository::init(temp_dir.path()).expect("init repo");
         {
             let mut config = repo.config().expect("repo config");
-            config.set_str("user.name", "gnostr-trace").expect("user name");
+            config
+                .set_str("user.name", "gnostr-trace")
+                .expect("user name");
             config
                 .set_str("user.email", "trace@gnostr.org")
                 .expect("user email");
         }
 
-        let repo_path: RepoPath = temp_dir
-            .path()
-            .to_str()
-            .expect("repo path")
-            .into();
+        let repo_path: RepoPath = temp_dir.path().to_str().expect("repo path").into();
 
         let trace_file = temp_dir.path().join("trace.txt");
         fs::write(&trace_file, "real p2p trace").expect("write trace file");
@@ -163,9 +163,11 @@ mod tests {
         get_leading_zero_bits(note_id.as_bytes())
     }
 
-    async fn spawn_attestation_relay(
-    ) -> anyhow::Result<(String, tokio::task::JoinHandle<()>, tokio::sync::oneshot::Receiver<Event>)>
-    {
+    async fn spawn_attestation_relay() -> anyhow::Result<(
+        String,
+        tokio::task::JoinHandle<()>,
+        tokio::sync::oneshot::Receiver<Event>,
+    )> {
         let listener = TcpListener::bind("127.0.0.1:0").await?;
         let port = listener.local_addr()?.port();
         let (event_tx, event_rx) = tokio::sync::oneshot::channel::<Event>();
@@ -214,7 +216,8 @@ mod tests {
             relay_message
         );
         assert_eq!(
-            serde_json::from_str::<ClientMessage>(&client_json).expect("deserialize client message"),
+            serde_json::from_str::<ClientMessage>(&client_json)
+                .expect("deserialize client message"),
             client_message
         );
         assert_eq!(
@@ -229,7 +232,8 @@ mod tests {
 
     #[test]
     fn reexports_nip34_kinds_and_aliases_through_p2p() {
-        let _nip34_kind: Nip34Kind = Nip34Kind::from(crate::git2::types::nip34::REPO_ANNOUNCEMENT_KIND);
+        let _nip34_kind: Nip34Kind =
+            Nip34Kind::from(crate::git2::types::nip34::REPO_ANNOUNCEMENT_KIND);
         let _nip34_event: Option<Nip34Event> = None;
         let _nip34_unsigned: Option<Nip34UnsignedEvent> = None;
 
@@ -351,7 +355,8 @@ mod tests {
             content: event.content.clone(),
         };
 
-        let relay_message = RelayMessage::Event(subscription_id.clone(), Box::new(p2p_event.clone()));
+        let relay_message =
+            RelayMessage::Event(subscription_id.clone(), Box::new(p2p_event.clone()));
         let client_message = ClientMessage::Req(subscription_id.clone(), vec![filter.clone()]);
 
         assert_eq!(unsigned_event.hash().expect("unsigned hash"), event.id);
@@ -359,15 +364,19 @@ mod tests {
         assert_eq!(git_note.message, asyncgit_event.content);
 
         let event_json = serde_json::to_string(&p2p_event).expect("serialize p2p event");
-        let unsigned_json = serde_json::to_string(&unsigned_event).expect("serialize unsigned event");
+        let unsigned_json =
+            serde_json::to_string(&unsigned_event).expect("serialize unsigned event");
         let relay_json = serde_json::to_string(&relay_message).expect("serialize relay message");
         let client_json = serde_json::to_string(&client_message).expect("serialize client message");
 
-        let decoded_event: Nip34Event = serde_json::from_str(&event_json).expect("deserialize p2p event");
+        let decoded_event: Nip34Event =
+            serde_json::from_str(&event_json).expect("deserialize p2p event");
         let decoded_unsigned: Nip34UnsignedEvent =
             serde_json::from_str(&unsigned_json).expect("deserialize unsigned event");
-        let decoded_relay: RelayMessage = serde_json::from_str(&relay_json).expect("deserialize relay message");
-        let decoded_client: ClientMessage = serde_json::from_str(&client_json).expect("deserialize client message");
+        let decoded_relay: RelayMessage =
+            serde_json::from_str(&relay_json).expect("deserialize relay message");
+        let decoded_client: ClientMessage =
+            serde_json::from_str(&client_json).expect("deserialize client message");
 
         let asyncgit_round_trip_event: gnostr_asyncgit::types::EventV3 = decoded_event.clone();
 
@@ -427,7 +436,10 @@ mod tests {
         assert_eq!(event.kind, EventKind::Patches);
         assert_eq!(event.created_at, Unixtime(consensus.timestamp()));
         assert_eq!(event.content, quorum_note.message);
-        assert!(matches!(state.status, ClockStatus::Synced | ClockStatus::Slewing));
+        assert!(matches!(
+            state.status,
+            ClockStatus::Synced | ClockStatus::Slewing
+        ));
         assert!(state.pending_alert.is_none());
     }
 
@@ -487,7 +499,8 @@ mod tests {
             let consensus = consensus_time(&mut state, estimates);
             let mut quorum_note = git_note.clone();
             quorum_note.committer_time = consensus.timestamp();
-            let event = generate_git_note_event(&quorum_note, &private_key).expect("git note event");
+            let event =
+                generate_git_note_event(&quorum_note, &private_key).expect("git note event");
 
             println!(
                 "round {label}: event created_at={} consensus={}",
@@ -504,7 +517,10 @@ mod tests {
             assert_eq!(event.kind, EventKind::Patches);
             assert_eq!(event.created_at, Unixtime(consensus.timestamp()));
             assert_eq!(event.content, quorum_note.message);
-            assert!(matches!(state.status, ClockStatus::Synced | ClockStatus::Slewing));
+            assert!(matches!(
+                state.status,
+                ClockStatus::Synced | ClockStatus::Slewing
+            ));
             assert!(state.pending_alert.is_none());
 
             if let Some(previous) = last_created_at {
@@ -520,8 +536,12 @@ mod tests {
             let repo = gnostr_asyncgit::git2::Repository::init(td.path()).expect("init repo");
             {
                 let mut config = repo.config().expect("repo config");
-                config.set_str("user.name", "gnostr-p2p").expect("user name");
-                config.set_str("user.email", "p2p@gnostr.org").expect("user email");
+                config
+                    .set_str("user.name", "gnostr-p2p")
+                    .expect("user name");
+                config
+                    .set_str("user.email", "p2p@gnostr.org")
+                    .expect("user email");
             }
             (td, repo)
         })?;
@@ -547,8 +567,9 @@ mod tests {
             )?;
             println!("[p2p] mined commit={commit_id}");
 
-            let attestation_target = Id::try_from_hex_string(&format!("{:0>64}", commit_id.to_string()))
-                .map_err(|err| anyhow::anyhow!(err.to_string()))?;
+            let attestation_target =
+                Id::try_from_hex_string(&format!("{:0>64}", commit_id.to_string()))
+                    .map_err(|err| anyhow::anyhow!(err.to_string()))?;
             let secret_key = profile.private_key().0.clone();
             let xonly_public_key = profile.public_key().as_xonly_public_key();
             let attestation = create_attestation_with_pow(
@@ -586,7 +607,8 @@ mod tests {
             let attestation_json = serde_json::to_value(&attestation)?;
             let relay_message_json = serde_json::to_value(&relay_message)?;
             let profile_metadata = profile.metadata();
-            let attestation_content = serde_json::from_str::<serde_json::Value>(&attestation.content)?;
+            let attestation_content =
+                serde_json::from_str::<serde_json::Value>(&attestation.content)?;
 
             println!(
                 "pretty_print_attestations\n{}",
@@ -621,13 +643,18 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn pretty_print_attestations_are_syndicated_via_p2p_and_crawler_buckets() -> anyhow::Result<()> {
+    async fn pretty_print_attestations_are_syndicated_via_p2p_and_crawler_buckets(
+    ) -> anyhow::Result<()> {
         let (_td, repo) = tempdir().map(|td| {
             let repo = gnostr_asyncgit::git2::Repository::init(td.path()).expect("init repo");
             {
                 let mut config = repo.config().expect("repo config");
-                config.set_str("user.name", "gnostr-p2p").expect("user name");
-                config.set_str("user.email", "p2p@gnostr.org").expect("user email");
+                config
+                    .set_str("user.name", "gnostr-p2p")
+                    .expect("user name");
+                config
+                    .set_str("user.email", "p2p@gnostr.org")
+                    .expect("user email");
             }
             (td, repo)
         })?;
@@ -661,8 +688,9 @@ mod tests {
             },
         )?;
 
-        let attestation_target = Id::try_from_hex_string(&format!("{:0>64}", commit_id.to_string()))
-            .map_err(|err| anyhow::anyhow!(err.to_string()))?;
+        let attestation_target =
+            Id::try_from_hex_string(&format!("{:0>64}", commit_id.to_string()))
+                .map_err(|err| anyhow::anyhow!(err.to_string()))?;
         let secret_key = bitcoindev_1.private_key().0.clone();
         let xonly_public_key = bitcoindev_1.public_key().as_xonly_public_key();
         let attestation = create_attestation_with_pow(
@@ -718,8 +746,11 @@ mod tests {
             }))?
         );
 
-        let published =
-            crate::crawler_broadcast::broadcast_event_to_crawler_relays(config_dir.path(), &attestation).await?;
+        let published = crate::crawler_broadcast::broadcast_event_to_crawler_relays(
+            config_dir.path(),
+            &attestation,
+        )
+        .await?;
         assert_eq!(published, 1);
 
         let received_event = timeout(std::time::Duration::from_secs(5), received_event)
@@ -747,8 +778,12 @@ mod tests {
             let repo = gnostr_asyncgit::git2::Repository::init(td.path()).expect("init repo");
             {
                 let mut config = repo.config().expect("repo config");
-                config.set_str("user.name", "gnostr-p2p").expect("user name");
-                config.set_str("user.email", "p2p@gnostr.org").expect("user email");
+                config
+                    .set_str("user.name", "gnostr-p2p")
+                    .expect("user name");
+                config
+                    .set_str("user.email", "p2p@gnostr.org")
+                    .expect("user email");
             }
             (td, repo)
         })?;
@@ -764,8 +799,8 @@ mod tests {
         assert!(!relays.is_empty(), "live crawler relays.yaml was empty");
         println!("[p2p] crawler relays={relays:?}");
 
-        let buckets = load_relay_buckets(&config_dir)
-            .map_err(|err| anyhow::anyhow!(err.to_string()))?;
+        let buckets =
+            load_relay_buckets(&config_dir).map_err(|err| anyhow::anyhow!(err.to_string()))?;
         assert_eq!(buckets.len(), 1);
         assert_eq!(buckets[0].nip, 34);
         assert_eq!(buckets[0].relays, relays);
@@ -787,8 +822,9 @@ mod tests {
         )?;
         println!("[p2p] mined commit={commit_id}");
 
-        let attestation_target = Id::try_from_hex_string(&format!("{:0>64}", commit_id.to_string()))
-            .map_err(|err| anyhow::anyhow!(err.to_string()))?;
+        let attestation_target =
+            Id::try_from_hex_string(&format!("{:0>64}", commit_id.to_string()))
+                .map_err(|err| anyhow::anyhow!(err.to_string()))?;
         let secret_key = bitcoindev_2.private_key().0.clone();
         let xonly_public_key = bitcoindev_2.public_key().as_xonly_public_key();
         let attestation = create_attestation_with_pow(
@@ -840,11 +876,9 @@ mod tests {
             }))?
         );
 
-        let _published = crate::crawler_broadcast::broadcast_event_to_crawler_relays(
-            &config_dir,
-            &attestation,
-        )
-        .await?;
+        let _published =
+            crate::crawler_broadcast::broadcast_event_to_crawler_relays(&config_dir, &attestation)
+                .await?;
         println!("[p2p] broadcast complete");
 
         Ok(())
@@ -862,8 +896,12 @@ mod tests {
             let repo = gnostr_asyncgit::git2::Repository::init(td.path()).expect("init repo");
             {
                 let mut config = repo.config().expect("repo config");
-                config.set_str("user.name", "gnostr-p2p").expect("user name");
-                config.set_str("user.email", "p2p@gnostr.org").expect("user email");
+                config
+                    .set_str("user.name", "gnostr-p2p")
+                    .expect("user name");
+                config
+                    .set_str("user.email", "p2p@gnostr.org")
+                    .expect("user email");
             }
             (td, repo)
         })?;
@@ -878,8 +916,8 @@ mod tests {
         assert!(!relays.is_empty(), "live crawler relays.yaml was empty");
         println!("[p2p] crawler relays={relays:?}");
 
-        let buckets = load_relay_buckets(&config_dir)
-            .map_err(|err| anyhow::anyhow!(err.to_string()))?;
+        let buckets =
+            load_relay_buckets(&config_dir).map_err(|err| anyhow::anyhow!(err.to_string()))?;
         assert_eq!(buckets.len(), 1);
         assert_eq!(buckets[0].nip, 34);
         assert_eq!(buckets[0].relays, relays);
@@ -901,8 +939,9 @@ mod tests {
             },
         )?;
 
-        let attestation_target = Id::try_from_hex_string(&format!("{:0>64}", commit_id.to_string()))
-            .map_err(|err| anyhow::anyhow!(err.to_string()))?;
+        let attestation_target =
+            Id::try_from_hex_string(&format!("{:0>64}", commit_id.to_string()))
+                .map_err(|err| anyhow::anyhow!(err.to_string()))?;
         let secret_key = bitcoindev_3.private_key().0.clone();
         let xonly_public_key = bitcoindev_3.public_key().as_xonly_public_key();
         let attestation = create_attestation_with_pow(
@@ -912,7 +951,10 @@ mod tests {
             &secret_key,
             5,
         );
-        println!("[p2p] created attestation={}", attestation.id.as_hex_string());
+        println!(
+            "[p2p] created attestation={}",
+            attestation.id.as_hex_string()
+        );
         let note_message = append_public_attestation_log(
             None,
             3234,
@@ -956,11 +998,9 @@ mod tests {
         );
 
         println!("[p2p] broadcasting attestation to crawler relays");
-        let published = crate::crawler_broadcast::broadcast_event_to_crawler_relays(
-            &config_dir,
-            &attestation,
-        )
-        .await?;
+        let published =
+            crate::crawler_broadcast::broadcast_event_to_crawler_relays(&config_dir, &attestation)
+                .await?;
         println!("[p2p] broadcast complete published={published}");
         assert!(published >= 1);
 
@@ -979,8 +1019,12 @@ mod tests {
             let repo = gnostr_asyncgit::git2::Repository::init(td.path()).expect("init repo");
             {
                 let mut config = repo.config().expect("repo config");
-                config.set_str("user.name", "gnostr-p2p").expect("user name");
-                config.set_str("user.email", "p2p@gnostr.org").expect("user email");
+                config
+                    .set_str("user.name", "gnostr-p2p")
+                    .expect("user name");
+                config
+                    .set_str("user.email", "p2p@gnostr.org")
+                    .expect("user email");
             }
             (td, repo)
         })?;
@@ -995,8 +1039,8 @@ mod tests {
         assert!(!relays.is_empty(), "live crawler relays.yaml was empty");
         println!("[p2p] crawler relays={relays:?}");
 
-        let buckets = load_relay_buckets(&config_dir)
-            .map_err(|err| anyhow::anyhow!(err.to_string()))?;
+        let buckets =
+            load_relay_buckets(&config_dir).map_err(|err| anyhow::anyhow!(err.to_string()))?;
         assert_eq!(buckets.len(), 1);
         assert_eq!(buckets[0].nip, 34);
         assert_eq!(buckets[0].relays, relays);
@@ -1018,8 +1062,9 @@ mod tests {
             },
         )?;
 
-        let attestation_target = Id::try_from_hex_string(&format!("{:0>64}", commit_id.to_string()))
-            .map_err(|err| anyhow::anyhow!(err.to_string()))?;
+        let attestation_target =
+            Id::try_from_hex_string(&format!("{:0>64}", commit_id.to_string()))
+                .map_err(|err| anyhow::anyhow!(err.to_string()))?;
         let secret_key = bitcoindev_1.private_key().0.clone();
         let xonly_public_key = bitcoindev_1.public_key().as_xonly_public_key();
         let attestation = create_attestation_with_pow(

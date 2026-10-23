@@ -357,10 +357,7 @@ impl Transport for TorTransport {
 pub async fn build_transport(
     keypair: &libp2p::identity::Keypair,
 ) -> Result<
-    libp2p::core::transport::Boxed<(
-        libp2p::PeerId,
-        libp2p::core::muxing::StreamMuxerBox,
-    )>,
+    libp2p::core::transport::Boxed<(libp2p::PeerId, libp2p::core::muxing::StreamMuxerBox)>,
     Box<dyn std::error::Error + Send + Sync>,
 > {
     let transport = TorTransport::bootstrapped()

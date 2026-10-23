@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
-use std::ffi::{OsStr, OsString};
 use libp2p::{multiaddr::Protocol, swarm::NetworkBehaviour, Multiaddr};
+use std::ffi::{OsStr, OsString};
 
 use crate::network_config::Network;
 
@@ -93,11 +93,21 @@ pub struct LookupOpts {
     pub swarm_key: Option<String>,
 
     /// Lookup a peer directly by dialing its multiaddr.
-    #[arg(long, value_name = "ADDR", conflicts_with = "peer", required_unless_present = "peer")]
+    #[arg(
+        long,
+        value_name = "ADDR",
+        conflicts_with = "peer",
+        required_unless_present = "peer"
+    )]
     pub multiaddr: Option<Multiaddr>,
 
     /// Lookup a peer through the DHT using its peer ID.
-    #[arg(long, value_name = "PEER_ID", conflicts_with = "multiaddr", required_unless_present = "multiaddr")]
+    #[arg(
+        long,
+        value_name = "PEER_ID",
+        conflicts_with = "multiaddr",
+        required_unless_present = "multiaddr"
+    )]
     pub peer: Option<String>,
 
     /// Optional bootstrap network whose bootnodes will be added to the DHT.

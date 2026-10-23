@@ -20,7 +20,12 @@ pub fn kubo_listening_addrs(state: &IpfsState) -> Vec<String> {
     guard
         .as_ref()
         .and_then(|n| n.listening_addrs())
-        .map(|s| s.lines().map(|l| l.to_string()).filter(|l| !l.is_empty()).collect())
+        .map(|s| {
+            s.lines()
+                .map(|l| l.to_string())
+                .filter(|l| !l.is_empty())
+                .collect()
+        })
         .unwrap_or_default()
 }
 

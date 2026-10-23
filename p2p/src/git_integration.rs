@@ -22,7 +22,10 @@ pub fn get_commit_diff_as_bytes(
     Ok(buf)
 }
 
-pub fn get_commit_id_of_tag(repo: &Repository, tag_name: &str) -> Result<String, crate::git2::Error> {
+pub fn get_commit_id_of_tag(
+    repo: &Repository,
+    tag_name: &str,
+) -> Result<String, crate::git2::Error> {
     let reference_name = format!("refs/tags/{}", tag_name);
     let reference = repo.find_reference(&reference_name)?;
     let object = reference.peel(ObjectType::Commit)?;

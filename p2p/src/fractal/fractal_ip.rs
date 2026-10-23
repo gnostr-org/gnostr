@@ -1,11 +1,8 @@
-use std::{
-    fs,
-    path::PathBuf,
-};
+use std::{fs, path::PathBuf};
 
+use crate::keypair_from_seed;
 use futures::StreamExt;
 use log::{debug, info};
-use crate::keypair_from_seed;
 // pub use crate::perfect_ip_core::*;
 use crate::fractal::fractal_ip_core::{
     build_fractal_swarm, generate_manifest, packetize, reconstruct_directory, reconstruct_payload,
@@ -163,7 +160,10 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let walk = run_directory_walk(root, depth, logging.is_some())?;
         if let Some(ref out_path) = out {
             reconstruct_directory(walk, out_path)?;
-            println!("recursively reconstructed directory to {}", out_path.display());
+            println!(
+                "recursively reconstructed directory to {}",
+                out_path.display()
+            );
             return Ok(());
         }
         return Ok(());
@@ -243,13 +243,25 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         Tag::new_identifier("ROOT".to_string()),
         Tag::new_tag("sha256", &original_sha256),
     ];
-    let manifest_event = EventBuilder::new(EventKind::Other(39078), manifest_content, manifest_tags)
-        .to_event(&private_key)
-        .expect("build manifest event");
-    
-    info!("Broadcasting PIP Manifest event: {}", manifest_event.id.as_hex_string());
-    if let Ok(count) = crate::p2p::crawler_broadcast::broadcast_event_to_crawler_relays(&config_dir, &manifest_event).await {
-        info!("Broadcasted PIP Manifest event: {:?}. Published to {} relays.", manifest_event.id, count);
+    let manifest_event =
+        EventBuilder::new(EventKind::Other(39078), manifest_content, manifest_tags)
+            .to_event(&private_key)
+            .expect("build manifest event");
+
+    info!(
+        "Broadcasting PIP Manifest event: {}",
+        manifest_event.id.as_hex_string()
+    );
+    if let Ok(count) = crate::p2p::crawler_broadcast::broadcast_event_to_crawler_relays(
+        &config_dir,
+        &manifest_event,
+    )
+    .await
+    {
+        info!(
+            "Broadcasted PIP Manifest event: {:?}. Published to {} relays.",
+            manifest_event.id, count
+        );
     }
 
     // 2. Broadcast Slice Events (Kind 39079)
@@ -265,9 +277,20 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             .to_event(&private_key)
             .expect("build slice event");
 
-        debug!("Broadcasting PIP Slice event: {}", serde_json::to_string_pretty(&slice_event).expect("serialize event"));
-        if let Ok(count) = crate::p2p::crawler_broadcast::broadcast_event_to_crawler_relays(&config_dir, &slice_event).await {
-             debug!("Broadcasted PIP Slice event: {:?}. Published to {} relays.", slice_event.id, count);
+        debug!(
+            "Broadcasting PIP Slice event: {}",
+            serde_json::to_string_pretty(&slice_event).expect("serialize event")
+        );
+        if let Ok(count) = crate::p2p::crawler_broadcast::broadcast_event_to_crawler_relays(
+            &config_dir,
+            &slice_event,
+        )
+        .await
+        {
+            debug!(
+                "Broadcasted PIP Slice event: {:?}. Published to {} relays.",
+                slice_event.id, count
+            );
         }
     }
 

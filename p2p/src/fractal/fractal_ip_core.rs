@@ -46,7 +46,7 @@ pub use gnostr_types::{
     calculate_parity, generate_manifest, list_directory, packetize, process_slice,
     reconstruct_directory, reconstruct_payload, recover_missing_data, recover_missing_slice,
     run_directory_walk, sha256_hex, summarize_packets, DirectoryWalk, Header, IntegrityManager,
-    MTU_PAYLOAD, PacketBatch, ProtocolSlice,
+    PacketBatch, ProtocolSlice, MTU_PAYLOAD,
 };
 
 /// libp2p repair behaviour for exchanging packet slices.
@@ -154,7 +154,10 @@ pub async fn run_fractal_engine(
                                 data: Vec::new(),
                                 is_parity: false,
                             });
-                        let _ = swarm.behaviour_mut().repair_rpc.send_response(channel, response);
+                        let _ = swarm
+                            .behaviour_mut()
+                            .repair_rpc
+                            .send_response(channel, response);
                     }
                 }
             }
@@ -179,9 +182,7 @@ mod tests {
 
     #[tokio::test]
     async fn build_fractal_swarm_accepts_quic_listen_address() {
-        let keypair = keypair_from_seed(Some(
-            gnostr_asyncgit::default_gnostr_private_key_hex(),
-        ));
+        let keypair = keypair_from_seed(Some(gnostr_asyncgit::default_gnostr_private_key_hex()));
         let mut swarm = build_fractal_swarm(keypair).await.expect("swarm");
         let addr: Multiaddr = "/ip4/127.0.0.1/udp/0/quic-v1"
             .parse()
@@ -200,8 +201,11 @@ mod tests {
         println!("fixture: {}", fixture.display());
 
         let walk = run_directory_walk(&fixture, 3, false).expect("packetize fixture");
-        let all_slices: Vec<ProtocolSlice> =
-            walk.files.values().flat_map(|packets| packets.clone()).collect();
+        let all_slices: Vec<ProtocolSlice> = walk
+            .files
+            .values()
+            .flat_map(|packets| packets.clone())
+            .collect();
         let all_ids: Vec<String> = all_slices.iter().map(|s| s.id.clone()).collect();
         println!("total slices to sync: {}", all_slices.len());
 
@@ -385,7 +389,10 @@ mod tests {
             .arg(&clone)
             .status()
             .expect("spawn git clone");
-        assert!(status.success(), "git clone from reconstructed directory failed");
+        assert!(
+            status.success(),
+            "git clone from reconstructed directory failed"
+        );
         assert!(clone.join(".git").exists(), "cloned repo missing .git");
 
         let reconstructed_head = git_output(&reconstructed, &["rev-parse", "HEAD"]);
@@ -410,8 +417,11 @@ mod tests {
 
         // Phase 1: sender -> receiver (initial sync).
         let walk = run_directory_walk(&fixture, 3, false).expect("packetize fixture");
-        let all_slices: Vec<ProtocolSlice> =
-            walk.files.values().flat_map(|packets| packets.clone()).collect();
+        let all_slices: Vec<ProtocolSlice> = walk
+            .files
+            .values()
+            .flat_map(|packets| packets.clone())
+            .collect();
         let all_ids: Vec<String> = all_slices.iter().map(|s| s.id.clone()).collect();
 
         let mut sender_manager = IntegrityManager::new(all_ids.clone());
@@ -422,7 +432,10 @@ mod tests {
         let (sender_handle, sender_addr) = spawn_responder(sender_manager, "sender").await;
         let received_slices = request_all_slices(sender_addr, "receiver1", all_ids.clone()).await;
 
-        println!("[test] phase 1 complete: {} slices received", received_slices.len());
+        println!(
+            "[test] phase 1 complete: {} slices received",
+            received_slices.len()
+        );
         sender_handle.abort();
 
         let temp = TempDir::new().expect("temp dir");
@@ -459,7 +472,10 @@ mod tests {
         assert!(clone_status.success(), "initial git clone failed");
 
         // Phase 2: receiver modifies the repo.
-        git_output(&receiver_working, &["config", "user.email", "test@example.com"]);
+        git_output(
+            &receiver_working,
+            &["config", "user.email", "test@example.com"],
+        );
         git_output(&receiver_working, &["config", "user.name", "Test User"]);
 
         let new_file = receiver_working.join("NEW_FILE.md");
@@ -472,7 +488,8 @@ mod tests {
 
         // Phase 3: receiver -> sender (send modified repo back).
         let receiver_working_git = receiver_working.join(".git");
-        let modified_walk = run_directory_walk(&receiver_working_git, 3, false).expect("packetize modified .git");
+        let modified_walk =
+            run_directory_walk(&receiver_working_git, 3, false).expect("packetize modified .git");
         let modified_slices: Vec<ProtocolSlice> = modified_walk
             .files
             .values()
@@ -518,10 +535,16 @@ mod tests {
         .expect("reconstruct sender modified repo");
 
         println!("\n=== modified repo log ===");
-        println!("{}", git_output(&sender_modified_repo, &["log", "--oneline"]));
+        println!(
+            "{}",
+            git_output(&sender_modified_repo, &["log", "--oneline"])
+        );
 
         println!("\n=== modified repo diff (HEAD~1..HEAD) ===");
-        println!("{}", git_output(&sender_modified_repo, &["diff", "HEAD~1..HEAD"]));
+        println!(
+            "{}",
+            git_output(&sender_modified_repo, &["diff", "HEAD~1..HEAD"])
+        );
 
         println!("\n=== modified repo show ===");
         println!("{}", git_output(&sender_modified_repo, &["show", "--stat"]));
@@ -530,9 +553,10 @@ mod tests {
         let original_commit_count: usize = git_output(&fixture, &["rev-list", "--count", "HEAD"])
             .parse()
             .expect("parse original commit count");
-        let commit_count: usize = git_output(&sender_modified_repo, &["rev-list", "--count", "HEAD"])
-            .parse()
-            .expect("parse commit count");
+        let commit_count: usize =
+            git_output(&sender_modified_repo, &["rev-list", "--count", "HEAD"])
+                .parse()
+                .expect("parse commit count");
         assert_eq!(
             commit_count,
             original_commit_count + 1,
@@ -540,7 +564,10 @@ mod tests {
         );
 
         let diff = git_output(&sender_modified_repo, &["diff", "HEAD~1..HEAD"]);
-        assert!(diff.contains("NEW_FILE.md"), "diff should mention NEW_FILE.md");
+        assert!(
+            diff.contains("NEW_FILE.md"),
+            "diff should mention NEW_FILE.md"
+        );
         assert!(
             diff.contains("# Added by receiver"),
             "diff should contain added content"

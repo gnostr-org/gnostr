@@ -4,8 +4,8 @@ use std::error::Error;
 pub mod fractal_ip;
 pub mod fractal_ip_core;
 
-use gnostr_types::FileSliceReader;
 use futures::StreamExt;
+use gnostr_types::FileSliceReader;
 use libp2p::{
     gossipsub,
     kad::{self, store::MemoryStore},
@@ -190,7 +190,10 @@ pub async fn run_fractal_engine_with_shutdown(
                             }
                         };
 
-                        let _ = swarm.behaviour_mut().repair_rpc.send_response(channel, response);
+                        let _ = swarm
+                            .behaviour_mut()
+                            .repair_rpc
+                            .send_response(channel, response);
                     }
                 }
             }
@@ -236,9 +239,7 @@ mod tests {
 
     #[tokio::test]
     async fn build_fractal_swarm_accepts_quic_listen_address() {
-        let keypair = keypair_from_seed(Some(
-            gnostr_asyncgit::default_gnostr_private_key_hex(),
-        ));
+        let keypair = keypair_from_seed(Some(gnostr_asyncgit::default_gnostr_private_key_hex()));
         let mut swarm = build_fractal_swarm(keypair).await.expect("swarm");
         let addr: Multiaddr = "/ip4/127.0.0.1/udp/0/quic-v1"
             .parse()

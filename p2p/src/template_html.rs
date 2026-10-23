@@ -35,7 +35,9 @@ mod tests {
     fn template_html_exposes_expected_bytes() {
         let template = TemplateHtml::new();
         assert!(template.bytes().starts_with(b"<!DOCTYPE html>"));
-        assert!(template.as_str().contains(r#"<script defer src="/js/main.js?v=1"></script>"#));
+        assert!(template
+            .as_str()
+            .contains(r#"<script defer src="/js/main.js?v=1"></script>"#));
     }
 
     #[test]

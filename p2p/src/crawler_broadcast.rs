@@ -1,18 +1,12 @@
-use std::{
-    error::Error,
-    fs,
-    process::Stdio,
-    path::Path,
-    time::Duration,
-};
+use std::{error::Error, fs, path::Path, process::Stdio, time::Duration};
 
 use libp2p::gossipsub::IdentTopic;
 use serde::{Deserialize, Serialize};
 use tracing::{debug, info, warn};
 
-use gnostr_crawler::processor::SHITLIST_RELAYS;
 use crate::relay_paths::get_config_dir_path;
 use crate::{message::Event, relay_bridge::NostrRelayConnection};
+use gnostr_crawler::processor::SHITLIST_RELAYS;
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct RelayBucket {
@@ -206,16 +200,15 @@ async fn fetch_live_crawler_relays() -> anyhow::Result<Option<Vec<String>>> {
     }
 
     let relays = response.text().await?;
-    let relays = serde_yaml::from_str::<Vec<String>>(&relays)
-        .or_else(|_| {
-            Ok::<Vec<String>, serde_yaml::Error>(
-                relays
-                    .lines()
-                    .map(str::trim)
-                    .filter_map(normalize_relay_entry)
-                    .collect(),
-            )
-        })?;
+    let relays = serde_yaml::from_str::<Vec<String>>(&relays).or_else(|_| {
+        Ok::<Vec<String>, serde_yaml::Error>(
+            relays
+                .lines()
+                .map(str::trim)
+                .filter_map(normalize_relay_entry)
+                .collect(),
+        )
+    })?;
     let relays = relays
         .into_iter()
         .filter_map(|relay| normalize_relay_entry(&relay))
@@ -325,33 +318,30 @@ pub async fn broadcast_event_to_crawler_relays(
                 bucket.nip, relay_url
             );
             let relay_url_for_task = relay_url.clone();
-            match tokio::time::timeout(
-                RELAY_CONNECT_TIMEOUT + RELAY_PUBLISH_TIMEOUT,
-                async move {
-                    let mut connection = NostrRelayConnection::connect(relay_url_for_task.clone())
-                        .await
-                        .map_err(|err| {
-                            anyhow::anyhow!(
-                                "broadcast_event_to_crawler_relays: connect error for {}: {}",
-                                relay_url_for_task,
-                                err
-                            )
-                        })?;
+            match tokio::time::timeout(RELAY_CONNECT_TIMEOUT + RELAY_PUBLISH_TIMEOUT, async move {
+                let mut connection = NostrRelayConnection::connect(relay_url_for_task.clone())
+                    .await
+                    .map_err(|err| {
+                        anyhow::anyhow!(
+                            "broadcast_event_to_crawler_relays: connect error for {}: {}",
+                            relay_url_for_task,
+                            err
+                        )
+                    })?;
 
-                    connection
-                        .publish_event(event.clone())
-                        .await
-                        .map_err(|err| {
-                            anyhow::anyhow!(
-                                "broadcast_event_to_crawler_relays: publish error for {}: {}",
-                                relay_url_for_task,
-                                err
-                            )
-                        })?;
+                connection
+                    .publish_event(event.clone())
+                    .await
+                    .map_err(|err| {
+                        anyhow::anyhow!(
+                            "broadcast_event_to_crawler_relays: publish error for {}: {}",
+                            relay_url_for_task,
+                            err
+                        )
+                    })?;
 
-                    Ok::<(), anyhow::Error>(())
-                },
-            )
+                Ok::<(), anyhow::Error>(())
+            })
             .await
             {
                 Ok(Ok(())) => {
@@ -401,7 +391,10 @@ mod tests {
         fn set(key: &'static str, value: impl AsRef<std::ffi::OsStr>) -> Self {
             let previous = env::var_os(key);
             env::set_var(key, value);
-            Self { key, value: previous }
+            Self {
+                key,
+                value: previous,
+            }
         }
     }
 
@@ -454,11 +447,7 @@ mod tests {
         let crawler_config_dir = get_config_dir_path();
         let bucket_dir = crawler_config_dir.join("23");
         create_dir_all(&bucket_dir).expect("bucket dir");
-        write(
-            bucket_dir.join("relays.yaml"),
-            "- wss://relay.example\n",
-        )
-        .expect("bucket relays");
+        write(bucket_dir.join("relays.yaml"), "- wss://relay.example\n").expect("bucket relays");
 
         let buckets = load_crawler_relay_buckets().expect("buckets");
         assert_eq!(buckets.len(), 1);

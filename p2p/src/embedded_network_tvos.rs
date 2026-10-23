@@ -104,7 +104,9 @@ pub fn register_chat_topic(topic: impl Into<String>) -> String {
 pub fn send_chat_message(topic: impl Into<String>, message: impl Into<String>) -> String {
     let topic = topic.into();
     let message = message.into();
-    push_log(format!("tvOS stub chat send topic={topic} message={message}"));
+    push_log(format!(
+        "tvOS stub chat send topic={topic} message={message}"
+    ));
     format!("tvOS stub queued chat message for {topic}")
 }
 
@@ -114,8 +116,7 @@ pub fn start() -> String {
         .unwrap_or_else(|poisoned| poisoned.into_inner());
     state.status = format!(
         "tvOS stub: discovery={}, chat={}",
-        DEFAULT_DISCOVERY_TOPIC,
-        DEFAULT_CHAT_TOPIC
+        DEFAULT_DISCOVERY_TOPIC, DEFAULT_CHAT_TOPIC
     );
     "tvOS stub network started".to_string()
 }

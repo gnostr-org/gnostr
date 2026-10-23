@@ -89,7 +89,10 @@ mod tests {
 
     #[test]
     fn extract_correct_address_from_ips() {
-        let addresses = ["/ip4/127.0.0.1/tcp/10".parse().unwrap(), "/ip6/::1/tcp/10".parse().unwrap()];
+        let addresses = [
+            "/ip4/127.0.0.1/tcp/10".parse().unwrap(),
+            "/ip6/::1/tcp/10".parse().unwrap(),
+        ];
 
         let actual = addresses
             .iter()

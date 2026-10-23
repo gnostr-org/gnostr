@@ -130,7 +130,9 @@ impl NostrRelayConnection {
     }
 }
 
-pub async fn connect(relay_url: impl Into<String>) -> Result<NostrRelayConnection, RelayBridgeError> {
+pub async fn connect(
+    relay_url: impl Into<String>,
+) -> Result<NostrRelayConnection, RelayBridgeError> {
     NostrRelayConnection::connect(relay_url).await
 }
 
@@ -267,15 +269,17 @@ async fn run_session(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{crawler_broadcast::load_crawler_relay_buckets, message::{EventBuilder, EventKind, PrivateKey}};
+    use crate::{
+        crawler_broadcast::load_crawler_relay_buckets,
+        message::{EventBuilder, EventKind, PrivateKey},
+    };
     use std::{
-        env,
-        fs,
+        env, fs,
         sync::{Mutex, OnceLock},
         time::Duration,
     };
-    use tokio::net::TcpListener;
     use tempfile::tempdir;
+    use tokio::net::TcpListener;
 
     struct EnvGuard {
         key: &'static str,
@@ -286,7 +290,10 @@ mod tests {
         fn set(key: &'static str, value: impl AsRef<std::ffi::OsStr>) -> Self {
             let previous = env::var_os(key);
             env::set_var(key, value);
-            Self { key, value: previous }
+            Self {
+                key,
+                value: previous,
+            }
         }
     }
 
@@ -319,9 +326,12 @@ mod tests {
                             .expect("event");
                         let notice = RelayMessage::Notice("subscribed".to_string());
                         ws.send(Message::Text(
-                            serde_json::to_string(&RelayMessage::Event(subscription_id.clone(), Box::new(event)))
-                                .expect("event wire")
-                                .into(),
+                            serde_json::to_string(&RelayMessage::Event(
+                                subscription_id.clone(),
+                                Box::new(event),
+                            ))
+                            .expect("event wire")
+                            .into(),
                         ))
                         .await
                         .expect("send event");
@@ -380,7 +390,9 @@ mod tests {
     #[tokio::test]
     async fn relay_bridge_session_streams_updates_from_the_mock_relay() {
         let (url, handle) = spawn_mock_relay().await;
-        let session = RelayBridgeSession::connect(url.clone()).await.expect("connect session");
+        let session = RelayBridgeSession::connect(url.clone())
+            .await
+            .expect("connect session");
         assert_eq!(session.relay_url(), url);
         let mut updates = session.subscribe_updates();
 
@@ -438,14 +450,17 @@ mod tests {
 
         let (url, handle) = spawn_mock_relay().await;
         let relay_url = url.replace("http", "ws");
-        fs::write(bucket_dir.join("relays.yaml"), format!("- {relay_url}\n")).expect("write bucket");
+        fs::write(bucket_dir.join("relays.yaml"), format!("- {relay_url}\n"))
+            .expect("write bucket");
 
         let buckets = load_crawler_relay_buckets().expect("load buckets");
         assert_eq!(buckets.len(), 1);
         assert_eq!(buckets[0].nip, 34);
         assert_eq!(buckets[0].relays, vec![relay_url.clone()]);
 
-        let mut relay = NostrRelayConnection::connect(relay_url).await.expect("connect");
+        let mut relay = NostrRelayConnection::connect(relay_url)
+            .await
+            .expect("connect");
         let sub_id = SubscriptionId("sub-bridge".to_string());
         relay
             .subscribe(sub_id.clone(), vec![Filter::default()])

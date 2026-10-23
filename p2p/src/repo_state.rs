@@ -110,7 +110,8 @@ impl RepoStateQuorum {
     }
 
     pub fn consensus_created_at(&self) -> Option<Unixtime> {
-        self.consensus_snapshot().map(|snapshot| snapshot.event.created_at)
+        self.consensus_snapshot()
+            .map(|snapshot| snapshot.event.created_at)
     }
 
     pub fn consensus_head(&self) -> Option<&str> {
@@ -127,11 +128,18 @@ mod tests {
     fn build_snapshot() -> RepoStateSnapshot {
         let private_key = PrivateKey::generate();
         let state = BTreeMap::from([
-            ("refs/heads/main".to_string(), "ref: refs/heads/main".to_string()),
+            (
+                "refs/heads/main".to_string(),
+                "ref: refs/heads/main".to_string(),
+            ),
             ("refs/tags/v0.1.0".to_string(), "abcdef123456".to_string()),
         ]);
-        let repo_state = Nip34RepoState::build("gnostr".to_string(), state.into_iter().collect(), &private_key)
-            .expect("repo state");
+        let repo_state = Nip34RepoState::build(
+            "gnostr".to_string(),
+            state.into_iter().collect(),
+            &private_key,
+        )
+        .expect("repo state");
 
         RepoStateSnapshot::from(repo_state)
     }

@@ -5,13 +5,13 @@ use std::{
 };
 
 use libp2p::{
-    autonat, dcutr, gossipsub, identify, identity, relay,
+    autonat, dcutr, gossipsub, identify, identity,
     kad::{
         self,
         store::{MemoryStore, MemoryStoreConfig},
         Config as KadConfig,
     },
-    mdns, noise, ping, rendezvous,
+    mdns, noise, ping, relay, rendezvous,
     swarm::Swarm,
     tcp, yamux, PeerId, StreamProtocol,
 };
@@ -57,7 +57,8 @@ fn build_behaviour(
         max_value_bytes: usize::MAX,
     };
     let protocol_name = active_protocol_name();
-    let mut kad_config = KadConfig::new(StreamProtocol::try_from_owned(protocol_name.clone()).unwrap());
+    let mut kad_config =
+        KadConfig::new(StreamProtocol::try_from_owned(protocol_name.clone()).unwrap());
     kad_config.set_query_timeout(Duration::from_secs(120));
     kad_config.set_replication_factor(std::num::NonZeroUsize::new(20).unwrap());
     kad_config.set_publication_interval(Some(Duration::from_secs(10)));
@@ -69,7 +70,8 @@ fn build_behaviour(
 
     let relay_server = relay::Behaviour::new(local_peer_id, Default::default());
     let rendezvous_client = rendezvous::client::Behaviour::new(key.clone());
-    let rendezvous_server = rendezvous::server::Behaviour::new(rendezvous::server::Config::default());
+    let rendezvous_server =
+        rendezvous::server::Behaviour::new(rendezvous::server::Config::default());
 
     Ok(Behaviour {
         relay_client,
@@ -110,8 +112,7 @@ pub async fn build_swarm(
             tcp::Config::default(),
             noise::Config::new,
             yamux::Config::default,
-        )?
-        ;
+        )?;
 
     let builder = builder.with_quic();
 
@@ -143,11 +144,12 @@ mod tests {
 
     #[tokio::test]
     async fn build_swarm_accepts_websocket_listen_address() {
-        let keypair = crate::keypair_from_seed(Some(
-            gnostr_asyncgit::default_gnostr_private_key_hex(),
-        ));
+        let keypair =
+            crate::keypair_from_seed(Some(gnostr_asyncgit::default_gnostr_private_key_hex()));
         let mut swarm = build_swarm(keypair).await.expect("swarm");
-        let addr: Multiaddr = "/ip4/127.0.0.1/tcp/0/ws".parse().expect("websocket multiaddr");
+        let addr: Multiaddr = "/ip4/127.0.0.1/tcp/0/ws"
+            .parse()
+            .expect("websocket multiaddr");
         swarm.listen_on(addr).expect("websocket listen");
     }
 }

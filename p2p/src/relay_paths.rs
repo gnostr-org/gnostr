@@ -6,7 +6,10 @@ pub fn get_config_dir_path() -> PathBuf {
     }
 
     if let Some(home) = env::var_os("HOME") {
-        return PathBuf::from(home).join(".config").join("gnostr").join("p2p");
+        return PathBuf::from(home)
+            .join(".config")
+            .join("gnostr")
+            .join("p2p");
     }
 
     PathBuf::from(".")

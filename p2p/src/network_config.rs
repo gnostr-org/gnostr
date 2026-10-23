@@ -100,7 +100,8 @@ pub fn active_protocol_name() -> String {
 }
 
 pub fn active_discovery_topic() -> String {
-    normalized_env_value("GNOSTR_P2P_DISCOVERY_TOPIC").unwrap_or_else(|| DEFAULT_DISCOVERY_TOPIC.to_string())
+    normalized_env_value("GNOSTR_P2P_DISCOVERY_TOPIC")
+        .unwrap_or_else(|| DEFAULT_DISCOVERY_TOPIC.to_string())
 }
 
 pub fn active_chat_topic() -> String {
@@ -166,7 +167,9 @@ mod tests {
     #[test]
     fn ipfs_bootnodes_include_bootstrap_nodes() {
         let bootnodes = Network::Ipfs.bootnodes();
-        assert!(bootnodes.iter().any(|(_, peer)| peer.to_string() == "QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN"));
+        assert!(bootnodes
+            .iter()
+            .any(|(_, peer)| peer.to_string() == "QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN"));
     }
 
     #[test]

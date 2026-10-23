@@ -7,8 +7,12 @@ pub fn registry_path() -> Option<PathBuf> {
 }
 
 pub fn read_peers() -> Vec<String> {
-    let Some(path) = registry_path() else { return vec![]; };
-    let Ok(content) = std::fs::read_to_string(path) else { return vec![]; };
+    let Some(path) = registry_path() else {
+        return vec![];
+    };
+    let Ok(content) = std::fs::read_to_string(path) else {
+        return vec![];
+    };
     serde_json::from_str(&content).unwrap_or_default()
 }
 

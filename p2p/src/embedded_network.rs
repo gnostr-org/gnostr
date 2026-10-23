@@ -12,25 +12,26 @@ use chacha20poly1305::{
     ChaCha20Poly1305, Nonce,
 };
 use futures::StreamExt;
+use gnostr_asyncgit::types::PrivateKey;
 use libp2p::{
     gossipsub::IdentTopic,
     kad::{self, RecordKey as KadKey},
     swarm::SwarmEvent,
     Multiaddr, PeerId,
 };
-use gnostr_asyncgit::types::PrivateKey;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use tokio::{runtime::Builder, sync::{mpsc, oneshot}};
 use tokio::sync::Notify;
+use tokio::{
+    runtime::Builder,
+    sync::{mpsc, oneshot},
+};
 
 use crate::{
-    cli,
-    event_handler,
-    keypair_from_seed,
+    cli, event_handler, keypair_from_seed,
     network_config::{active_chat_topic, active_discovery_topic},
-    time::run_time_sync_daemon,
     swarm_builder,
+    time::run_time_sync_daemon,
     utils::multiaddr_with_peer_id,
 };
 use gnostr_asyncgit::blockheight::blockheight_sync;
@@ -109,7 +110,9 @@ struct EncryptedChatTopicsPayload {
 fn push_log(line: impl Into<String>) {
     let line = line.into();
     {
-        let mut logs = logs_slot().lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        let mut logs = logs_slot()
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
         logs.push(line.clone());
         if logs.len() > 500 {
             let drain_to = logs.len().saturating_sub(500);
@@ -117,9 +120,14 @@ fn push_log(line: impl Into<String>) {
         }
     }
 
-    let guard = network_slot().lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    let guard = network_slot()
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
     if let Some(state) = guard.as_ref() {
-        let mut logs = state.logs.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        let mut logs = state
+            .logs
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
         logs.push(line);
         if logs.len() > 500 {
             let drain_to = logs.len().saturating_sub(500);
@@ -136,11 +144,16 @@ fn with_status<F, T>(f: F) -> T
 where
     F: FnOnce(&mut String) -> T,
 {
-    let guard = network_slot().lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    let guard = network_slot()
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
     let Some(state) = guard.as_ref() else {
         return f(&mut String::from("not running"));
     };
-    let mut status = state.status.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    let mut status = state
+        .status
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
     f(&mut status)
 }
 
@@ -149,7 +162,9 @@ pub fn status() -> String {
 }
 
 pub fn logs() -> String {
-    let logs = logs_slot().lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    let logs = logs_slot()
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
     logs.join("\n")
 }
 
@@ -184,7 +199,9 @@ fn reset_topic_state() {
 }
 
 fn merge_peer_discovery(peer_id: String, source: String, addresses: Vec<String>) {
-    let mut peers = peers_slot().lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    let mut peers = peers_slot()
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
     let mut normalized = Vec::new();
     let mut seen = HashSet::new();
     for address in addresses {
@@ -221,12 +238,18 @@ fn merge_peer_discovery(peer_id: String, source: String, addresses: Vec<String>)
     }
 }
 
-pub fn record_peer_discovery(peer_id: impl Into<String>, source: impl Into<String>, addresses: Vec<String>) {
+pub fn record_peer_discovery(
+    peer_id: impl Into<String>,
+    source: impl Into<String>,
+    addresses: Vec<String>,
+) {
     merge_peer_discovery(peer_id.into(), source.into(), addresses);
 }
 
 pub fn peers() -> String {
-    let peers = peers_slot().lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    let peers = peers_slot()
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
     serde_json::to_string(&*peers).unwrap_or_else(|error| {
         push_log(format!("failed to serialize peers: {error}"));
         String::from("[]")
@@ -255,7 +278,9 @@ fn sync_registered_chat_topics(
     swarm: &mut libp2p::Swarm<crate::behaviour::Behaviour>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let topics = {
-        let topics = chat_topics_slot().lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        let topics = chat_topics_slot()
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
         topics.clone()
     };
     let mut subscribed = subscribed_chat_topics_slot()
@@ -317,7 +342,9 @@ pub fn register_chat_topic(topic: impl Into<String>) -> String {
         return String::from("skipping empty chat topic");
     }
 
-    let mut topics = chat_topics_slot().lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    let mut topics = chat_topics_slot()
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
     if topics.insert(topic.clone()) {
         push_log(format!("registered chat topic {topic}"));
         chat_topic_sync_notify().notify_one();
@@ -340,7 +367,9 @@ pub fn send_chat_message(topic: impl Into<String>, message: impl Into<String>) -
     }
 
     let sender = {
-        let guard = network_slot().lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        let guard = network_slot()
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
         let Some(state) = guard.as_ref() else {
             push_log("cannot send chat message: network not running");
             return String::from("p2p network not running");
@@ -348,12 +377,20 @@ pub fn send_chat_message(topic: impl Into<String>, message: impl Into<String>) -
         state.chat_tx.clone()
     };
 
-    if sender.send(ChatCommand { topic: topic.clone(), message: message.clone() }).is_err() {
+    if sender
+        .send(ChatCommand {
+            topic: topic.clone(),
+            message: message.clone(),
+        })
+        .is_err()
+    {
         push_log(format!("failed to queue chat message on topic {topic}"));
         return String::from("failed to queue chat message");
     }
 
-    push_log(format!("queued chat message '{message}' on topic '{topic}'"));
+    push_log(format!(
+        "queued chat message '{message}' on topic '{topic}'"
+    ));
     message
 }
 
@@ -412,18 +449,20 @@ fn decrypt_chat_topics(
 
     let key = chat_topics_key(private_key_seed);
     let cipher = ChaCha20Poly1305::new((&key).into());
-    let plaintext = cipher.decrypt(
-        Nonce::from_slice(&nonce),
-        Payload {
-            msg: &combined,
-            aad: &[],
-        },
-    ).map_err(|error| {
-        std::io::Error::new(
-            std::io::ErrorKind::InvalidData,
-            format!("chat topic decryption failed: {error}"),
+    let plaintext = cipher
+        .decrypt(
+            Nonce::from_slice(&nonce),
+            Payload {
+                msg: &combined,
+                aad: &[],
+            },
         )
-    })?;
+        .map_err(|error| {
+            std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!("chat topic decryption failed: {error}"),
+            )
+        })?;
 
     let topics: Vec<String> = serde_json::from_slice(&plaintext)?;
     let mut seen = HashSet::new();
@@ -517,7 +556,11 @@ pub fn bootstrap_public_dht(
         }
     }
 
-    if let Err(error) = swarm.behaviour_mut().kademlia.start_providing(discovery_key()) {
+    if let Err(error) = swarm
+        .behaviour_mut()
+        .kademlia
+        .start_providing(discovery_key())
+    {
         push_log(format!("failed to start providing discovery key: {error}"));
     }
 
@@ -537,7 +580,10 @@ pub fn refresh_wide_area_discovery(
     subscribe_to_discovery_topic(swarm)?;
     bootstrap_public_dht(swarm)?;
     publish_presence(swarm, peer_id)?;
-    swarm.behaviour_mut().kademlia.get_providers(discovery_key());
+    swarm
+        .behaviour_mut()
+        .kademlia
+        .get_providers(discovery_key());
     Ok(())
 }
 
@@ -581,11 +627,7 @@ pub fn handle_presence_message(
     }
 
     if !discovered_addresses.is_empty() {
-        record_peer_discovery(
-            remote_peer_id.to_string(),
-            "presence",
-            discovered_addresses,
-        );
+        record_peer_discovery(remote_peer_id.to_string(), "presence", discovered_addresses);
     }
 
     if announced > 0 {
@@ -598,7 +640,9 @@ pub fn handle_presence_message(
 }
 
 pub fn start() -> String {
-    let mut guard = network_slot().lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    let mut guard = network_slot()
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
     if let Some(state) = guard.as_ref() {
         push_log("p2p network already running");
         return state
@@ -774,7 +818,9 @@ pub fn start() -> String {
 
 pub fn stop() -> String {
     let state = {
-        let mut guard = network_slot().lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        let mut guard = network_slot()
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
         guard.take()
     };
     let Some(mut state) = state else {
