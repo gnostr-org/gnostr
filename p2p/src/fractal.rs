@@ -60,11 +60,11 @@ impl From<gossipsub::Event> for FractalBehaviourEvent {
     }
 }
 
-pub struct IntegrityManager {
+pub struct FileSliceReader {
     file_path: PathBuf,
 }
 
-impl IntegrityManager {
+impl FileSliceReader {
     pub fn new(file_path: impl Into<PathBuf>) -> Self {
         Self {
             file_path: file_path.into(),
@@ -135,7 +135,7 @@ pub async fn run_fractal_engine(
     local_key: libp2p::identity::Keypair,
     listen_address: libp2p::Multiaddr,
     audio_topic: &str,
-    managers: HashMap<String, IntegrityManager>,
+    managers: HashMap<String, FileSliceReader>,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
     run_fractal_engine_with_shutdown(local_key, listen_address, audio_topic, managers, None).await
 }
@@ -144,7 +144,7 @@ pub async fn run_fractal_engine_with_shutdown(
     local_key: libp2p::identity::Keypair,
     listen_address: libp2p::Multiaddr,
     audio_topic: &str,
-    managers: HashMap<String, IntegrityManager>,
+    managers: HashMap<String, FileSliceReader>,
     mut shutdown: Option<oneshot::Receiver<()>>,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
     let mut swarm = build_fractal_swarm(local_key).await?;
@@ -241,7 +241,7 @@ mod tests {
     async fn read_slice_returns_requested_bytes() {
         let temp = NamedTempFile::new().expect("temp file");
         std::fs::write(temp.path(), b"abcdefgh").expect("write file");
-        let manager = IntegrityManager::new(temp.path());
+        let manager = FileSliceReader::new(temp.path());
 
         assert_eq!(manager.read_slice(2, 3).await.expect("slice"), b"cde");
     }
@@ -250,7 +250,7 @@ mod tests {
     async fn read_slice_errors_when_range_exceeds_file() {
         let temp = NamedTempFile::new().expect("temp file");
         std::fs::write(temp.path(), b"abc").expect("write file");
-        let manager = IntegrityManager::new(temp.path());
+        let manager = FileSliceReader::new(temp.path());
 
         assert!(manager.read_slice(1, 4).await.is_err());
     }
