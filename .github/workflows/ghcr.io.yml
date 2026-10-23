@@ -49,4 +49,4 @@ jobs:
 
           - name: 'Build gnostr image'
             run: |
-              docker buildx build --platform linux/amd64,linux/arm64 . --tag ghcr.io/gnostr-org/gnostr:latest --push
+              docker buildx build --platform linux/amd64,linux/arm64 -f docker/Dockerfile.gnostr-node . --tag ghcr.io/gnostr-org/gnostr-node:latest --push
