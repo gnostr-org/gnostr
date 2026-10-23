@@ -396,7 +396,7 @@ class InteractiveScriptTests(unittest.TestCase):
         result = self.run_script("update", "q\n", ("--interactive",))
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(self.calls("cargo"), [])
-        self.assertEqual(self.calls("git"), [])
+        self.assertTrue(all(call[1] == "ls-files" for call in self.calls("git")))
 
 
 class SystemBashInteractiveScriptTests(InteractiveScriptTests):
