@@ -36,6 +36,16 @@ fn run() -> anyhow::Result<()> {
     build_js(paths).context("Failed to build JS bundle")?;
 
     println!("cargo:rerun-if-changed=build.rs");
+    // Rebuild when the Kubo FFI crate changes (only relevant with the `ipfs` feature).
+    let ffi_dir = manifest_dir.join("..").join("ipfs").join("ffi").join("rust");
+    if ffi_dir.exists() {
+        for entry in walkdir::WalkDir::new(&ffi_dir) {
+            let entry = entry.context("Failed to walk ipfs ffi directory")?;
+            if entry.file_type().is_file() {
+                println!("cargo:rerun-if-changed={}", entry.path().display());
+            }
+        }
+    }
     for entry in walkdir::WalkDir::new(manifest_dir.join("templates")) {
         let entry = entry.context("Failed to walk templates directory")?;
         if entry.file_type().is_file() {

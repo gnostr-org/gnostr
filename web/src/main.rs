@@ -233,21 +233,30 @@ async fn main() -> Result<(), anyhow::Error> {
     prime_highlighters();
     init_static_asset_hashes();
 
-    // Start an embedded Kubo (IPFS) node + gateway so Helia and gnostr-web can talk.
-    let kubo_repo = std::env::temp_dir().join("gnostr-kubo-repo");
-    let _ = std::fs::remove_dir_all(&kubo_repo);
-    match gnostr_web::app::methods::ipfs::init(&kubo_repo.to_string_lossy()) {
-        Ok(url) => info!("Kubo gateway listening at {url}"),
-        Err(e) => tracing::warn!("Kubo node not started: {e}"),
+    #[cfg(feature = "ipfs")]
+    {
+        // Start an embedded Kubo (IPFS) node + gateway so Helia and gnostr-web can talk.
+        let kubo_repo = std::env::temp_dir().join("gnostr-kubo-repo");
+        let _ = std::fs::remove_dir_all(&kubo_repo);
+        match gnostr_web::app::methods::ipfs::init(&kubo_repo.to_string_lossy()) {
+            Ok(url) => info!("Kubo gateway listening at {url}"),
+            Err(e) => tracing::warn!("Kubo node not started: {e}"),
+        }
     }
+
+    #[cfg(feature = "ipfs")]
+    let ipfs_routes = Router::new()
+        .route("/api/ipfs/add", axum::routing::post(methods::ipfs::add))
+        .route("/api/ipfs/gateway", get(methods::ipfs::gateway));
+    #[cfg(not(feature = "ipfs"))]
+    let ipfs_routes = Router::new();
 
     info!("Server starting up...");
 
     #[allow(deprecated)]
     let app = Router::new()
         .route("/api/cid-manifest", get(methods::manifest::get_manifest).post(methods::manifest::post_manifest))
-        .route("/api/ipfs/add", axum::routing::post(methods::ipfs::add))
-        .route("/api/ipfs/gateway", get(methods::ipfs::gateway))
+        .merge(ipfs_routes)
         .route("/", get(methods::index::handle))
         .route("/gnostr", get(methods::gnostr::handle))
         .route("/gnostr/", get(methods::gnostr::handle)) // Handle trailing slash

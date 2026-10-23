@@ -36,7 +36,7 @@ gix = { version = "0.66", default-features = false, features = [
 gnostr-asyncgit = { workspace = true, features = ["vendor-openssl"] }
 gnostr-grammar = { workspace = true }
 gnostr-js = { workspace = true }
-kubo-ffi = { path = "../ipfs/ffi/rust" }
+kubo-ffi = { path = "../ipfs/ffi/rust", optional = true }
 handlebars = { workspace = true }
 httparse = "1.7"
 humantime = "2.1"
@@ -84,6 +84,10 @@ warp = { workspace = true }
 webbrowser = { workspace = true }
 xxhash-rust = { version = "0.8.12", features = ["const_xxh3"] }
 yoke = { version = "0.7.1", features = ["derive"] }
+
+[features]
+default = []
+ipfs = ["dep:kubo-ffi"]
 
 [build-dependencies]
 anyhow = "1.0.100"

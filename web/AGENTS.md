@@ -143,6 +143,11 @@ All warp-based servers call `webbrowser::open()` to launch a browser tab.
 
 ## Feature flags
 
+- `ipfs` (optional, `gnostr-web`): enables the embedded Kubo (IPFS) node via
+  `ipfs/ffi/rust` (`kubo-ffi`). Off by default so a plain
+  `cargo build -p gnostr-web` does not require a Go toolchain. Enable with
+  `--features ipfs`. When enabled, the server starts a Kubo node + gateway and
+  exposes `/api/ipfs/*`.
 - Root `gnostr` crate: `blossom` enables the `server` subcommand (Blossom), not
   the web UI.
 - `gnostr-bins` crate:
