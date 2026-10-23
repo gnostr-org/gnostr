@@ -162,9 +162,17 @@ pub async fn run_fractal_engine(
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+    use std::path::Path;
+    use std::process::Command;
+    use std::time::Duration;
+
+    use libp2p::{request_response, swarm::SwarmEvent, Multiaddr};
+    use tempfile::TempDir;
+    use tokio::time::timeout;
+
     use super::*;
     use crate::keypair_from_seed;
-    use libp2p::Multiaddr;
 
     #[tokio::test]
     async fn build_fractal_swarm_accepts_quic_listen_address() {
@@ -177,5 +185,185 @@ mod tests {
             .expect("quic multiaddr");
 
         swarm.listen_on(addr).expect("quic listen");
+    }
+
+    #[tokio::test]
+    #[ignore = "networked p2p sync test: run with --ignored --nocapture"]
+    async fn fractal_p2p_sync_reconstructs_git_repo() {
+        let fixture = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../web/crlf.git")
+            .canonicalize()
+            .expect("locate web/crlf.git fixture");
+
+        let walk = run_directory_walk(&fixture, 3, false).expect("packetize fixture");
+        let all_slices: Vec<ProtocolSlice> =
+            walk.files.values().flat_map(|packets| packets.clone()).collect();
+        let all_ids: Vec<String> = all_slices.iter().map(|s| s.id.clone()).collect();
+
+        let mut sender_manager = IntegrityManager::new(all_ids.clone());
+        for slice in &all_slices {
+            sender_manager.record_slice(slice.clone());
+        }
+
+        // Sender: listen and answer repair requests.
+        let (addr_tx, addr_rx) = tokio::sync::oneshot::channel();
+        let sender_handle = tokio::spawn(async move {
+            let keypair = keypair_from_seed(Some("sender".to_string()));
+            let mut swarm = build_fractal_swarm(keypair).await.expect("sender swarm");
+            swarm
+                .listen_on("/ip4/127.0.0.1/udp/0/quic-v1".parse().unwrap())
+                .unwrap();
+
+            let mut addr_tx = Some(addr_tx);
+            loop {
+                match swarm.select_next_some().await {
+                    SwarmEvent::NewListenAddr { address, .. } => {
+                        if let Some(tx) = addr_tx.take() {
+                            let _ = tx.send(address);
+                        }
+                    }
+                    SwarmEvent::Behaviour(FractalBehaviourEvent::RepairRpc(event)) => {
+                        if let request_response::Event::Message { message, .. } = event {
+                            if let request_response::Message::Request {
+                                request, channel, ..
+                            } = message
+                            {
+                                let response = sender_manager
+                                    .received_slices
+                                    .get(&request.id)
+                                    .cloned()
+                                    .unwrap_or_else(|| ProtocolSlice {
+                                        id: request.id.clone(),
+                                        header: request.header.clone(),
+                                        data: Vec::new(),
+                                        is_parity: false,
+                                    });
+                                let _ = swarm
+                                    .behaviour_mut()
+                                    .repair_rpc
+                                    .send_response(channel, response);
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        });
+
+        let sender_addr: Multiaddr = timeout(Duration::from_secs(5), addr_rx)
+            .await
+            .expect("sender address timeout")
+            .expect("sender address channel");
+
+        // Receiver: dial sender, request every slice, and collect responses.
+        let keypair = keypair_from_seed(Some("receiver".to_string()));
+        let mut swarm = build_fractal_swarm(keypair).await.expect("receiver swarm");
+        swarm.dial(sender_addr).unwrap();
+
+        let mut received_slices = HashMap::new();
+
+        timeout(Duration::from_secs(30), async {
+            loop {
+                match swarm.select_next_some().await {
+                    SwarmEvent::ConnectionEstablished { peer_id, .. } => {
+                        for slice in &all_slices {
+                            let request = ProtocolSlice {
+                                id: slice.id.clone(),
+                                header: slice.header.clone(),
+                                data: Vec::new(),
+                                is_parity: false,
+                            };
+                            swarm
+                                .behaviour_mut()
+                                .repair_rpc
+                                .send_request(&peer_id, request);
+                        }
+                    }
+                    SwarmEvent::Behaviour(FractalBehaviourEvent::RepairRpc(event)) => {
+                        if let request_response::Event::Message { message, .. } = event {
+                            if let request_response::Message::Response { response, .. } = message {
+                                received_slices.insert(response.id.clone(), response);
+                                if received_slices.len() == all_slices.len() {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        })
+        .await
+        .expect("p2p sync timed out");
+
+        sender_handle.abort();
+
+        // Verify every expected slice was received.
+        for expected in &all_slices {
+            assert!(
+                received_slices.contains_key(&expected.id),
+                "missing slice {}",
+                expected.id
+            );
+        }
+
+        // Reconstruct the directory tree from the received slices.
+        let temp = TempDir::new().expect("temp dir");
+        let reconstructed = temp.path().join("gnostr_web_crlf");
+        let clone = temp.path().join("gnostr_web_crlf_repo");
+
+        let mut files = std::collections::BTreeMap::new();
+        for (rel_path, original_packets) in &walk.files {
+            let mut packets = Vec::new();
+            for original in original_packets {
+                let received = received_slices
+                    .get(&original.id)
+                    .unwrap_or_else(|| panic!("missing slice {}", original.id));
+                packets.push(received.clone());
+            }
+            files.insert(rel_path.clone(), packets);
+        }
+
+        let receiver_walk = DirectoryWalk {
+            files,
+            empty_dirs: walk.empty_dirs.clone(),
+        };
+        reconstruct_directory(receiver_walk, &reconstructed).expect("reconstruct directory");
+
+        // Verify the reconstructed repo can be cloned.
+        let status = Command::new("git")
+            .arg("clone")
+            .arg(&reconstructed)
+            .arg(&clone)
+            .status()
+            .expect("spawn git clone");
+        assert!(status.success(), "git clone from reconstructed directory failed");
+        assert!(clone.join(".git").exists(), "cloned repo missing .git");
+
+        let reconstructed_head = git_output(&reconstructed, &["rev-parse", "HEAD"]);
+        let clone_head = git_output(&clone, &["rev-parse", "HEAD"]);
+        assert_eq!(reconstructed_head, clone_head, "clone HEAD mismatch");
+
+        let status_output = git_output(&clone, &["status", "--porcelain"]);
+        assert!(
+            status_output.is_empty(),
+            "cloned working tree is not clean:\n{status_output}"
+        );
+    }
+
+    fn git_output(repo: &Path, args: &[&str]) -> String {
+        let output = Command::new("git")
+            .arg("-C")
+            .arg(repo)
+            .args(args)
+            .output()
+            .expect("spawn git");
+        assert!(
+            output.status.success(),
+            "git -C {} {} failed",
+            repo.display(),
+            args.join(" ")
+        );
+        String::from_utf8_lossy(&output.stdout).trim().to_string()
     }
 }
