@@ -268,3 +268,40 @@ pub async fn peers(Extension(state): Extension<Arc<IpfsState>>) -> impl IntoResp
     };
     Json(serde_json::json!({"peers": node.swarm_peers()})).into_response()
 }
+
+#[cfg(all(test, feature = "ipfs"))]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_port_extracts_tcp_port() {
+        assert_eq!(parse_port("/ip4/127.0.0.1/tcp/5001"), Some(5001));
+        assert_eq!(parse_port("/ip4/0.0.0.0/tcp/0"), Some(0));
+        assert_eq!(parse_port("nonsense"), None);
+    }
+
+    #[test]
+    fn status_serializes() {
+        let s = IpfsStatus {
+            enabled: true,
+            gateway: Some("http://127.0.0.1:1234".into()),
+            error: None,
+        };
+        let v = serde_json::to_value(s).unwrap();
+        assert_eq!(v["enabled"], true);
+        assert_eq!(v["gateway"], "http://127.0.0.1:1234");
+    }
+
+    #[test]
+    #[ignore = "requires Go toolchain to build kubo-ffi"]
+    fn node_roundtrip() {
+        let dir = tempfile::tempdir().unwrap();
+        let state = IpfsState::init(dir.path().to_str().unwrap(), false);
+        assert!(state.enabled, "kubo node should start: {:?}", state.last_error.lock().unwrap());
+        let guard = state.node.lock().unwrap();
+        let node = guard.as_ref().unwrap();
+        let cid = node.unixfs_add_bytes(b"hello phase5").unwrap();
+        let bytes = node.unixfs_cat(&cid).unwrap();
+        assert_eq!(bytes, b"hello phase5");
+    }
+}

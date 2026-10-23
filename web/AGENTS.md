@@ -203,3 +203,9 @@ are currently exact copies), or refactor them to share server-building code.
 - `web/build.rs` depends on `gnostr_js` as a build dependency; ensure `js`
   compiles before `web` when adding assets.
 - Do not confuse `gnostr server` (Blossom) with `gnostr-web`/`gnostr-js`.
+
+## Testing
+
+- Run IPFS-related tests with `--features ipfs`:
+  `cargo test -p gnostr-web --features ipfs`
+- The `node_roundtrip` test is `#[ignore]`d because it requires the Go toolchain to build `kubo-ffi`; run it with `-- --ignored`.
