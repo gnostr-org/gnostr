@@ -51,11 +51,15 @@
             // Display the CID alongside the repository name.
             const nameCell = link.parentElement;
             if (nameCell && !nameCell.querySelector(".repo-cid")) {
-              const cidEl = document.createElement("div");
+              const cidEl = document.createElement("a");
               cidEl.className = "repo-cid";
               cidEl.style.fontSize = "0.75rem";
               cidEl.style.opacity = "0.7";
+              cidEl.style.display = "block";
               cidEl.textContent = `CID: ${cidStr}`;
+              cidEl.href = `https://ipfs.io/ipfs/${cidStr}`;
+              cidEl.target = "_blank";
+              cidEl.rel = "noopener noreferrer";
               nameCell.appendChild(cidEl);
             }
 
