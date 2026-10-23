@@ -1,4 +1,3 @@
-pub use crate::perfect_ip_core::*;
 use std::{
     fs,
     io,
@@ -8,6 +7,7 @@ use std::{
 use futures::StreamExt;
 use log::{debug, info};
 use crate::keypair_from_seed;
+// pub use crate::perfect_ip_core::*;
 use crate::perfect_ip_core::{
     build_fractal_swarm, generate_manifest, packetize, summarize_packets, FractalBehaviourEvent,
     IntegrityManager, ProtocolSlice,
