@@ -236,6 +236,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
     #[allow(deprecated)]
     let app = Router::new()
+        .route("/api/cid-manifest", get(methods::manifest::get_manifest).post(methods::manifest::post_manifest))
         .route("/", get(methods::index::handle))
         .route("/gnostr", get(methods::gnostr::handle))
         .route("/gnostr/", get(methods::gnostr::handle)) // Handle trailing slash

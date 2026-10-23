@@ -37,6 +37,7 @@
         //    content identifier (CID) for it, building a CID merkle chain.
         const rows = Array.from(document.querySelectorAll("table.repositories tbody tr"));
         const cidChain = [];
+        const manifestEntries = [];
         for (const row of rows) {
           const link = row.querySelector("td a");
           if (!link) continue;
@@ -47,6 +48,7 @@
             const cid = await fs.addBytes(bytes);
             const cidStr = cid.toString();
             cidChain.push(cidStr);
+            manifestEntries.push({ repo: repoRef, cid: cidStr });
 
             // Display the CID alongside the repository name.
             const nameCell = link.parentElement;
@@ -83,6 +85,17 @@
           } catch (repoErr) {
             console.error("Failed to compute CID for repo", repoRef, repoErr);
           }
+        }
+
+        // Publish the collected CID merkle chain as a manifest to the server.
+        try {
+          await fetch("/api/cid-manifest", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ repos: manifestEntries }),
+          });
+        } catch (publishErr) {
+          console.debug("Could not publish manifest", publishErr);
         }
 
         const statusEl = document.getElementById("status");
