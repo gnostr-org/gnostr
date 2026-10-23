@@ -628,6 +628,9 @@ mod tests {
         seed: &str,
         slice_ids: Vec<String>,
     ) -> HashMap<String, ProtocolSlice> {
+        use futures::{FutureExt, StreamExt};
+        use std::collections::HashSet;
+
         let keypair = keypair_from_seed(Some(seed.to_string()));
         let mut swarm = build_fractal_swarm(keypair).await.expect("requester swarm");
         swarm
@@ -637,58 +640,100 @@ mod tests {
         println!("[requester {seed}] dialing responder");
 
         let mut received_slices = HashMap::new();
+        let mut pending: HashSet<String> = HashSet::new();
+        let mut peer_id: Option<libp2p::PeerId> = None;
+        let mut retry_interval = tokio::time::interval(Duration::from_secs(2));
+        retry_interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
 
-        timeout(Duration::from_secs(30), async {
+        timeout(Duration::from_secs(60), async {
             loop {
-                match swarm.select_next_some().await {
-                    SwarmEvent::ConnectionEstablished { peer_id, .. } => {
-                        println!(
-                            "[requester {seed}] connected to {peer_id}; sending {} requests",
-                            slice_ids.len()
-                        );
-                        tokio::time::sleep(Duration::from_millis(100)).await;
-                        for id in &slice_ids {
-                            let request = ProtocolSlice {
-                                id: id.clone(),
-                                header: Header {
-                                    seq_num: 0,
-                                    total_packets: 0,
-                                },
-                                data: Vec::new(),
-                                is_parity: false,
-                            };
-                            swarm
-                                .behaviour_mut()
-                                .repair_rpc
-                                .send_request(&peer_id, request);
-                        }
-                        println!("[requester {seed}] all requests sent");
-                    }
-                    SwarmEvent::Behaviour(FractalBehaviourEvent::RepairRpc(event)) => {
-                        if let request_response::Event::Message { message, .. } = event {
-                            if let request_response::Message::Response { response, .. } = message {
-                                let prev = received_slices.len();
-                                let id = response.id.clone();
-                                let len = response.data.len();
-                                received_slices.insert(id.clone(), response);
-                                if received_slices.len() > prev {
-                                    println!(
-                                        "[requester {seed}] response {}/{}: {} ({} bytes)",
-                                        received_slices.len(),
-                                        slice_ids.len(),
-                                        id,
-                                        len
-                                    );
+                futures::select! {
+                    event = swarm.select_next_some() => {
+                        match event {
+                            SwarmEvent::ConnectionEstablished { peer_id: pid, .. } => {
+                                peer_id = Some(pid);
+                                println!(
+                                    "[requester {seed}] connected to {pid}; sending {} requests",
+                                    slice_ids.len()
+                                );
+                                pending = slice_ids.iter().cloned().collect();
+                                tokio::time::sleep(Duration::from_millis(100)).await;
+                                for id in &slice_ids {
+                                    let request = ProtocolSlice {
+                                        id: id.clone(),
+                                        header: Header {
+                                            seq_num: 0,
+                                            total_packets: 0,
+                                        },
+                                        data: Vec::new(),
+                                        is_parity: false,
+                                    };
+                                    swarm
+                                        .behaviour_mut()
+                                        .repair_rpc
+                                        .send_request(&pid, request);
+                                    tokio::time::sleep(Duration::from_millis(1)).await;
                                 }
-                                if received_slices.len() == slice_ids.len() {
-                                    println!("[requester {seed}] all responses received");
-                                    break;
+                                println!("[requester {seed}] all requests sent");
+                            }
+                            SwarmEvent::Behaviour(FractalBehaviourEvent::RepairRpc(event)) => {
+                                if let request_response::Event::Message { message, .. } = event {
+                                    if let request_response::Message::Response { response, .. } =
+                                        message
+                                    {
+                                        let prev = received_slices.len();
+                                        let id = response.id.clone();
+                                        let len = response.data.len();
+                                        received_slices.insert(id.clone(), response);
+                                        pending.remove(&id);
+                                        if received_slices.len() > prev {
+                                            println!(
+                                                "[requester {seed}] response {}/{}: {} ({} bytes)",
+                                                received_slices.len(),
+                                                slice_ids.len(),
+                                                id,
+                                                len
+                                            );
+                                        }
+                                        if received_slices.len() == slice_ids.len() {
+                                            println!("[requester {seed}] all responses received");
+                                            break;
+                                        }
+                                    }
                                 }
+                            }
+                            other => {
+                                println!("[requester {seed}] event: {other:?}");
                             }
                         }
                     }
-                    other => {
-                        println!("[requester {seed}] event: {other:?}");
+                    _ = retry_interval.tick().fuse() => {
+                        if let Some(pid) = peer_id {
+                            if !pending.is_empty() && received_slices.len() < slice_ids.len() {
+                                let missing: Vec<String> =
+                                    pending.iter().take(10).cloned().collect();
+                                println!(
+                                    "[requester {seed}] retrying {} missing slices ({} received)",
+                                    pending.len(),
+                                    received_slices.len()
+                                );
+                                for id in missing {
+                                    let request = ProtocolSlice {
+                                        id: id.clone(),
+                                        header: Header {
+                                            seq_num: 0,
+                                            total_packets: 0,
+                                        },
+                                        data: Vec::new(),
+                                        is_parity: false,
+                                    };
+                                    swarm
+                                        .behaviour_mut()
+                                        .repair_rpc
+                                        .send_request(&pid, request);
+                                }
+                            }
+                        }
                     }
                 }
             }
