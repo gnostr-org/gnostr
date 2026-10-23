@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 use tokio::sync::oneshot;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub struct ProtocolSlice {
+pub struct FractalSlice {
     pub block_id: String,
     pub id: String,
     pub offset: u64,
@@ -24,20 +24,20 @@ pub struct ProtocolSlice {
 #[derive(NetworkBehaviour)]
 #[behaviour(to_swarm = "FractalBehaviourEvent")]
 pub struct FractalBehaviour {
-    pub repair_rpc: request_response::cbor::Behaviour<ProtocolSlice, ProtocolSlice>,
+    pub repair_rpc: request_response::cbor::Behaviour<FractalSlice, FractalSlice>,
     pub kad: kad::Behaviour<MemoryStore>,
     pub gossipsub: gossipsub::Behaviour,
 }
 
 #[derive(Debug)]
 pub enum FractalBehaviourEvent {
-    RepairRpc(request_response::Event<ProtocolSlice, ProtocolSlice>),
+    RepairRpc(request_response::Event<FractalSlice, FractalSlice>),
     Kad(kad::Event),
     Gossipsub(gossipsub::Event),
 }
 
-impl From<request_response::Event<ProtocolSlice, ProtocolSlice>> for FractalBehaviourEvent {
-    fn from(event: request_response::Event<ProtocolSlice, ProtocolSlice>) -> Self {
+impl From<request_response::Event<FractalSlice, FractalSlice>> for FractalBehaviourEvent {
+    fn from(event: request_response::Event<FractalSlice, FractalSlice>) -> Self {
         Self::RepairRpc(event)
     }
 }
@@ -146,7 +146,7 @@ pub async fn run_fractal_engine_with_shutdown(
                         request, channel, ..
                     } = message
                     {
-                        let ProtocolSlice {
+                        let FractalSlice {
                             block_id,
                             id,
                             offset,
@@ -155,7 +155,7 @@ pub async fn run_fractal_engine_with_shutdown(
                         let requested_len = requested_bytes.len();
                         let response = if let Some(mgr) = managers.get(&block_id) {
                             match mgr.read_slice(offset, requested_len).await {
-                                Ok(data) => ProtocolSlice {
+                                Ok(data) => FractalSlice {
                                     block_id,
                                     id,
                                     offset,
@@ -166,7 +166,7 @@ pub async fn run_fractal_engine_with_shutdown(
                                         "[fractral] failed to read slice for {} at {}: {}",
                                         block_id, offset, error
                                     );
-                                    ProtocolSlice {
+                                    FractalSlice {
                                         block_id,
                                         id,
                                         offset,
@@ -179,7 +179,7 @@ pub async fn run_fractal_engine_with_shutdown(
                                 "[fractral] missing integrity manager for block {}",
                                 block_id
                             );
-                            ProtocolSlice {
+                            FractalSlice {
                                 block_id,
                                 id,
                                 offset,
