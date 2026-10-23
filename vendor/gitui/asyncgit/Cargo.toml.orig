@@ -4,7 +4,6 @@ version = "0.28.1"
 authors = ["extrawurst <mail@rusticorn.com>"]
 edition = "2021"
 description = "allow using git2 in a asynchronous context"
-homepage = "https://github.com/gitui-org/gitui"
 repository = "https://github.com/gitui-org/gitui"
 readme = "README.md"
 license = "MIT"

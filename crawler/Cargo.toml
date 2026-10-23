@@ -10,7 +10,6 @@ autoexamples = false
 autotests = false
 autobenches = false
 description = "gnostr:a git+nostr workflow utility"
-homepage = "https://github.com/gnostr-org/gnostr"
 readme = "README.md"
 keywords = ["gnostr", "tool", "nostr"]
 categories = ["command-line-utilities"]

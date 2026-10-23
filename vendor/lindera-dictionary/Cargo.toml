@@ -20,7 +20,6 @@ autoexamples = false
 autotests = false
 autobenches = false
 description = "A morphological analysis library."
-homepage = "https://github.com/lindera/lindera"
 documentation = "https://docs.rs/lindera-dictionary"
 readme = "README.md"
 keywords = [

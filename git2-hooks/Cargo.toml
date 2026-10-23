@@ -4,7 +4,6 @@ version = "972830.1842.835965"
 authors = ["extrawurst <mail@rusticorn.com>"]
 edition = "2021"
 description = "adds git hooks support based on git2-rs"
-homepage = "https://github.com/gitui-org/gitui"
 repository = "https://github.com/gitui-org/gitui"
 documentation = "https://docs.rs/git2-hooks/"
 readme = "README.md"

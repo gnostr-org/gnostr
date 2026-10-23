@@ -21,7 +21,6 @@ autoexamples = false
 autotests = false
 autobenches = false
 description = "allow using git2 in a asynchronous context"
-homepage = "https://github.com/gitui-org/gitui"
 readme = "README.md"
 keywords = ["git"]
 categories = ["asynchronous", "concurrency"]

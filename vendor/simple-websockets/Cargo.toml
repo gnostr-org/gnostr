@@ -21,7 +21,6 @@ autoexamples = false
 autotests = false
 autobenches = false
 description = "Fast and efficient WebSocket server with an easy API"
-homepage = "https://github.com/Flying-Toast/simple-websockets"
 readme = "README.md"
 keywords = [
     "websocket",

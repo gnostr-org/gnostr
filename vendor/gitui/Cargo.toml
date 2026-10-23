@@ -27,7 +27,6 @@ autoexamples = false
 autotests = false
 autobenches = false
 description = "blazing fast terminal-ui for git"
-homepage = "https://github.com/gitui-org/gitui"
 readme = "README.md"
 keywords = [
     "cli",

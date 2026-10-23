@@ -6,7 +6,6 @@ description = "blazing fast terminal-ui for git"
 edition = "2021"
 rust-version = "1.88"
 exclude = [".github/*", ".vscode/*", "assets/*"]
-homepage = "https://github.com/gitui-org/gitui"
 repository = "https://github.com/gitui-org/gitui"
 readme = "README.md"
 license = "MIT"
