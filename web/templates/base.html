@@ -15,6 +15,8 @@
     {%- block head -%}{%- endblock %}
   </head>
   <body>
+    <div id="status"></div>
+    <div id="cid-chain"></div>
         <!-- Notice type="module" is mandatory for modern CDN usage -->
   <script type="module">
     // 1. Import Helia core and UnixFS file system helpers directly from jsDelivr ESM builds
@@ -26,20 +28,71 @@
       try {
         // 2. Instantiate the core Helia engine
         const helia = await createHelia();
-        
+
         // 3. Attach UnixFS capabilities to handle data streams and files
         const fs = unixfs(helia);
-
-        // 4. Test adding some data to your in-browser node
         const encoder = new TextEncoder();
-        const bytes = encoder.encode("Hello IPFS from Helia CDN!");
-        const cid = await fs.addBytes(bytes);
 
-        document.getElementById("status").innerText = `Helia is running! Created CID: ${cid.toString()}`;
+        // 4. Traverse every repository rendered on the page and compute a
+        //    content identifier (CID) for it, building a CID merkle chain.
+        const rows = Array.from(document.querySelectorAll("table.repositories tbody tr"));
+        const cidChain = [];
+        for (const row of rows) {
+          const link = row.querySelector("td a");
+          if (!link) continue;
+          const repoRef = (link.getAttribute("href") || link.textContent || "").trim();
+          if (!repoRef) continue;
+          try {
+            const bytes = encoder.encode(repoRef);
+            const cid = await fs.addBytes(bytes);
+            const cidStr = cid.toString();
+            cidChain.push(cidStr);
+
+            // Display the CID alongside the repository name.
+            const nameCell = link.parentElement;
+            if (nameCell && !nameCell.querySelector(".repo-cid")) {
+              const cidEl = document.createElement("div");
+              cidEl.className = "repo-cid";
+              cidEl.style.fontSize = "0.75rem";
+              cidEl.style.opacity = "0.7";
+              cidEl.textContent = `CID: ${cidStr}`;
+              nameCell.appendChild(cidEl);
+            }
+
+            const chainEl = document.getElementById("cid-chain");
+            if (chainEl) {
+              const item = document.createElement("div");
+              item.style.fontSize = "0.7rem";
+              item.style.fontFamily = "monospace";
+              item.textContent = cidStr;
+              chainEl.appendChild(item);
+            }
+
+            // Broadcast / announce the CID to the network when possible.
+            try {
+              if (helia.routing && typeof helia.routing.provide === "function") {
+                await helia.routing.provide(cid);
+              }
+            } catch (announceErr) {
+              console.debug("Could not announce CID", cidStr, announceErr);
+            }
+          } catch (repoErr) {
+            console.error("Failed to compute CID for repo", repoRef, repoErr);
+          }
+        }
+
+        const statusEl = document.getElementById("status");
+        if (statusEl) {
+          statusEl.innerText = `Helia is running! Indexed ${cidChain.length} repos.`;
+        }
         console.log("Helia Node:", helia);
+        console.log("CID merkle chain:", cidChain);
       } catch (error) {
         console.error("Failed to start Helia:", error);
-        document.getElementById("status").innerText = "Failed to load Helia.";
+        const statusEl = document.getElementById("status");
+        if (statusEl) {
+          statusEl.innerText = "Failed to load Helia.";
+        }
       }
     }
 

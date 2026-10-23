@@ -4,7 +4,7 @@ use std::{
     fmt::Debug,
     fs,
     path::{Path, PathBuf},
-    sync::Arc,
+    sync::{Arc, Mutex},
 };
 
 use anyhow::Context;
@@ -673,12 +673,14 @@ fn is_git_worktree(path: &Path) -> bool {
 }
 
 fn discover_repositories(scan_path: &Path, discovered_repos: &mut Vec<PathBuf>) {
+    let discovered = Arc::new(Mutex::new(Vec::new()));
+    let discovered_filter = Arc::clone(&discovered);
+
     let mut walker = ignore::WalkBuilder::new(scan_path)
         .git_ignore(true)
         .git_global(false)
         .git_exclude(false)
-        .build()
-        .filter_entry(|entry| {
+        .filter_entry(move |entry| {
             let path = entry.path();
             let is_dir = entry.file_type().map(|ft| ft.is_dir()).unwrap_or(false);
             if !is_dir {
@@ -686,15 +688,20 @@ fn discover_repositories(scan_path: &Path, discovered_repos: &mut Vec<PathBuf>) 
             }
             if is_bare_repository(path) || is_git_worktree(path) {
                 println!("Discovered repository: {}", path.display());
-                discovered_repos.push(path.to_path_buf());
+                discovered_filter.lock().unwrap().push(path.to_path_buf());
                 return false; // do not descend into repositories
             }
             true
-        });
+        })
+        .build();
 
-    for _ in &mut walker {
-        // Errors and non-repo directories are handled inside filter_entry.
+    for result in &mut walker {
+        if let Err(err) = result {
+            eprintln!("Repository discovery walk error: {}", err);
+        }
     }
+
+    discovered_repos.append(&mut discovered.lock().unwrap());
 }
 
 fn find_gitweb_owner(repository_path: &Path) -> Option<String> {
