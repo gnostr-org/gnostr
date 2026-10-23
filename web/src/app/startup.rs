@@ -491,6 +491,11 @@ pub struct W2UiArgs {
     pub port: u16,
 }
 
+#[cfg(feature = "ipfs")]
+const DEFAULT_BIND_PORT: u16 = 3334;
+#[cfg(not(feature = "ipfs"))]
+const DEFAULT_BIND_PORT: u16 = 3333;
+
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
 pub struct GnitArgs {
@@ -504,7 +509,7 @@ pub struct GnitArgs {
     #[arg(long, default_value = "127.0.0.1")]
     pub bind_address: std::net::IpAddr,
     /// The socket port to bind to (e.g., 3333).
-    #[arg(short, long, default_value = "3333", env = "GNOSTR_GNIT_BIND_PORT")]
+    #[arg(short, long, default_value_t = DEFAULT_BIND_PORT, env = "GNOSTR_GNIT_BIND_PORT")]
     pub bind_port: u16,
     /// The path in which your bare Git repositories reside.
     ///
