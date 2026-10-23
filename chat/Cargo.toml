@@ -35,6 +35,7 @@ gnostr-crawler = { path = "../crawler", package = "gnostr-crawler", version = ">
 gnostr-p2p = { path = "../p2p", package = "gnostr-p2p", version = ">=972830.1842.836622", default-features = false, features = [
     "tor",
 ] }
+gnostr-types = { path = "../types", package = "gnostr-types", version = ">=972830.1842.836622" }
 hostname = "0.3.1"
 libp2p = { version = "0.54.1", features = [
     "full",

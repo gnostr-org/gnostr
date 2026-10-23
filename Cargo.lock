@@ -7388,6 +7388,7 @@ dependencies = [
  "gnostr-asyncgit",
  "gnostr-crawler",
  "gnostr-p2p",
+ "gnostr-types",
  "hostname",
  "libp2p 0.54.1",
  "once_cell",

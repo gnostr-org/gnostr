@@ -3,13 +3,16 @@
 //!
 //! If chat needs a new wire type, expose it from `p2p` instead of importing
 //! `asyncgit` directly.
+//!
+//! Shared primitives are available through [`types`], while [`fractal`],
+//! [`perfect_ip`], and [`perfect_ip_core`] expose the P2P repair and demo APIs.
 
 pub mod command;
 pub mod event;
-pub mod message;
-pub mod msg;
 #[cfg(feature = "ipfs")]
 pub mod ipfs;
+pub mod message;
+pub mod msg;
 pub mod p2p;
 pub mod session;
 pub mod tui;
@@ -25,4 +28,5 @@ pub use p2p::{evt_loop, global_rt};
 pub use session::{ChatNotification, ChatSession};
 pub use tui::run_chat_tui;
 
-pub use gnostr_p2p::perfect_ip;
+pub use gnostr_p2p::{fractal, perfect_ip, perfect_ip_core};
+pub use gnostr_types as types;
