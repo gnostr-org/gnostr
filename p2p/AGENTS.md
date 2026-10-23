@@ -224,3 +224,13 @@ Configuration & safety:
   Kubo node even with the `ipfs` feature enabled.
 - `ipfs_disabled()` helper checks the env var.
 - Tor paths remain compatible; no transport changes required.
+
+## IPFS (Kubo) interop (Phase 6)
+
+Testing:
+
+- `cargo test -p gnostr-p2p --features ipfs` runs unit tests.
+- `block_roundtrip_interop` is `#[ignore]`d (requires Go toolchain); run with
+  `-- --ignored`.
+- Interop with `gnostr-web` is exercised via the shared `kubo-ffi` crate:
+  both sides use `unixfs_add_bytes`/`unixfs_cat` for block exchange.

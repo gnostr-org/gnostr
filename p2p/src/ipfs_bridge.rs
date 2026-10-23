@@ -78,3 +78,35 @@ pub async fn fetch_via_gateway(gateway_url: &str, cid: &str) -> Option<Vec<u8>> 
     }
     resp.bytes().await.ok().map(|b| b.to_vec())
 }
+
+#[cfg(all(test, feature = "ipfs"))]
+mod tests {
+    use super::*;
+    use crate::ipfs::IpfsState;
+    use tempfile::tempdir;
+
+    #[test]
+    #[ignore = "requires Go toolchain to build kubo-ffi"]
+    fn block_roundtrip_interop() {
+        let dir = tempdir().unwrap();
+        let state = IpfsState::init(dir.path().to_str().unwrap(), false);
+        assert!(state.enabled);
+        let cid = provide_block(&state, b"interop payload").unwrap();
+        let bytes = fetch_block(&state, &cid).unwrap();
+        assert_eq!(bytes, b"interop payload");
+    }
+
+    use super::*;
+
+    #[test]
+    fn announce_message_contains_cid_and_peer() {
+        let msg = announce_message("QmTest", "12D3KooW");
+        assert!(msg.contains("QmTest"));
+        assert!(msg.contains("12D3KooW"));
+    }
+
+    #[test]
+    fn cid_announce_topic_nonempty() {
+        assert!(!CID_ANNOUNCE_TOPIC.is_empty());
+    }
+}
