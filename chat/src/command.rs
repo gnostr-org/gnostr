@@ -53,6 +53,10 @@ pub struct ChatSubCommands {
     pub gitdir: Option<gnostr_asyncgit::sync::RepoPath>,
     #[arg(short = '1', long, global = true, requires = "topic")]
     pub oneshot: Option<String>,
+
+    #[cfg(feature = "ipfs")]
+    #[arg(long, global = true, help = "Attach a file (stored in IPFS) to the oneshot message")]
+    pub attach: Option<String>,
 }
 
 pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<()> {
@@ -149,7 +153,11 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<()> {
             return Ok(());
         }
 
-        run_oneshot(&mut session, message_input).await?;
+        #[cfg(feature = "ipfs")]
+        let attach = sub_command_args.attach.clone();
+        #[cfg(not(feature = "ipfs"))]
+        let attach: Option<String> = None;
+        run_oneshot(&mut session, message_input, attach).await?;
         return Ok(());
     }
 
@@ -196,7 +204,7 @@ async fn run_chat_session(
     Ok(())
 }
 
-async fn run_oneshot(session: &mut ChatSession, message_input: String) -> Result<()> {
+async fn run_oneshot(session: &mut ChatSession, message_input: String, attach: Option<String>) -> Result<()> {
     tracing::info!("Oneshot mode: sending message '{}'", message_input);
     let printer = spawn_notification_printer(session.subscribe());
     println!("Initializing network and discovering peers...");
@@ -207,6 +215,13 @@ async fn run_oneshot(session: &mut ChatSession, message_input: String) -> Result
 
     // Subscribe to publication confirmations before sending so we cannot miss the event.
     let mut publish_rx = session.subscribe();
+    #[cfg(feature = "ipfs")]
+    if let Some(path) = attach {
+        session.send_text_with_attachment(message_input, std::path::Path::new(&path)).await?;
+    } else {
+        session.send_text(message_input).await?;
+    }
+    #[cfg(not(feature = "ipfs"))]
     session.send_text(message_input).await?;
     println!("Oneshot message queued at {p2p_timestamp}. Waiting for publication...");
 

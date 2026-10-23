@@ -1,3 +1,4 @@
+use std::path::Path;
 use std::time::Duration;
 
 use anyhow::{Context, Result};
@@ -94,6 +95,22 @@ impl ChatSession {
         let text = text.into();
         let kind = infer_message_kind(&text);
         let msg = Msg::default().set_kind(kind).set_content(text, 0);
+        self.send_event(ChatEvent::ChatMessage(msg)).await
+    }
+
+    #[cfg(feature = "ipfs")]
+    pub async fn send_text_with_attachment(
+        &self,
+        text: impl Into<String>,
+        path: &Path,
+    ) -> Result<()> {
+        let text = text.into();
+        let kind = infer_message_kind(&text);
+        let attachment = crate::ipfs::attach_file(path)?;
+        let msg = Msg::default()
+            .set_kind(kind)
+            .set_content(text, 0)
+            .add_attachment(attachment);
         self.send_event(ChatEvent::ChatMessage(msg)).await
     }
 
