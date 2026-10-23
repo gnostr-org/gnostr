@@ -89,6 +89,8 @@ pub mod time;
 pub mod template_html;
 #[cfg(not(target_os = "tvos"))]
 pub mod swarm_builder;
+#[cfg(all(feature = "ipfs", not(target_os = "tvos")))]
+pub mod ipfs;
 #[cfg(not(target_os = "tvos"))]
 pub mod utils;
 #[cfg(not(target_os = "tvos"))]

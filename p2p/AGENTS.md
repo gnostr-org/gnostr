@@ -179,3 +179,17 @@ Environment variables:
 
 This is the first step toward a shared identity/swarm between the libp2p and
 Kubo planes; full peer/content bridging is planned in later phases.
+
+## IPFS (Kubo) interop (Phase 2)
+
+`gnostr-p2p` can host an embedded Kubo node when built with `--features ipfs`
+(requires Go toolchain for `ipfs/ffi/rust`):
+
+- `gnostr_p2p::ipfs::init_global(repo_path, online)` starts the node and
+  stores a process-global `Arc<IpfsState>`; `gnostr_p2p::ipfs::global()`
+  retrieves it.
+- `NodeOpts`/`LookupOpts` accept `--ipfs-repo` / `GNOSTR_P2P_IPFS_REPO` and
+  `--ipfs-online` / `GNOSTR_P2P_IPFS_ONLINE`.
+
+This shares the Kubo node handle within the p2p process; cross-process sharing
+will be addressed in later phases.

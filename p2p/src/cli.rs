@@ -28,6 +28,16 @@ pub struct NodeOpts {
     #[arg(long, env = "GNOSTR_P2P_SWARM_KEY")]
     pub swarm_key: Option<String>,
 
+    /// Directory used to store the embedded Kubo (IPFS) repository.
+    #[cfg(feature = "ipfs")]
+    #[arg(long, env = "GNOSTR_P2P_IPFS_REPO")]
+    pub ipfs_repo: Option<std::path::PathBuf>,
+
+    /// Start the embedded Kubo node in online mode (swarm participation).
+    #[cfg(feature = "ipfs")]
+    #[arg(long, env = "GNOSTR_P2P_IPFS_ONLINE", default_value_t = false)]
+    pub ipfs_online: bool,
+
     /// Run the service in the background and exit the parent process.
     #[arg(long)]
     pub detach: bool,
