@@ -23,6 +23,7 @@ LIST_ONLY=false
 VERBOSE=false
 FORCE_BROKEN_CROSS=${GNOSTR_CROSS_FORCE:-false}
 INTERACTIVE=false
+INSTALL_TARGETS=true
 # shellcheck source=scripts/lib/script-ui.sh
 source "$SCRIPT_DIR/lib/script-ui.sh"
 
@@ -82,6 +83,8 @@ Options:
   --force-broken-cross   Attempt known-broken Apple Silicon cross targets anyway.
   --list                 List the targets this host can attempt, then exit.
   --interactive          Select available targets, package, and profile.
+  --install-targets      Install missing Rust targets before native Cargo builds (default).
+  --no-install-targets   Report missing targets without installing them.
   --dry-run              Print commands without executing them.
   --help                 Show this help.
 
@@ -161,14 +164,26 @@ host_can_attempt() {
 }
 
 ensure_rust_target() {
-  local triple="$1"
+  local triple="$1" installed
 
-  if ! rustup target list --installed | grep -qx "$triple"; then
+  if ! installed="$(rustup target list --installed)"; then
+    warn "could not inspect installed Rust targets; check your active rustup toolchain"
+    return 1
+  fi
+
+  if ! grep -Fxq "$triple" <<<"$installed"; then
+    if [[ "$INSTALL_TARGETS" != true ]]; then
+      warn "missing Rust target $triple (core/std unavailable). Run: rustup target add $triple; or rerun with --install-targets"
+      return 1
+    fi
     if [[ "$DRY_RUN" == true ]]; then
       log "would run: rustup target add $triple"
     else
       log "installing rust target: $triple"
-      rustup target add "$triple"
+      if ! rustup target add "$triple"; then
+        warn "failed to install $triple; no build will be attempted. Retry: rustup target add $triple"
+        return 1
+      fi
     fi
   fi
 }
@@ -192,7 +207,9 @@ run_build() {
   local -a cmd
 
   cmd_prefix=$(build_cmd_prefix "$triple" "$tool")
-  ensure_rust_target "$triple"
+  if [[ "$tool" == cargo ]]; then
+    ensure_rust_target "$triple" || return 1
+  fi
 
   read -r -a cmd <<<"$cmd_prefix"
   cmd+=(--target "$triple")
@@ -250,6 +267,14 @@ parse_args() {
     case "$1" in
       --interactive|-i)
         INTERACTIVE=true
+        shift
+        ;;
+      --install-targets)
+        INSTALL_TARGETS=true
+        shift
+        ;;
+      --no-install-targets)
+        INSTALL_TARGETS=false
         shift
         ;;
       --target)
