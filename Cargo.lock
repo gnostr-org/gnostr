@@ -7663,6 +7663,7 @@ dependencies = [
  "gnostr-asyncgit",
  "gnostr-crawler",
  "gnostr-js",
+ "gnostr-types",
  "kubo-ffi",
  "libp2p 0.54.1",
  "log",

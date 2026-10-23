@@ -68,6 +68,7 @@ gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version =
 ] }
 gnostr-crawler = { path = "../crawler", package = "gnostr-crawler", version = ">=971907.1844.75902" }
 gnostr-js = { path = "../js", package = "gnostr-js", version = ">=971907.1844.75902", optional = true }
+gnostr-types = { path = "../types", package = "gnostr-types", version = ">=971907.1844.75902" }
 libp2p = { version = "0.54.1", features = [
     "full",
     "autonat",

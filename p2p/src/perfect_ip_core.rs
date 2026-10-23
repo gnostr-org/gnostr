@@ -43,51 +43,7 @@ use libp2p::{
     swarm::{NetworkBehaviour, Swarm, SwarmEvent},
     StreamProtocol,
 };
-use serde::{Deserialize, Serialize};
-
-/// Packet header metadata shared by all packet types in the tree.
-///
-/// `seq_num` is assigned in the order packets are emitted by the recursive
-/// packetizer. `total_packets` is populated only after packetization has
-/// finished, so callers can treat the batch as self-describing once finalized.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Header {
-    /// Monotonic sequence number assigned during packetization.
-    pub seq_num: u32,
-    /// Total number of packets in the finalized batch.
-    pub total_packets: u32,
-}
-
-/// A single packet produced by the recursive packetizer.
-///
-/// `id` carries the recursive path for the packet, such as `ROOT.0.1.P`.
-/// `is_parity` marks frames that store XOR parity rather than original user
-/// data. `data` always contains the raw bytes that would be transmitted on the
-/// wire inside the JSON-encoded repair message.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct ProtocolSlice {
-    /// Stable recursive packet identifier.
-    pub id: String,
-    /// Packet sequencing metadata.
-    pub header: Header,
-    /// Raw payload bytes for the packet or parity frame.
-    pub data: Vec<u8>,
-    /// `true` when this slice is a parity frame.
-    pub is_parity: bool,
-}
-
-/// Finalized packet tree output.
-///
-/// `total_packets` is duplicated here so callers can inspect batch metadata
-/// without walking the packet list. The packet list is stable and already has
-/// each packet header patched to reflect the finalized count.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct PacketBatch {
-    /// Number of packets in the batch.
-    pub total_packets: u32,
-    /// Finalized packets with matching `total_packets` headers.
-    pub packets: Vec<ProtocolSlice>,
-}
+pub use gnostr_types::perfect_ip::{Header, PacketBatch, ProtocolSlice};
 
 /// libp2p repair behaviour for exchanging packet slices.
 ///
