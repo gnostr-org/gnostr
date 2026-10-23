@@ -20,6 +20,7 @@ path = "src/lib.rs"
 [features]
 default = ["js"]
 js = ["dep:gnostr-js"]
+ipfs = ["dep:kubo-ffi"]
 tor = ["dep:arti-client", "dep:tor-rtcompat", "dep:data-encoding"]
 listen-onion-service = [
     "tor",
@@ -129,3 +130,4 @@ tracing-subscriber = { version = "0.3.22", default-features = false, features = 
     "fmt",
 ] }
 warp = { workspace = true }
+kubo-ffi = { path = "../ipfs/ffi/rust", optional = true }

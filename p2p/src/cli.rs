@@ -24,6 +24,10 @@ pub struct NodeOpts {
     #[arg(long)]
     pub secret_key_seed: Option<String>,
 
+    /// Optional IPFS/Kubo swarm key (PSK) shared with the embedded Kubo node.
+    #[arg(long, env = "GNOSTR_P2P_SWARM_KEY")]
+    pub swarm_key: Option<String>,
+
     /// Run the service in the background and exit the parent process.
     #[arg(long)]
     pub detach: bool,
@@ -68,6 +72,10 @@ pub struct LookupOpts {
     /// Seed used to generate a deterministic Ed25519 identity.
     #[arg(long)]
     pub secret_key_seed: Option<String>,
+
+    /// Optional IPFS/Kubo swarm key (PSK) shared with the embedded Kubo node.
+    #[arg(long, env = "GNOSTR_P2P_SWARM_KEY")]
+    pub swarm_key: Option<String>,
 
     /// Lookup a peer directly by dialing its multiaddr.
     #[arg(long, value_name = "ADDR", conflicts_with = "peer", required_unless_present = "peer")]

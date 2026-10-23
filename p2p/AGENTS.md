@@ -168,3 +168,14 @@ Environment variables:
 - Tor bootstrap can be slow and may fail if no Tor network is reachable.
 - Many P2P tests are network-dependent and marked `#[ignore]`.
 - `p2p/` uses default rustfmt; run `cargo fmt --all --check`.
+
+## IPFS (Kubo) interop (Phase 1)
+
+`gnostr-p2p` can derive a shared swarm key from a Nostr nsec when built with
+`--features ipfs` (requires Go toolchain for `ipfs/ffi/rust`):
+
+- `gnostr_p2p::swarm_key_from_nsec(nsec_or_hex)` returns an IPFS PSK string.
+- `NodeOpts`/`LookupOpts` accept `--swarm-key` / `GNOSTR_P2P_SWARM_KEY`.
+
+This is the first step toward a shared identity/swarm between the libp2p and
+Kubo planes; full peer/content bridging is planned in later phases.

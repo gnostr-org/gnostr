@@ -20,6 +20,9 @@ pub mod git2 {
 }
 
 use std::path::PathBuf;
+
+#[cfg(feature = "ipfs")]
+extern crate kubo_ffi;
 use std::process::{Command, Stdio};
 
 #[cfg(not(target_os = "tvos"))]
@@ -102,6 +105,13 @@ pub fn js_source_dir() -> PathBuf {
 /// Build a deterministic libp2p keypair from an optional secret seed string.
 ///
 /// Hex SHA-256 seeds are used directly; any other input is hashed into a 32-byte seed.
+/// Derive an IPFS/Kubo swarm key from a Nostr private key (nsec or hex).
+/// Only available with the `ipfs` feature.
+#[cfg(all(feature = "ipfs", not(target_os = "tvos")))]
+pub fn swarm_key_from_nsec(nsec_or_hex: &str) -> Result<String, String> {
+    kubo_ffi::nostr_nsec_to_swarm_key(nsec_or_hex)
+}
+
 #[cfg(not(target_os = "tvos"))]
 pub fn keypair_from_seed(secret_key_seed: Option<String>) -> identity::Keypair {
     match secret_key_seed {
