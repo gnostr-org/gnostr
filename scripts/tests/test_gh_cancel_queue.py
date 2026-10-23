@@ -9,6 +9,8 @@ SCRIPT = Path(__file__).resolve().parents[1] / "gh-cancel-queue.sh"
 
 
 class CancelQueueTests(unittest.TestCase):
+    bash = "bash"
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
@@ -43,7 +45,7 @@ fi
 
     def run_script(self, answers="", args=(), **env):
         return subprocess.run(
-            ["bash", str(SCRIPT), *args],
+            [self.bash, str(SCRIPT), *args],
             input=answers,
             text=True,
             capture_output=True,
@@ -112,6 +114,10 @@ fi
         self.assertIn("failed to cancel run 202", result.stderr)
         self.assertIn("2 cancellation requests accepted; 1 failed", result.stdout)
         self.assertEqual(len(self.cancellations()), 3)
+
+
+class SystemBashCancelQueueTests(CancelQueueTests):
+    bash = "/bin/bash"
 
 
 if __name__ == "__main__":

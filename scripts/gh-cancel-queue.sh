@@ -57,6 +57,10 @@ fi
 
 choices=()
 read -r -a choices <<<"${selection//,/ }"
+if [[ "${#choices[@]}" -eq 0 ]]; then
+  echo "No runs cancelled."
+  exit 0
+fi
 selected=()
 for choice in "${choices[@]}"; do
   case "$choice" in
