@@ -193,3 +193,14 @@ Kubo planes; full peer/content bridging is planned in later phases.
 
 This shares the Kubo node handle within the p2p process; cross-process sharing
 will be addressed in later phases.
+
+## IPFS (Kubo) interop (Phase 3)
+
+`gnostr-p2p` provides bridge helpers (`ipfs_bridge` module, cfg `ipfs`) to
+exchange peer info with an embedded Kubo node:
+
+- `kubo_peer_id`, `kubo_listening_addrs`, `kubo_swarm_peers`
+- `connect_kubo(state, addr)` — dial an address from Kubo's side
+- `kubo_bootstrap_info(state)` — (peer_id, addrs) for seeding the swarm
+
+These allow p2p code to bootstrap from and dial into a Kubo node.

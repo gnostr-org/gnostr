@@ -91,6 +91,8 @@ pub mod template_html;
 pub mod swarm_builder;
 #[cfg(all(feature = "ipfs", not(target_os = "tvos")))]
 pub mod ipfs;
+#[cfg(all(feature = "ipfs", not(target_os = "tvos")))]
+pub mod ipfs_bridge;
 #[cfg(not(target_os = "tvos"))]
 pub mod utils;
 #[cfg(not(target_os = "tvos"))]
