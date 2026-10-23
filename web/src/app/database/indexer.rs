@@ -220,12 +220,7 @@ fn update_repository_metadata(scan_path: &Path, db: &rocksdb::DB) {
     let mut discovered = Vec::new();
 
     // discover_repositories
-    let mut gitignore_files = Vec::new();
-    let root_gitignore = scan_path.join(".gitignore");
-    if root_gitignore.exists() {
-        gitignore_files.push(root_gitignore);
-    }
-    discover_repositories(scan_path, scan_path, &gitignore_files, &mut discovered);
+    discover_repositories(scan_path, &mut discovered);
 
     for repository in discovered {
         // get_relative_path
@@ -670,109 +665,35 @@ fn get_relative_path<'a>(relative_to: &Path, full_path: &'a Path) -> Option<&'a 
     }
 }
 
-fn discover_repositories(
-    scan_path: &Path,
-    current: &Path,
-    gitignore_files: &[PathBuf],
-    discovered_repos: &mut Vec<PathBuf>,
-) {
-    // Include the current directory's .gitignore (if any) before building the
-    // matcher so patterns apply to this directory's immediate children.
-    let current_gitignore = current.join(".gitignore");
-    let mut effective_gitignore_files = gitignore_files.to_vec();
-    if current_gitignore.exists() {
-        effective_gitignore_files.push(current_gitignore);
-    }
+fn is_git_worktree(path: &Path) -> bool {
+    // A directory that contains a .git file or directory is a git worktree.
+    // We deliberately do not use gix::open here so that subdirectories of a
+    // repository are not mistaken for repositories themselves.
+    path.join(".git").exists()
+}
 
-    // Build a gitignore matcher from all .gitignore files collected so far.
-    let mut builder = ignore::gitignore::GitignoreBuilder::new(scan_path);
-    for gitignore_path in &effective_gitignore_files {
-        if let Some(error) = builder.add(gitignore_path) {
-            warn!(%error, "Failed to add gitignore {}", gitignore_path.display());
-        }
-    }
-    let gitignore = match builder.build() {
-        Ok(v) => v,
-        Err(error) => {
-            warn!(%error, "Failed to build gitignore matcher");
-            return;
-        }
-    };
-
-    // Skip the scan root itself; otherwise respect .gitignore before treating
-    // the path as a repository.
-    if current != scan_path {
-        let matched = gitignore.matched(current, true);
-        if matched.is_ignore() {
-            println!("Ignoring gitignored directory: {}", current.display());
-            return;
-        }
-    }
-
-    // First check if current path is itself a bare repository
-    // is_bare_repository
-    if is_bare_repository(current) {
-        debug!("Discovered bare Git repository at: {}", current.display());
-        discovered_repos.push(current.to_path_buf());
-        return; // Stop recursion for this path
-    }
-
-    // Check if current is a directory that contains .git (file or directory).
-    // Use isolated open so subdirectories of a git repository are not mistaken
-    // for repositories themselves.
-    if current.is_dir() {
-        let git_path = current.join(".git");
-        if git_path.exists() {
-            if gix::open::Options::isolated().open(current).is_ok() {
-                debug!("Discovered Git repository at: {}", current.display());
-                discovered_repos.push(current.to_path_buf());
-                return; // Stop recursion for this path
-            } else {
-                debug!(
-                    "Found .git at {} but not a valid repository",
-                    current.display()
-                );
+fn discover_repositories(scan_path: &Path, discovered_repos: &mut Vec<PathBuf>) {
+    let mut walker = ignore::WalkBuilder::new(scan_path)
+        .git_ignore(true)
+        .git_global(false)
+        .git_exclude(false)
+        .build()
+        .filter_entry(|entry| {
+            let path = entry.path();
+            let is_dir = entry.file_type().map(|ft| ft.is_dir()).unwrap_or(false);
+            if !is_dir {
+                return true;
             }
-        }
-    } else {
-        debug!("current.is_file()={}", current.is_file());
-        return;
-    }
+            if is_bare_repository(path) || is_git_worktree(path) {
+                println!("Discovered repository: {}", path.display());
+                discovered_repos.push(path.to_path_buf());
+                return false; // do not descend into repositories
+            }
+            true
+        });
 
-    // If it's not a repository, and it's a directory, then we can recurse.
-    let current_dir_entries = match std::fs::read_dir(current) {
-        Ok(v) => v,
-        Err(error) => {
-            // Don't log an error if we just can't read a directory, it might be permissions, etc.
-            // Only log if it's unexpected.
-            if error.kind() != std::io::ErrorKind::NotFound
-                && error.kind() != std::io::ErrorKind::PermissionDenied
-            {
-                error!(%error, "Failed to read directory {}", current.display());
-            }
-            return;
-        }
-    };
-
-    for entry in current_dir_entries.filter_map(Result::ok) {
-        let path = entry.path();
-
-        if path.is_dir() {
-            if path.file_name() == Some(OsStr::new(".git")) {
-                continue;
-            }
-            // Skip directories under `target/`
-            if path.components().any(|c| c.as_os_str() == "target") {
-                debug!("Skipping target directory: {}", path.display());
-                continue;
-            }
-            let matched = gitignore.matched(&path, true);
-            if matched.is_ignore() {
-                println!("Ignoring gitignored directory: {}", path.display());
-                continue;
-            }
-            discover_repositories(scan_path, &path, &effective_gitignore_files, discovered_repos);
-        }
+    for _ in &mut walker {
+        // Errors and non-repo directories are handled inside filter_entry.
     }
 }
 
