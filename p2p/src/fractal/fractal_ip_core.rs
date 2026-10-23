@@ -526,24 +526,16 @@ mod tests {
         println!("modified packets: {}", modified_ids_set.len());
         println!("added packets: {}", added_ids.len());
         println!("removed packets: {}", removed_ids.len());
+        println!(
+            "changed packets: {}",
+            common_ids
+                .iter()
+                .filter(|id| original_by_id[**id].data != modified_by_id[**id].data)
+                .count()
+        );
 
-        for id in &added_ids {
-            let slice = modified_by_id[*id];
-            println!(
-                "+ {id} ({} bytes, {})",
-                slice.data.len(),
-                if slice.is_parity { "parity" } else { "data" }
-            );
-        }
-        for id in &removed_ids {
-            let slice = original_by_id[*id];
-            println!(
-                "- {id} ({} bytes, {})",
-                slice.data.len(),
-                if slice.is_parity { "parity" } else { "data" }
-            );
-        }
-
+        // Show changed packets first because they are the most interesting.
+        println!("\n--- changed packets (same id, different payload) ---");
         let mut changed_count = 0usize;
         for id in &common_ids {
             let original = original_by_id[*id];
@@ -559,7 +551,40 @@ mod tests {
                 );
             }
         }
-        println!("changed packets: {changed_count}");
+        if changed_count == 0 {
+            println!("(none)");
+        }
+
+        println!("\n--- added packets (ids present only in modified .git) ---");
+        if added_ids.is_empty() {
+            println!("(none)");
+        } else {
+            for id in added_ids.iter().take(20) {
+                let slice = modified_by_id[*id];
+                println!(
+                    "+ {id} ({} bytes, {})",
+                    slice.data.len(),
+                    if slice.is_parity { "parity" } else { "data" }
+                );
+            }
+            if added_ids.len() > 20 {
+                println!("... and {} more added packets", added_ids.len() - 20);
+            }
+        }
+
+        println!("\n--- removed packets (ids present only in original .git) ---");
+        if removed_ids.is_empty() {
+            println!("(none)");
+        } else {
+            for id in &removed_ids {
+                let slice = original_by_id[*id];
+                println!(
+                    "- {id} ({} bytes, {})",
+                    slice.data.len(),
+                    if slice.is_parity { "parity" } else { "data" }
+                );
+            }
+        }
 
         let mut receiver_manager = IntegrityManager::new(modified_ids.clone());
         for slice in &modified_slices {
