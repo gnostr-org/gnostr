@@ -14,6 +14,10 @@ categories = ["network-programming", "web-programming"]
 ## [features] ## dependency lindera-unidic v0.32.3 unavailable
 ## search = ["nostr-relay/search"]
 
+[features]
+default = []
+ipfs = ["dep:kubo-ffi"]
+
 [dependencies]
 actix-http = { version = "3.9.0" }
 actix-web = { workspace = true }
@@ -24,4 +28,5 @@ nostr-relay = { version = "0.4.8", default-features = false }
 num_cpus = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
+kubo-ffi = { path = "../ipfs/ffi/rust", optional = true }
 tracing-subscriber = { workspace = true }

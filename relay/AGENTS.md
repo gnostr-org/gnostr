@@ -197,3 +197,11 @@ Endpoint discovery helpers:
   `Cargo.toml`. Do not bump the version without updating the vendored copy and
   verifying `nostr-db` / `nostr-lmdb` compatibility.
 - Relay tests use temporary data dirs and `tokio_tungstenite` clients.
+
+## IPFS (Kubo) integration
+
+`gnostr-relay` can host an embedded Kubo node when built with `--features ipfs`
+(requires Go toolchain for `ipfs/ffi/rust`):
+
+- `gnostr_relay::ipfs::IpfsState::init(repo_path, online)` starts the node.
+- Feature is off by default to keep builds Go-free.
