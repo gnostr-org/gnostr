@@ -27,6 +27,7 @@ tui = ["dep:crossterm", "dep:ratatui", "dep:tui-prompts"]
 speedy = []
 nostr = []
 long_tests = []
+ipfs = ["dep:kubo-ffi"]
 expensive_tests = ["long_tests"]
 vendor-openssl = ["openssl-sys/vendored"]
 vendored-openssl = ["vendor-openssl"]
@@ -74,6 +75,7 @@ crossterm = { version = "0.28.1", optional = true }
 derive_more = { workspace = true }
 directories = { workspace = true }
 dirs = "5.0.1"
+kubo-ffi = { path = "../ipfs/ffi/rust", optional = true }
 easy-cast = "0.5"
 etcetera = "0.10.0"
 figment = { version = "0.10.19", features = ["toml"] }

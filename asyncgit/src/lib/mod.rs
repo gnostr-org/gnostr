@@ -69,6 +69,8 @@ pub mod profiles;
 
 /// Local Nostr and Git domain types.
 pub mod types;
+#[cfg(feature = "ipfs")]
+pub mod ipfs;
 
 /// Terminal UI entry points.
 #[cfg(feature = "tui")]
