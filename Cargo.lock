@@ -7858,6 +7858,7 @@ dependencies = [
  "gnostr-asyncgit",
  "gnostr-grammar",
  "gnostr-js",
+ "gnostr-p2p",
  "handlebars",
  "httparse",
  "humantime",
