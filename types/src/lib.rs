@@ -1,3 +1,4 @@
+pub mod ipfs;
 pub mod blockhash;
 pub mod blockheight;
 pub mod nostr;
