@@ -223,6 +223,25 @@ class InteractiveScriptTests(unittest.TestCase):
         self.assertIn(["rustup", "target", "add", "x86_64-apple-darwin"], self.calls("rustup"))
         self.assertEqual(len(self.calls("cargo")), 1)
 
+    def test_interactive_missing_target_decline_never_installs_or_builds(self):
+        result = self.run_script(
+            "cross.sh", "1\n\n\n\ny\nn\n",
+            ("--interactive", "--target", "macos-x64"),
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("Rust target x86_64-apple-darwin is missing", result.stdout)
+        self.assertEqual(self.calls("cargo"), [])
+        self.assertFalse(any(call[1:3] == ["target", "add"] for call in self.calls("rustup")))
+
+    def test_interactive_missing_target_accept_installs_then_builds(self):
+        result = self.run_script(
+            "cross.sh", "1\n\n\n\ny\ny\n",
+            ("--interactive", "--target", "macos-x64"),
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn(["rustup", "target", "add", "x86_64-apple-darwin"], self.calls("rustup"))
+        self.assertEqual(len(self.calls("cargo")), 1)
+
     def test_xcode_interactive_list_only_shows_selected_project(self):
         result = self.run_script("xcode-build.sh", "4\n3\n\n", ("--interactive",))
         self.assertEqual(result.returncode, 0, result.stderr)
