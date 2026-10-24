@@ -10,6 +10,9 @@ fi
 output=$1
 shift
 cc=${CC:-cc}
+if [ -z "${CC:-}" ] && [ -n "${SDKROOT:-}" ]; then
+    cc=$(xcrun --find clang)
+fi
 mkdir -p "$(dirname "$output")"
 temporary=$(mktemp -d "$(dirname "$output")/.configurator.XXXXXX")
 trap 'rm -f "$temporary/probe.c" "$temporary/probe.o" "$temporary/probe.log" "$temporary/config.h"; rmdir "$temporary"' EXIT
@@ -49,7 +52,8 @@ probe()
         if ! compile "$architecture" "$@"; then
             available=0
             echo "--- $feature unavailable ($architecture) ---" >&2
-            cat "$temporary/probe.log" >&2
+            # Expected probe failures must not become Xcode build issues.
+            sed 's/error:/diagnostic:/g' "$temporary/probe.log" >&2
             break
         fi
     done
