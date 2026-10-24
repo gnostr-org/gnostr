@@ -37,10 +37,13 @@ gnostr-legit --version
 Without flags, it uses the current repository, prefix `000`, available CPU
 parallelism, and `default commit message`. Thread counts must be positive.
 
-Use `--depth N` to append up to `N` existing first-parent commit hashes to the
+Use `--depth N` to append up to `N` existing first-parent commits to the
 commit body, starting with the current HEAD and continuing newest-first through
-its first parents. Merged-branch commits are excluded. Each full hash is on its
-own line in the final paragraph before the blank line and mining nonce:
+its first parents. Merged branches are not traversed. Ordinary commits use one
+full hash per line; merge commits list every direct parent as
+`<full parent hash> <full merge commit hash>`, one line per parent in Git's parent
+order. A merge counts as one depth step regardless of its number of parents.
+These lines form the final paragraph before the blank line and mining nonce:
 
 ```text
 subject
@@ -51,6 +54,13 @@ body
 <full HEAD first-parent commit hash>
 
 01-00000122
+```
+
+For example, when HEAD is a merge commit, `--depth 1` includes:
+
+```text
+<full first parent hash> <full HEAD merge commit hash>
+<full second parent hash> <full HEAD merge commit hash>
 ```
 
 For example, `gnostr-legit --depth 3 -m "subject" -m "body"`. The default is

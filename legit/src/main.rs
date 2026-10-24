@@ -38,7 +38,9 @@ struct Args {
     #[arg(short, long, default_value = "default commit message")]
     message: Vec<String>,
 
-    /// Include up to this many first-parent commit hashes before the commit nonce
+    /// Include up to this many first-parent commits before the commit nonce
+    ///
+    /// Merge commits list each direct parent as <parent> <commit>, one per line.
     #[arg(long, default_value_t = 0, value_name = "INT")]
     depth: usize,
 

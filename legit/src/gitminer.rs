@@ -99,7 +99,7 @@ impl Gitminer {
         self
     }
 
-    /// Append up to `depth` first-parent hashes, starting at the existing HEAD.
+    /// Append up to `depth` first-parent commits, listing every parent of merges.
     pub fn with_depth(mut self, depth: usize) -> Self {
         self.depth = depth;
         self
@@ -118,23 +118,33 @@ impl Gitminer {
         let mut history = self.repo.revwalk()?;
         history.push(gnostr_asyncgit::git2::Oid::from_str(parent)?)?;
         history.simplify_first_parent()?;
-        let hashes = history
-            .take(self.depth)
-            .map(|id| id.map(|id| id.to_string()))
-            .collect::<Result<Vec<_>, _>>()?;
-        for hash in &hashes {
-            debug!("Including first-parent commit {} in mined message", hash);
+        let mut entries = Vec::new();
+        let mut commits = 0;
+        for id in history.take(self.depth) {
+            let commit = self.repo.find_commit(id?)?;
+            if commit.parent_count() > 1 {
+                for parent in commit.parent_ids() {
+                    entries.push(format!("{} {}", parent, commit.id()));
+                }
+            } else {
+                entries.push(commit.id().to_string());
+            }
+            commits += 1;
+        }
+        for entry in &entries {
+            debug!("Including history entry {} in mined message", entry);
         }
         info!(
-            "Including {} first-parent commit hash(es), requested depth={}",
-            hashes.len(),
+            "Including {} first-parent commit(s) in {} history line(s), requested depth={}",
+            commits,
+            entries.len(),
             self.depth
         );
-        if !hashes.is_empty() {
+        if !entries.is_empty() {
             if !message.is_empty() {
                 message.push_str("\n\n");
             }
-            message.push_str(&hashes.join("\n"));
+            message.push_str(&entries.join("\n"));
         }
         Ok(message)
     }
@@ -792,7 +802,7 @@ mod tests {
             "body one".to_string(),
             "body two".to_string(),
         ];
-        let (root, main, tip, tree_id) = {
+        let (root, main, side, tip, tree_id) = {
             let repo = &miner.repo;
             let tree_id = repo.index().unwrap().write_tree().unwrap();
             let tree = repo.find_tree(tree_id).unwrap();
@@ -810,7 +820,7 @@ mod tests {
             let main = commit("main", &[root]);
             let side = commit("side branch", &[root]);
             let tip = commit("merge", &[main, side]);
-            (root, main, tip, tree_id)
+            (root, main, side, tip, tree_id)
         };
         miner
             .repo
@@ -821,8 +831,13 @@ mod tests {
         let original = "subject\n\nbody one\nbody two";
         assert_eq!(miner.mining_message(&parent).unwrap(), original);
 
+        let merge_entries = format!("{} {}\n{} {}", main, tip, side, tip);
+        assert_eq!(
+            miner.clone().with_depth(1).mining_message(&parent).unwrap(),
+            format!("{}\n\n{}", original, merge_entries)
+        );
         let miner = miner.with_depth(2);
-        let message = format!("{}\n\n{}\n{}", original, tip, main);
+        let message = format!("{}\n\n{}\n{}", original, merge_entries, main);
         assert_eq!(miner.mining_message(&parent).unwrap(), message);
         assert_eq!(miner.clone().mining_message(&parent).unwrap(), message);
 
@@ -846,7 +861,7 @@ mod tests {
         let miner = miner.with_depth(usize::MAX);
         assert_eq!(
             miner.mining_message(&parent).unwrap(),
-            format!("{}\n\n{}\n{}\n{}", original, tip, main, root)
+            format!("{}\n\n{}\n{}\n{}", original, merge_entries, main, root)
         );
         assert_eq!(
             miner.with_depth(0).mining_message(&parent).unwrap(),
