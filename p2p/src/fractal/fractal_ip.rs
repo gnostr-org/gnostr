@@ -32,7 +32,7 @@ fn usage() {
            --file PATH       Read a single file from PATH\n\
           --out PATH        Write reconstructed bytes to PATH [default: example.reconstructed.bin]\n\
           --recursive PATH   Walk PATH as a directory tree and preserve relative paths\n\
-          --clone PATH      After recursive reconstruction, git clone the reconstructed directory to PATH\n\
+          --clone PATH      After recursive reconstruction, git clone the reconstructed directory to PATH;\n                            if --recursive is omitted, --clone implies --recursive . and --out example.reconstructed.dir\n\
           --depth N         Limit recursive directory walking to N levels [default: 3]\n\
           --logging         Enable verbose logging\n\
            --help            Show this help message\n"
@@ -125,8 +125,14 @@ fn parse_args() -> DemoArgs {
     if recursive.is_some() && file.is_some() {
         help = true;
     }
+
+    let mut recursive = recursive;
+    let mut out = out;
     if clone.is_some() && recursive.is_none() {
-        help = true;
+        recursive = Some(PathBuf::from("."));
+        if out.is_none() {
+            out = Some(PathBuf::from("example.reconstructed.dir"));
+        }
     }
 
     DemoArgs {
