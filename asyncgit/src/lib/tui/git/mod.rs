@@ -46,7 +46,7 @@ pub fn run(args: &cli::Args, term: &mut Term) -> Res<()> {
 
     let mut state = state::State::create(
         Rc::new(repo),
-        term.size().map_err(Error::Term)?,
+        term.size().map_err(|e| Error::Term(e.into()))?,
         args,
         config.clone(),
         true,

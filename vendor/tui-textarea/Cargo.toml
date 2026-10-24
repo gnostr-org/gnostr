@@ -169,7 +169,7 @@ features = ["derive"]
 optional = true
 
 [dependencies.crossterm]
-version = "0.28"
+version = "0.29"
 optional = true
 package = "crossterm"
 

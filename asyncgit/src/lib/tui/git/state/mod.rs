@@ -218,7 +218,7 @@ impl State {
     pub fn redraw_now(&mut self, term: &mut Term) -> Res<()> {
         if self.screens.last_mut().is_some() {
             term.draw(|frame| ui::ui(frame, self))
-                .map_err(Error::Term)?;
+                .map_err(|e| Error::Term(e.into()))?;
 
             self.needs_redraw = false;
         };
@@ -337,7 +337,7 @@ impl State {
 
         let log_entry = self.current_cmd_log.push_cmd(&cmd);
         term.draw(|frame| ui::ui(frame, self))
-            .map_err(Error::Term)?;
+            .map_err(|e| Error::Term(e.into()))?;
 
         let mut child = cmd.spawn().map_err(Error::SpawnCmd)?;
 
@@ -347,7 +347,7 @@ impl State {
             .take()
             .unwrap()
             .write_all(input)
-            .map_err(Error::Term)?;
+            .map_err(|e| Error::Term(e.into()))?;
 
         self.pending_cmd = Some((child, log_entry));
 
@@ -409,7 +409,7 @@ impl State {
 
         // If we don't show the cursor prior spawning (thus restore the default
         // state), the cursor may be missing in $EDITOR.
-        term.show_cursor().map_err(Error::Term)?;
+        term.show_cursor().map_err(|e| Error::Term(e.into()))?;
 
         let mut child = cmd.spawn().map_err(Error::SpawnCmd)?;
 
@@ -418,13 +418,13 @@ impl State {
 
         let (mut stdout, mut stderr) = (Vec::new(), Vec::new());
 
-        tee(child.stdout.as_mut(), &mut [&mut stdout]).map_err(Error::Term)?;
+        tee(child.stdout.as_mut(), &mut [&mut stdout]).map_err(|e| Error::Term(e.into()))?;
 
         tee(
             child.stderr.as_mut(),
             &mut [&mut std::io::stderr(), &mut stderr],
         )
-        .map_err(Error::Term)?;
+        .map_err(|e| Error::Term(e.into()))?;
 
         let status = child.wait().map_err(Error::CouldntAwaitCmd)?;
         let out_utf8 = String::from_utf8(strip_ansi_escapes::strip(stderr.clone()))
@@ -438,12 +438,12 @@ impl State {
         term.backend().enable_raw_mode()?;
 
         // Prevents cursor flash when exiting editor
-        term.hide_cursor().map_err(Error::Term)?;
+        term.hide_cursor().map_err(|e| Error::Term(e.into()))?;
 
         // In case the command left the alternate screen (editors would)
         term.backend_mut().enter_alternate_screen()?;
 
-        term.clear().map_err(Error::Term)?;
+        term.clear().map_err(|e| Error::Term(e.into()))?;
         self.screen_mut().update()?;
 
         if !status.success() {

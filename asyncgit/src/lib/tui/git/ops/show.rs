@@ -44,7 +44,7 @@ fn goto_show_screen(r: String) -> Option<Action> {
             screen::show::create(
                 Rc::clone(&state.config),
                 Rc::clone(&state.repo),
-                term.size().map_err(Error::Term)?,
+                term.size().map_err(|e| Error::Term(e.into()))?,
                 r.clone(),
             )
             .expect("Couldn't create screen"),

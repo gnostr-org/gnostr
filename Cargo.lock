@@ -5396,7 +5396,7 @@ dependencies = [
  "chrono",
  "clap 4.6.7",
  "crossbeam-channel 0.5.17",
- "crossterm 0.28.1",
+ "crossterm 0.29.0",
  "dirs 6.0.0",
  "easy-cast",
  "filetreelist",
@@ -19529,7 +19529,7 @@ dependencies = [
 name = "tui-textarea"
 version = "0.7.0"
 dependencies = [
- "crossterm 0.28.1",
+ "crossterm 0.29.0",
  "ratatui",
  "unicode-width 0.2.2",
 ]

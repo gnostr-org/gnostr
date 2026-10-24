@@ -346,7 +346,7 @@ impl TuiNode {
         let h = h.max(1);
         let mut p = self.parser.lock().unwrap();
         if p.screen().size() != (h, w) || force {
-            p.set_size(h, w);
+            p.screen_mut().set_size(h, w);
             if let Some(master) = &self.master {
                 let master = master.lock().unwrap();
                 let _ = master.resize(PtySize {

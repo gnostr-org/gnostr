@@ -41,11 +41,11 @@ pub fn main() -> Res<()> {
 
 fn setup_term_and_run(args: &Args) -> Res<()> {
     log::debug!("Initializing terminal backend");
-    let mut terminal: Term = Term::new(term::backend()).map_err(Error::Term)?;
+    let mut terminal: Term = Term::new(term::backend()).map_err(|e| Error::Term(e.into()))?;
 
     // Prevents cursor flash when opening gnostr-asyncgit
-    terminal.hide_cursor().map_err(Error::Term)?;
-    terminal.clear().map_err(Error::Term)?;
+    terminal.hide_cursor().map_err(|e| Error::Term(e.into()))?;
+    terminal.clear().map_err(|e| Error::Term(e.into()))?;
 
     log::debug!("Starting app");
     gnostr_asyncgit::tui::git::run(args, &mut terminal)

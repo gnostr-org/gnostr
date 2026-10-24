@@ -29,7 +29,12 @@ impl Prompt {
     pub(crate) fn reset<B: Backend>(&mut self, terminal: &mut Terminal<B>) -> Res<()> {
         self.data = None;
         self.state = TextState::new();
-        terminal.hide_cursor().map_err(Error::Term)?;
+        terminal.hide_cursor().map_err(|e| {
+            Error::Term(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!("{e}"),
+            ))
+        })?;
         Ok(())
     }
 }
