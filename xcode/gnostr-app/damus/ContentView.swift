@@ -42,6 +42,41 @@ enum FilterState : Int {
     case posts = 0
 }
 
+struct NIP34SearchControls: View {
+    @EnvironmentObject var user_settings: UserSettingsStore
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Toggle("NIP-34 only", isOn: $user_settings.nip34_only)
+            if user_settings.nip34_only {
+                ScrollView(.horizontal, showsIndicators: true) {
+                    HStack(spacing: 16) {
+                        ForEach(NostrKind.nip34_kinds, id: \.self) { kind in
+                            let selected = user_settings.search_nip34_kinds.contains(kind)
+                            Button {
+                                if selected {
+                                    user_settings.search_nip34_kinds.remove(kind)
+                                } else {
+                                    user_settings.search_nip34_kinds.insert(kind)
+                                }
+                            } label: {
+                                HStack(spacing: 5) {
+                                    Image(systemName: selected ? "largecircle.fill.circle" : "circle")
+                                    Text("\(String(kind)) \(NostrKind.nip34_kind_name(kind))")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.borderless)
+                            .accessibilityValue(selected ? "On" : "Off")
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+            }
+        }
+    }
+}
+
 struct ContentView: View {
     let keypair: Keypair
     
@@ -188,6 +223,10 @@ struct ContentView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             if let damus = self.damus_state {
+                NIP34SearchControls()
+                    .padding(.horizontal)
+                    .padding(.vertical, 8)
+                Divider()
                 NavigationView {
                     MainContent(damus: damus)
                         .toolbar {

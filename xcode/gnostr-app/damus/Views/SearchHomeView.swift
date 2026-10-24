@@ -84,9 +84,6 @@ struct SearchHomeView: View {
                 SearchInput
                     //.frame(maxWidth: 275)
                     .padding()
-                NIP34SearchControls()
-                    .padding(.horizontal)
-                    .padding(.bottom)
                 Divider()
                     .frame(height: 1)
             }

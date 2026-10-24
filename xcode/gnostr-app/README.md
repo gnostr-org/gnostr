@@ -77,8 +77,10 @@ damus implements the following [Nostr Implementation Possibilities][nips]
     resume after reconnect, and merge matching posts/Git events into Home
     without changing your current screen. Relays without NIP-50 still get
     hashtag discovery; unrestricted full-text search is not assumed.
-  - Global Search and search-result timelines include a NIP-34 only toggle,
-    shared with Settings. Switching it resubscribes with Git-only kinds and
+  - The app-wide header keeps the NIP-34 only toggle and per-kind controls
+    available across tabs and navigation destinations, including profiles,
+    threads, search results, and Settings. It filters Global Search and
+    search-result timelines. Switching it resubscribes with Git-only kinds and
     clears stale results; switching it off restores ordinary posts alongside
     Git events. Explicit repository-kind searches keep their original scope.
     With NIP-34 only enabled, circular on/off buttons let you independently

@@ -116,10 +116,6 @@ struct ConfigView: View {
                     }
                 }
                 
-                Section("Git (NIP-34)") {
-                    Toggle("Show NIP-34 kinds only", isOn: $user_settings.nip34_only).toggleStyle(.switch)
-                }
-                
                 Section("Reset") {
                     Button("Logout") {
                         confirm_logout = true
