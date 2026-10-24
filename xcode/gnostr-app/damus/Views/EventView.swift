@@ -637,24 +637,30 @@ struct EventView_Previews: PreviewProvider {
 struct GitRefsView: View {
     let tags: [[String]]
     var onRefTapped: ((String, String)) -> Void
+    @State private var expanded = false
 
     var body: some View {
-        VStack(alignment: .leading) {
-            Text("Git References").font(.headline)
-            ForEach(tags, id: \.self) { tag in
-                if tag.count >= 2 {
-                    Button(action: {
-                        onRefTapped((tag[0], tag[1]))
-                    }) {
-                        HStack {
-                            Text(tag[0]).font(.caption).bold()
-                            Text(tag[1]).font(.caption.monospaced())
+        DisclosureGroup(isExpanded: $expanded) {
+            VStack(alignment: .leading) {
+                ForEach(tags, id: \.self) { tag in
+                    if tag.count >= 2 {
+                        Button(action: {
+                            onRefTapped((tag[0], tag[1]))
+                        }) {
+                            HStack {
+                                Text(tag[0]).font(.caption).bold()
+                                Text(tag[1]).font(.caption.monospaced())
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
                         }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
-                } else {}
+                }
             }
+        } label: {
+            Text("Git References").font(.headline)
         }
+        .buttonStyle(.borderless)
         .padding()
         .background(Color.gray.opacity(0.1))
         .cornerRadius(8)

@@ -98,6 +98,8 @@ damus implements the following [Nostr Implementation Possibilities][nips]
   with the remaining content collapsed under Show patch. Expand/collapse
   preserves the full plain-text diff, whitespace, and complete commit hashes.
   Short patches remain fully visible.
+- Git References is collapsed by default; tap its disclosure chevron to
+  expand the branch/tag references and select a complete commit hash.
 - Sending a Note is easy and it goes to both your 🏠 Personal and 🔍 Global Feeds
 - To tag a user you must grab their pubkey:
   1. Search their username in the search bar at the top of the 🔍 Global Feed and click their profile
