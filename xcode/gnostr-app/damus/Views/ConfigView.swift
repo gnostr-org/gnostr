@@ -18,12 +18,14 @@ struct ConfigView: View {
     @State var privkey_copied: Bool = false
     @State var pubkey_copied: Bool = false
     @State var relays: [RelayDescriptor]
+    @ObservedObject var pool: RelayPool
     @EnvironmentObject var user_settings: UserSettingsStore
     
     let generator = UIImpactFeedbackGenerator(style: .light)
     
     init(state: DamusState) {
         self.state = state
+        self.pool = state.pool
         _privkey = State(initialValue: self.state.keypair.privkey_bech32 ?? "")
         _relays = State(initialValue: state.pool.descriptors)
     }
@@ -42,13 +44,7 @@ struct ConfigView: View {
     }
     
     var recommended: [RelayDescriptor] {
-        let rs: [RelayDescriptor] = []
-        return BOOTSTRAP_RELAYS.reduce(into: rs) { (xs, x) in
-            if let _ = state.pool.get_relay(x) {
-            } else {
-                xs.append(RelayDescriptor(url: URL(string: x)!, info: .rw))
-            }
-        }
+        return pool.recommended_relays
     }
     
     var body: some View {
@@ -62,7 +58,7 @@ struct ConfigView: View {
                 
                 Section("Recommended Relays") {
                     List(recommended, id: \.url) { r in
-                        RecommendedRelayView(damus: state, relay: r.url.absoluteString)
+                        RecommendedRelayView(damus: state, relay: r.url.absoluteString, info: r.info)
                     }
                 }
                 

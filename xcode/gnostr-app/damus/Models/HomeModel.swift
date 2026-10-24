@@ -276,12 +276,13 @@ class HomeModel: ObservableObject {
         var friends = damus_state.contacts.get_friend_list()
         friends.append(damus_state.pubkey)
 
-        var contacts_filter = NostrFilter.filter_kinds([0])
+        var contacts_filter = NostrFilter.filter_kinds([0, NostrKind.relay_list.rawValue])
         contacts_filter.authors = friends
 
         var our_contacts_filter = NostrFilter.filter_kinds([
             3,
             0,
+            NostrKind.relay_list.rawValue,
             //nip-34
             NostrKind.repository_announcement.rawValue,// = 30617
             NostrKind.repository_state_announcement.rawValue,// = 30618
@@ -674,5 +675,4 @@ func load_our_relays(contacts: Contacts, our_pubkey: String, pool: RelayPool, m_
         notify(.relays_changed, ())
     }
 }
-
 

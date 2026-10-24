@@ -10,6 +10,87 @@ import XCTest
 
 class damusTests: XCTestCase {
 
+    private func relayListEvent(tags: [[String]], kind: Int = 10002) -> NostrEvent {
+        let privkey = String(repeating: "0", count: 63) + "1"
+        let event = NostrEvent(content: "", pubkey: privkey_to_pubkey(privkey: privkey)!,
+                               kind: kind, tags: tags)
+        event.calculate_id()
+        event.sign(privkey: privkey)
+        return event
+    }
+
+    func testRelayRecommendationsNIP65Markers() {
+        let event = relayListEvent(tags: [
+            ["r", "wss://relay.damus.io", "read"],
+            ["r", "wss://nos.lol", "write"],
+            ["r", "wss://relay.nostr.band"],
+        ])
+        let recommendations = relay_recommendations(event)
+        XCTAssertEqual(recommendations.map { $0.url.absoluteString },
+                       ["wss://relay.damus.io", "wss://nos.lol", "wss://relay.nostr.band"])
+        XCTAssertEqual(recommendations.map { $0.info.read }, [true, false, true])
+        XCTAssertEqual(recommendations.map { $0.info.write }, [false, true, true])
+    }
+
+    func testRelayRecommendationsIgnoreNonRelayTags() {
+        let event = relayListEvent(tags: [
+            [], ["r"], ["r", ""], ["r", "https://example.com"],
+            ["r", "wss://"], ["r", "wss://relay.example/a b"],
+            ["r", "wss://user:password@relay.example"],
+            ["r", "wss://relay.example#fragment"],
+            ["r", "wss://relay.example", "unsupported"],
+            ["e", "wss://not-a-relay.example"],
+            ["r", "WS://RELAY.EXAMPLE:80/", ""],
+            ["r", "wss://relay.example/path?token=value", "read"],
+        ])
+        XCTAssertEqual(relay_recommendations(event).map { $0.url.absoluteString },
+                       ["ws://relay.example", "wss://relay.example/path?token=value"])
+    }
+
+    func testRelayRecommendationsCollectedAcrossSubscriptions() throws {
+        let pool = RelayPool()
+        let event = relayListEvent(tags: [
+            ["r", "wss://DISCOVERED.example:443/", "read"],
+            ["r", "wss://discovered.example", "write"],
+        ])
+        pool.handle_event(relay_id: "wss://source.example",
+                          event: .nostr_event(.event("other-view", event)))
+        pool.handle_event(relay_id: "wss://other-source.example",
+                          event: .nostr_event(.event("another-view", event)))
+        XCTAssertEqual(pool.suggested_relays.count, 1)
+        XCTAssertTrue(pool.suggested_relays[0].info.read)
+        XCTAssertTrue(pool.suggested_relays[0].info.write)
+        XCTAssertTrue(pool.relays.isEmpty)
+        XCTAssertEqual(pool.recommended_relays.filter {
+            $0.url.absoluteString == "wss://discovered.example"
+        }.count, 1)
+
+        try pool.add_relay(URL(string: "wss://discovered.example/")!, info: .rw)
+        XCTAssertFalse(pool.recommended_relays.contains {
+            $0.url.absoluteString == "wss://discovered.example"
+        })
+        pool.remove_relay("wss://discovered.example/")
+        XCTAssertTrue(pool.recommended_relays.contains {
+            $0.url.absoluteString == "wss://discovered.example"
+        })
+    }
+
+    func testRelayRecommendationsFromOtherKindsAndInvalidEvents() {
+        let pool = RelayPool()
+        let event = relayListEvent(tags: [
+            ["r", "wss://git-relay.example"],
+            ["r", "https://repository.example/project"],
+        ], kind: NostrKind.repository_announcement.rawValue)
+        pool.collect_relay_recommendations(event)
+        XCTAssertEqual(pool.suggested_relays.map { $0.url.absoluteString },
+                       ["wss://git-relay.example"])
+
+        let invalid = relayListEvent(tags: [["r", "wss://invalid.example"]])
+        invalid.sig = String(repeating: "0", count: 128)
+        pool.collect_relay_recommendations(invalid)
+        XCTAssertEqual(pool.suggested_relays.count, 1)
+    }
+
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
     }

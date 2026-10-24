@@ -49,6 +49,11 @@ damus implements the following [Nostr Implementation Possibilities][nips]
 #### ⚙️ Settings (gear icon, top right)
 
 - Relays: You can add more relays to send your notes to by tapping the "+".
+  - Recommended Relays includes WebSocket relay URLs discovered in received
+    `r` tags, including NIP-65 kind-10002 relay lists from you and your follows.
+    Read/write markers are preserved when adding a suggestion. Duplicate and
+    already configured relays are hidden; discovering a relay does not connect
+    to it automatically. Discovered suggestions last for the current session.
   - Find more relays to add: https://nostr.info/relays/
 - Public Key (pubkey): Your public, personal address and how people can find and tag you
 - Secret Key: Your _private_ key unique to you. Never share your private key publically and share with other clients at your own risk!

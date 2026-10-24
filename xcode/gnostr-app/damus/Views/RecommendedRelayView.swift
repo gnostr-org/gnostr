@@ -11,27 +11,37 @@ struct RecommendedRelayView: View {
     let damus: DamusState
     let relay: String
     let add_button: Bool
+    let info: RelayInfo
     
-    init(damus: DamusState, relay: String) {
+    init(damus: DamusState, relay: String, info: RelayInfo = .rw) {
         self.damus = damus
         self.relay = relay
         self.add_button = true
+        self.info = info
     }
     
     init(damus: DamusState, relay: String, add_button: Bool) {
         self.damus = damus
         self.relay = relay
         self.add_button = add_button
+        self.info = .rw
     }
     
     var body: some View {
         HStack {
-            Text(relay)
+            VStack(alignment: .leading) {
+                Text(relay)
+                if !info.write {
+                    Text("Read only").font(.caption).foregroundColor(.secondary)
+                } else if !info.read {
+                    Text("Write only").font(.caption).foregroundColor(.secondary)
+                }
+            }
             Spacer()
             if let ev = damus.contacts.event, add_button {
                 if let privkey = damus.keypair.privkey {
                     Button("Add") {
-                        guard let ev = add_relay(ev: ev, privkey: privkey, current_relays: damus.pool.descriptors, relay: relay, info: .rw) else {
+                        guard let ev = add_relay(ev: ev, privkey: privkey, current_relays: damus.pool.descriptors, relay: relay, info: info) else {
                             return
                         }
                         process_contact_event(pool: damus.pool, contacts: damus.contacts, pubkey: damus.pubkey, ev: ev)

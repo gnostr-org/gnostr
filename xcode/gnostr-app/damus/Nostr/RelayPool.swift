@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Combine
 
 struct SubscriptionId: Identifiable, CustomStringConvertible {
     let id: String
@@ -28,9 +29,42 @@ struct RelayHandler {
     let callback: (String, NostrConnectionEvent) -> ()
 }
 
-class RelayPool {
-    var relays: [Relay] = []
+class RelayPool: ObservableObject {
+    @Published var relays: [Relay] = []
+    @Published private(set) var suggested_relays: [RelayDescriptor] = []
     var handlers: [RelayHandler] = []
+
+    var recommended_relays: [RelayDescriptor] {
+        let configured = Set(descriptors.compactMap { normalized_relay_url($0.url.absoluteString) })
+        var seen = configured
+        let bootstrap = BOOTSTRAP_RELAYS.compactMap { value -> RelayDescriptor? in
+            guard let url = normalized_relay_url(value) else { return nil }
+            return RelayDescriptor(url: url, info: .rw)
+        }
+        return (suggested_relays + bootstrap).filter { seen.insert($0.url).inserted }
+    }
+
+    func collect_relay_recommendations(_ event: NostrEvent) {
+        let recommendations = relay_recommendations(event)
+        guard !recommendations.isEmpty else { return }
+        guard event.pubkey.count == 64, event.sig.count == 128,
+              validate_event(ev: event) == .ok else {
+            print("Ignoring relay recommendations from invalid event \(event.id)")
+            return
+        }
+        for recommendation in recommendations {
+            if let index = suggested_relays.firstIndex(where: { $0.url == recommendation.url }) {
+                let previous = suggested_relays[index]
+                let info = RelayInfo(read: previous.info.read || recommendation.info.read,
+                                     write: previous.info.write || recommendation.info.write)
+                if info.read != previous.info.read || info.write != previous.info.write {
+                    suggested_relays[index] = RelayDescriptor(url: previous.url, info: info)
+                }
+            } else {
+                suggested_relays.append(recommendation)
+            }
+        }
+    }
 
     var descriptors: [RelayDescriptor] {
         relays.map { $0.descriptor }
@@ -195,6 +229,9 @@ class RelayPool {
     
     func handle_event(relay_id: String, event: NostrConnectionEvent) {
         record_last_pong(relay_id: relay_id, event: event)
+        if case .nostr_event(.event(_, let ev)) = event {
+            collect_relay_recommendations(ev)
+        }
         
         // handle reconnect logic, etc?
         for handler in handlers {
@@ -207,5 +244,4 @@ func add_rw_relay(_ pool: RelayPool, _ url: String) {
     let url_ = URL(string: url)!
     try? pool.add_relay(url_, info: RelayInfo.rw)
 }
-
 
