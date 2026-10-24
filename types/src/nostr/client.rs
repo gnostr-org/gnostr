@@ -581,8 +581,8 @@ impl Client {
                                 ));
                                 false
                             } else {
-                                debug!(
-                                    "send_event: relay {ws_url} succeeded for event {event_id}"
+                                info!(
+                                    "Sent event {event_id} to relay {ws_url} (WebSocket write completed; relay acceptance not confirmed)"
                                 );
                                 let _ = append_relay_to_crawler_recent(&ws_url);
                                 append_broadcast_log(&format!(
@@ -624,8 +624,14 @@ impl Client {
         .collect::<Vec<bool>>()
         .await;
 
-        if results.into_iter().any(|sent| sent) {
-            debug!("send_event: success id={}", event.id);
+        let sent_count = results.iter().filter(|&&sent| sent).count();
+        if sent_count > 0 {
+            info!(
+                "Sent event {} to {}/{} relay(s) (WebSocket writes completed)",
+                event.id,
+                sent_count,
+                results.len()
+            );
             Ok(event.id)
         } else {
             debug!("send_event: failure id={}", event.id);
