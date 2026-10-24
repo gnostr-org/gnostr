@@ -25,13 +25,16 @@ class SearchModel: ObservableObject {
         self.requested_kinds = search.kinds
     }
     
-    func subscribe(nip34_only: Bool = false) {
+    func subscribe(nip34_only: Bool = false, selected_kinds: Set<Int>? = nil) {
         // since 1 month
         search.limit = self.limit
-        search.kinds = nip34_only
-            ? NostrKind.nip34_kinds.filter { requested_kinds?.contains($0) ?? true }
-            : requested_kinds ?? ([1, 42] + NostrKind.nip34_kinds)
+        search.kinds = NostrKind.search_kinds(nip34_only: nip34_only, selected: selected_kinds,
+                                             requested: requested_kinds)
         events.removeAll()
+        guard search.kinds?.isEmpty != true else {
+            unsubscribe()
+            return
+        }
 
         //likes_filter.ids = ref_events.referenced_ids!
 

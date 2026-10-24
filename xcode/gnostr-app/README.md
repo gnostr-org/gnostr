@@ -81,6 +81,10 @@ damus implements the following [Nostr Implementation Possibilities][nips]
     shared with Settings. Switching it resubscribes with Git-only kinds and
     clears stale results; switching it off restores ordinary posts alongside
     Git events. Explicit repository-kind searches keep their original scope.
+    With NIP-34 only enabled, circular on/off buttons let you independently
+    select each event kind by number and name. Selections are shared across
+    search screens and saved across launches. Turning every kind off stops
+    the search subscription rather than sending an unrestricted filter.
   - Find more relays to add: https://nostr.info/relays/
 - Public Key (pubkey): Your public, personal address and how people can find and tag you
 - Secret Key: Your _private_ key unique to you. Never share your private key publically and share with other clients at your own risk!

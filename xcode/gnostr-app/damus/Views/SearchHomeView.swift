@@ -43,12 +43,13 @@ struct SearchHomeView: View {
     
     var GlobalContent: some View {
         return TimelineView(events: $model.events, loading: $model.loading, damus: damus_state, show_friend_icon: true, filter: {
-            !user_settings.nip34_only || NostrKind.nip34_kinds.contains($0.kind)
+            !user_settings.nip34_only || user_settings.search_nip34_kinds.contains($0.kind)
         })
             .refreshable {
                 // Fetch new information by unsubscribing and resubscribing to the relay
                 model.unsubscribe()
-                model.subscribe(nip34_only: user_settings.nip34_only)
+                model.subscribe(nip34_only: user_settings.nip34_only,
+                                selected_kinds: user_settings.search_nip34_kinds)
             }
     }
     
@@ -57,7 +58,8 @@ struct SearchHomeView: View {
             .refreshable {
                 // Fetch new information by unsubscribing and resubscribing to the relay
                 model.unsubscribe()
-                model.subscribe(nip34_only: user_settings.nip34_only)
+                model.subscribe(nip34_only: user_settings.nip34_only,
+                                selected_kinds: user_settings.search_nip34_kinds)
             }.padding(.horizontal)
     }
     
@@ -82,7 +84,7 @@ struct SearchHomeView: View {
                 SearchInput
                     //.frame(maxWidth: 275)
                     .padding()
-                Toggle("NIP-34 only", isOn: $user_settings.nip34_only)
+                NIP34SearchControls()
                     .padding(.horizontal)
                     .padding(.bottom)
                 Divider()
@@ -95,11 +97,18 @@ struct SearchHomeView: View {
         }
         .onChange(of: user_settings.nip34_only) { enabled in
             model.unsubscribe()
-            model.subscribe(nip34_only: enabled)
+            model.subscribe(nip34_only: enabled, selected_kinds: user_settings.search_nip34_kinds)
+        }
+        .onChange(of: user_settings.search_nip34_kinds) { selection in
+            guard user_settings.nip34_only else { return }
+            model.unsubscribe()
+            model.subscribe(nip34_only: true, selected_kinds: selection)
         }
         .onAppear {
-            if model.events.isEmpty || model.nip34_only != user_settings.nip34_only {
-                model.subscribe(nip34_only: user_settings.nip34_only)
+            if model.events.isEmpty || model.nip34_only != user_settings.nip34_only ||
+                model.selected_nip34_kinds != user_settings.search_nip34_kinds {
+                model.subscribe(nip34_only: user_settings.nip34_only,
+                                selected_kinds: user_settings.search_nip34_kinds)
             }
         }
         .onDisappear {
