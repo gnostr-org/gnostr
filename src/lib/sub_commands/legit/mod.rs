@@ -38,8 +38,8 @@ pub struct LegitSubCommand {
     )]
     event_difficulty: u8,
     /// Mine a hexadecimal event-ID prefix instead of NIP-13 leading zero bits
-    #[arg(long, value_name = "HEX", value_parser = gnostr_types::nostr::EventMining::prefix)]
-    event_prefix: Option<gnostr_types::nostr::EventMining>,
+    #[arg(long, value_name = "HEX", value_parser = gnostr_asyncgit::types::EventMining::prefix)]
+    event_prefix: Option<gnostr_asyncgit::types::EventMining>,
     /// Number of worker threads to use
     #[arg(short, long, default_value_t = 1)]
     threads: usize,
@@ -107,7 +107,9 @@ pub async fn legit(sub_command_args: &LegitSubCommand) -> Result<(), Box<dyn Std
             command::run_legit_command_with_event_mining(
                 opts,
                 sub_command_args.event_prefix.clone().unwrap_or(
-                    gnostr_types::nostr::EventMining::Difficulty(sub_command_args.event_difficulty),
+                    gnostr_asyncgit::types::EventMining::Difficulty(
+                        sub_command_args.event_difficulty,
+                    ),
                 ),
             )
             .await

@@ -6,14 +6,14 @@ use gnostr_asyncgit::sync::{
     RepoPath,
 };
 use gnostr_legit::gitminer::{self, Gitminer};
-use gnostr_types::nostr::EventMining;
 use once_cell::sync::OnceCell;
 use serde_json::json;
 use tokio::sync::mpsc;
 use tracing::{debug, error, info};
 
 use gnostr_asyncgit::types::{
-    Event, EventKind, KeySigner, PreEvent, PrivateKey, Signer, Tag, UncheckedUrl, Unixtime,
+    Event, EventKind, EventMining, KeySigner, PreEvent, PrivateKey, Signer, Tag, UncheckedUrl,
+    Unixtime,
 };
 
 pub async fn run_legit_command(opts: gitminer::Options) -> io::Result<()> {
