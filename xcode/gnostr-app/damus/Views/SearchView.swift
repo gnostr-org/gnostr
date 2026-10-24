@@ -11,16 +11,26 @@ struct SearchView: View {
     let appstate: DamusState
     @StateObject var search: SearchModel
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var user_settings: UserSettingsStore
     
     var body: some View {
-        TimelineView(events: $search.events, loading: $search.loading, damus: appstate, show_friend_icon: true, filter: { _ in true })
+        TimelineView(events: $search.events, loading: $search.loading, damus: appstate, show_friend_icon: true, filter: {
+            !user_settings.nip34_only || NostrKind.nip34_kinds.contains($0.kind)
+        })
+            .safeAreaInset(edge: .top) {
+                Toggle("NIP-34 only", isOn: $user_settings.nip34_only).padding()
+            }
             .navigationBarTitle(describe_search(search.search))
             .padding([.leading, .trailing], 6)
             .onReceive(handle_notify(.switched_timeline)) { obj in
                 dismiss()
             }
             .onAppear() {
-                search.subscribe()
+                search.subscribe(nip34_only: user_settings.nip34_only)
+            }
+            .onChange(of: user_settings.nip34_only) { enabled in
+                search.unsubscribe()
+                search.subscribe(nip34_only: enabled)
             }
             .onDisappear() {
                 search.unsubscribe()
@@ -45,5 +55,6 @@ struct SearchView_Previews: PreviewProvider {
         let model = SearchModel(pool: pool, search: filter)
         
         SearchView(appstate: test_state, search: model)
+            .environmentObject(UserSettingsStore())
     }
 }

@@ -77,6 +77,10 @@ damus implements the following [Nostr Implementation Possibilities][nips]
     resume after reconnect, and merge matching posts/Git events into Home
     without changing your current screen. Relays without NIP-50 still get
     hashtag discovery; unrestricted full-text search is not assumed.
+  - Global Search and search-result timelines include a NIP-34 only toggle,
+    shared with Settings. Switching it resubscribes with Git-only kinds and
+    clears stale results; switching it off restores ordinary posts alongside
+    Git events. Explicit repository-kind searches keep their original scope.
   - Find more relays to add: https://nostr.info/relays/
 - Public Key (pubkey): Your public, personal address and how people can find and tag you
 - Secret Key: Your _private_ key unique to you. Never share your private key publically and share with other clients at your own risk!

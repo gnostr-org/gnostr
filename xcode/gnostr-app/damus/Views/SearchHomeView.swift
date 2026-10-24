@@ -12,6 +12,7 @@ struct SearchHomeView: View {
     let damus_state: DamusState
     @StateObject var model: SearchHomeModel
     @State var search: String = ""
+    @EnvironmentObject var user_settings: UserSettingsStore
     
     var SearchInput: some View {
         ZStack(alignment: .leading) {
@@ -41,11 +42,13 @@ struct SearchHomeView: View {
     }
     
     var GlobalContent: some View {
-        return TimelineView(events: $model.events, loading: $model.loading, damus: damus_state, show_friend_icon: true, filter: { _ in true })
+        return TimelineView(events: $model.events, loading: $model.loading, damus: damus_state, show_friend_icon: true, filter: {
+            !user_settings.nip34_only || NostrKind.nip34_kinds.contains($0.kind)
+        })
             .refreshable {
                 // Fetch new information by unsubscribing and resubscribing to the relay
                 model.unsubscribe()
-                model.subscribe()
+                model.subscribe(nip34_only: user_settings.nip34_only)
             }
     }
     
@@ -54,7 +57,7 @@ struct SearchHomeView: View {
             .refreshable {
                 // Fetch new information by unsubscribing and resubscribing to the relay
                 model.unsubscribe()
-                model.subscribe()
+                model.subscribe(nip34_only: user_settings.nip34_only)
             }.padding(.horizontal)
     }
     
@@ -79,6 +82,9 @@ struct SearchHomeView: View {
                 SearchInput
                     //.frame(maxWidth: 275)
                     .padding()
+                Toggle("NIP-34 only", isOn: $user_settings.nip34_only)
+                    .padding(.horizontal)
+                    .padding(.bottom)
                 Divider()
                     .frame(height: 1)
             }
@@ -87,9 +93,13 @@ struct SearchHomeView: View {
         .onChange(of: search) { s in
             print("search change 1")
         }
+        .onChange(of: user_settings.nip34_only) { enabled in
+            model.unsubscribe()
+            model.subscribe(nip34_only: enabled)
+        }
         .onAppear {
-            if model.events.isEmpty {
-                model.subscribe()
+            if model.events.isEmpty || model.nip34_only != user_settings.nip34_only {
+                model.subscribe(nip34_only: user_settings.nip34_only)
             }
         }
         .onDisappear {
@@ -105,5 +115,6 @@ struct SearchHomeView_Previews: PreviewProvider {
             damus_state: state,
             model: SearchHomeModel(damus_state: state)
         )
+        .environmentObject(UserSettingsStore())
     }
 }

@@ -17,28 +17,21 @@ class SearchModel: ObservableObject {
     var search: NostrFilter
     let sub_id = UUID().description
     let limit: UInt32 = 500
+    private let requested_kinds: [Int]?
     
     init(pool: RelayPool, search: NostrFilter) {
         self.pool = pool
         self.search = search
+        self.requested_kinds = search.kinds
     }
     
-    func subscribe() {
+    func subscribe(nip34_only: Bool = false) {
         // since 1 month
         search.limit = self.limit
-        search.kinds = [
-            //1,
-            //5,
-            //7,
-            NostrKind.repository_announcement.rawValue,// = 30617
-            NostrKind.repository_state_announcement.rawValue,// = 30618
-            NostrKind.repository_reply.rawValue,// = 1111
-            NostrKind.repository_patch.rawValue,// = 1617
-            NostrKind.repository_issue_open.rawValue,// = 1630
-            NostrKind.repository_issue_applied.rawValue,// = 1631
-            NostrKind.repository_issue_closed.rawValue,// = 1632
-            NostrKind.repository_issue_draft.rawValue// = 1633
-        ]
+        search.kinds = nip34_only
+            ? NostrKind.nip34_kinds.filter { requested_kinds?.contains($0) ?? true }
+            : requested_kinds ?? ([1, 42] + NostrKind.nip34_kinds)
+        events.removeAll()
 
         //likes_filter.ids = ref_events.referenced_ids!
 
@@ -76,7 +69,8 @@ class SearchModel: ObservableObject {
     
     func handle_event(relay_id: String, ev: NostrConnectionEvent) {
         let (_, done) = handle_subid_event(pool: pool, relay_id: relay_id, ev: ev) { sub_id, ev in
-            if ev.is_textlike && ev.should_show_event {
+            guard sub_id == self.sub_id else { return }
+            if (ev.is_textlike || NostrKind.nip34_kinds.contains(ev.kind)) && ev.should_show_event {
                 self.add_event(ev)
             } else if ev.known_kind == .channel_create {
                 handle_channel_create(ev)
@@ -101,6 +95,12 @@ func event_matches_hashtag(_ ev: NostrEvent, hashtags: [String]) -> Bool {
 }
 
 func event_matches_filter(_ ev: NostrEvent, filter: NostrFilter) -> Bool {
+    if let kinds = filter.kinds, !kinds.contains(ev.kind) {
+        return false
+    }
+    if let search = filter.search, !ev.content.localizedCaseInsensitiveContains(search) {
+        return false
+    }
     if let hashtags = filter.hashtag {
         return event_matches_hashtag(ev, hashtags: hashtags)
     }

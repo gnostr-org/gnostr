@@ -8,6 +8,16 @@
 import Foundation
 
 enum NostrKind: Int {
+    static let nip34_kinds = [
+        repository_announcement.rawValue, repository_state_announcement.rawValue,
+        repository_reply.rawValue, repository_reply_legacy.rawValue,
+        repository_patch.rawValue, repository_pull_request.rawValue,
+        repository_pull_request_update.rawValue, repository_issue.rawValue,
+        repository_issue_open.rawValue, repository_issue_applied.rawValue,
+        repository_issue_closed.rawValue, repository_issue_draft.rawValue,
+        repository_grasp_list.rawValue,
+    ]
+
     case metadata = 0
     case text = 1
     case contacts = 3
@@ -22,10 +32,15 @@ enum NostrKind: Int {
     case repository_state_announcement = 30618 //add GitView to view
     case repository_reply = 1111
     case repository_patch = 1617 //add GitView to view
+    case repository_pull_request = 1618
+    case repository_pull_request_update = 1619
+    case repository_issue = 1621
+    case repository_reply_legacy = 1622
     case repository_issue_open = 1630
     case repository_issue_applied = 1631
     case repository_issue_closed = 1632
     case repository_issue_draft = 1633 //add GitView to view
+    case repository_grasp_list = 10317
 
     // NIP-51
     case mute_list = 10000

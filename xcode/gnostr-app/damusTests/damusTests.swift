@@ -270,6 +270,100 @@ class damusTests: XCTestCase {
         XCTAssertNotNil(pool.get_relay(url.absoluteString))
     }
 
+    func testGnostrDiscoveryFiltersEncodeHashtagAndTextAsAlternatives() throws {
+        let hashtagOnly = gnostr_discovery_filters(supports_search: false)
+        XCTAssertEqual(hashtagOnly.count, 1)
+        XCTAssertEqual(hashtagOnly[0].hashtag, ["gnostr"])
+        XCTAssertNil(hashtagOnly[0].authors)
+        XCTAssertNil(hashtagOnly[0].until)
+        let filters = gnostr_discovery_filters(supports_search: true, since: 123)
+        let encoded = try JSONEncoder().encode(filters)
+        let objects = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [[String: Any]])
+        XCTAssertEqual(objects.count, 2)
+        XCTAssertEqual(objects[0]["#t"] as? [String], ["gnostr"])
+        XCTAssertNil(objects[0]["search"])
+        XCTAssertEqual(objects[1]["search"] as? String, "gnostr")
+        XCTAssertNil(objects[1]["#t"])
+        XCTAssertEqual(filters.map { $0.limit }, [500, 500])
+        XCTAssertEqual(filters.map { $0.since }, [123, 123])
+        XCTAssertEqual(NostrFilter.copy(from: filters[1]).search, "gnostr")
+    }
+
+    func testGnostrDiscoveryRoutesMatchingPostsAndGitEventsAndRejectsNoise() {
+        let home = HomeModel()
+        let tagged = relayListEvent(tags: [["t", "gnostr"]], kind: 1)
+        let text = NostrEvent(content: "Building GNOSTR", pubkey: tagged.pubkey, kind: 1618)
+        text.calculate_id()
+        text.sign(privkey: String(repeating: "0", count: 63) + "1")
+        let unrelated = relayListEvent(tags: [["t", "other"]], kind: 1)
+        let invalid = relayListEvent(tags: [["t", "gnostr"]], kind: 1621)
+        invalid.sig = String(repeating: "0", count: 128)
+        for event in [tagged, text, tagged, unrelated, invalid] {
+            home.handle_event(relay_id: "wss://source.example",
+                              conn_event: .nostr_event(.event(home.gnostr_subid, event)))
+        }
+        XCTAssertEqual(Set(home.events.map { $0.id }), Set([tagged.id, text.id]))
+        home.loading = true
+        home.handle_event(relay_id: "wss://source.example",
+                          conn_event: .nostr_event(.eose(home.gnostr_subid)))
+        XCTAssertTrue(home.loading)
+        home.handle_event(relay_id: "wss://source.example",
+                          conn_event: .nostr_event(.eose(home.home_subid)))
+        XCTAssertFalse(home.loading)
+    }
+
+    func testGlobalSearchNIP34ToggleChangesSubscriptionAndAcceptsMultipleGitEvents() {
+        let model = SearchHomeModel(damus_state: .empty)
+        XCTAssertTrue(model.get_base_filter().kinds?.contains(1) == true)
+        model.subscribe(nip34_only: true)
+        XCTAssertFalse(model.get_base_filter().kinds?.contains(1) == true)
+        XCTAssertTrue(model.get_base_filter().kinds?.contains(1618) == true)
+        XCTAssertTrue(model.get_base_filter().kinds?.contains(1621) == true)
+        let post = relayListEvent(tags: [], kind: 1)
+        let issue = relayListEvent(tags: [], kind: 1621)
+        let pullRequest = relayListEvent(tags: [], kind: 1618)
+        for event in [post, issue, pullRequest] {
+            model.handle_event(relay_id: "wss://source.example",
+                               conn_ev: .nostr_event(.event(model.base_subid, event)))
+        }
+        XCTAssertEqual(Set(model.events.map { $0.id }), Set([issue.id, pullRequest.id]))
+        model.unsubscribe()
+        model.subscribe(nip34_only: false)
+        XCTAssertTrue(model.events.isEmpty)
+        XCTAssertTrue(model.get_base_filter().kinds?.contains(1) == true)
+        model.unsubscribe()
+    }
+
+    func testSearchNIP34ToggleKeepsExplicitScopeAndFiltersOtherSubscriptions() {
+        let pool = RelayPool(defaults: nil)
+        let model = SearchModel(pool: pool, search: .filter_hashtag(["gnostr"]))
+        model.subscribe(nip34_only: true)
+        let post = relayListEvent(tags: [["t", "gnostr"]], kind: 1)
+        let issue = relayListEvent(tags: [["t", "gnostr"]], kind: 1621)
+        let untagged = relayListEvent(tags: [], kind: 1618)
+        for event in [post, issue, untagged] {
+            model.handle_event(relay_id: "wss://source.example",
+                               ev: .nostr_event(.event(model.sub_id, event)))
+        }
+        model.handle_event(relay_id: "wss://source.example",
+                           ev: .nostr_event(.event("another-subscription", untagged)))
+        XCTAssertEqual(model.events.map { $0.id }, [issue.id])
+        model.unsubscribe()
+        model.subscribe(nip34_only: false)
+        XCTAssertTrue(model.events.isEmpty)
+        model.add_event(post)
+        XCTAssertEqual(model.events.map { $0.id }, [post.id])
+        model.unsubscribe()
+
+        let scoped = SearchModel(pool: pool, search: .filter_kinds([30617]))
+        scoped.subscribe(nip34_only: true)
+        XCTAssertEqual(scoped.search.kinds, [30617])
+        scoped.unsubscribe()
+        scoped.subscribe(nip34_only: false)
+        XCTAssertEqual(scoped.search.kinds, [30617])
+        scoped.unsubscribe()
+    }
+
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
     }

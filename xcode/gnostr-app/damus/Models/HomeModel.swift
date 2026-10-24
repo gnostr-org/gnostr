@@ -100,6 +100,11 @@ class HomeModel: ObservableObject {
             return
         }
 
+        if NostrKind.nip34_kinds.contains(ev.kind) {
+            handle_text_event(sub_id: sub_id, ev)
+            return
+        }
+
         switch kind {
         case .chat: fallthrough
         case .text:
@@ -120,22 +125,6 @@ class HomeModel: ObservableObject {
             handle_channel_create(ev)
         case .channel_meta:
             handle_channel_meta(ev)
-        case .repository_announcement:
-            handle_text_event(sub_id: sub_id, ev)
-        case .repository_state_announcement:
-            handle_text_event(sub_id: sub_id, ev)
-        case .repository_reply:
-            handle_text_event(sub_id: sub_id, ev)
-        case .repository_patch:
-            handle_text_event(sub_id: sub_id, ev)
-        case .repository_issue_open:
-            handle_text_event(sub_id: sub_id, ev)
-        case .repository_issue_applied:
-            handle_text_event(sub_id: sub_id, ev)
-        case .repository_issue_closed:
-            handle_text_event(sub_id: sub_id, ev)
-        case .repository_issue_draft:
-            handle_text_event(sub_id: sub_id, ev)
         default:
             break
         }

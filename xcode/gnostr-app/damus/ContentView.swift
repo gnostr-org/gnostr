@@ -230,6 +230,7 @@ struct ContentView: View {
             TabBar(new_events: $home.new_events, selected: $selected_timeline, action: switch_timeline)
                 .padding([.bottom], 8)
         }
+        .environmentObject(user_settings)
         .onAppear() {
             self.connect()
             //KingfisherManager.shared.cache.clearDiskCache()
@@ -556,4 +557,3 @@ func setup_notifications() {
         }
     }
 }
-
