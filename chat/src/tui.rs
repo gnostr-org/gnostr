@@ -349,10 +349,20 @@ impl ChatApp {
             ClockStatus::Init => "init".to_string(),
             ClockStatus::Synced => "synced".to_string(),
             ClockStatus::Slewing => "slewing".to_string(),
-            ClockStatus::Unreliable(reason) => format!("unreliable:{reason}"),
+            ClockStatus::Unreliable(ref reason) => format!("unreliable:{reason}"),
+        };
+        let clock_status_style = match metrics.status {
+            ClockStatus::Init => Style::default().fg(Color::Gray),
+            ClockStatus::Synced => Style::default().fg(Color::Green),
+            ClockStatus::Slewing => Style::default().fg(Color::Yellow),
+            ClockStatus::Unreliable(_) => Style::default().fg(Color::Red),
         };
         let clock_offset = format!("{:+}ms", metrics.offset_ms);
+        let clock_slew = format!("{:.6}", metrics.slew_rate);
+        let clock_last_sync = format!("{}s", metrics.last_sync_secs_ago);
         let peers = self.connected_peers.clone();
+        let header_clock_status = clock_status.clone();
+        let header_clock_offset = clock_offset.clone();
         let selected_msg = self.selected_message().cloned();
 
         #[cfg(feature = "fractal")]
@@ -378,7 +388,7 @@ impl ChatApp {
                         Span::raw(&clock_now),
                         Span::raw("  "),
                         Span::styled("p2p: ", Style::default().fg(Color::Magenta)),
-                        Span::raw(format!("{clock_status} {clock_offset}")),
+                        Span::raw(format!("{header_clock_status} {header_clock_offset}")),
                     ]),
                 ];
                 Paragraph::new(lines)
@@ -407,6 +417,29 @@ impl ChatApp {
                     Line::from(vec![
                         Span::styled("keys: ", Style::default().fg(Color::Magenta)),
                         Span::raw("tab switch, enter send, ? help, q quit"),
+                    ]),
+                    Line::from(""),
+                    Line::from(vec![Span::styled(
+                        "bft clock",
+                        Style::default()
+                            .fg(Color::Cyan)
+                            .add_modifier(Modifier::BOLD),
+                    )]),
+                    Line::from(vec![
+                        Span::styled("status: ", Style::default().fg(Color::Magenta)),
+                        Span::styled(&clock_status, clock_status_style),
+                    ]),
+                    Line::from(vec![
+                        Span::styled("offset: ", Style::default().fg(Color::Magenta)),
+                        Span::raw(&clock_offset),
+                    ]),
+                    Line::from(vec![
+                        Span::styled("slew: ", Style::default().fg(Color::Magenta)),
+                        Span::raw(&clock_slew),
+                    ]),
+                    Line::from(vec![
+                        Span::styled("sync: ", Style::default().fg(Color::Magenta)),
+                        Span::raw(&clock_last_sync),
                     ]),
                 ];
 
