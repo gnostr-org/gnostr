@@ -397,17 +397,34 @@ impl Client {
 
     /// Publish profile metadata.
     pub async fn set_metadata(&self, metadata: &Metadata) -> Result<Id, Error> {
+        self.set_metadata_with_tags(metadata, Vec::new()).await
+    }
+
+    /// Build signed profile metadata with additional event tags.
+    pub fn build_metadata_event(
+        &self,
+        metadata: &Metadata,
+        tags: Vec<Tag>,
+    ) -> Result<Event, Error> {
         let content = serde_json::to_string(metadata).map_err(|e| Error::Custom(e.into()))?;
 
-        let metadata_event = EventBuilder::new(EventKind::Metadata, content, Vec::new())
+        EventBuilder::new(EventKind::Metadata, content, tags)
             .to_event(
                 &self
                     .keys
                     .secret_key()
                     .map_err(|e| Error::Custom(e.into()))?,
             )
-            .map_err(|e| Error::Custom(e.into()))?;
+            .map_err(|e| Error::Custom(e.into()))
+    }
 
+    /// Publish profile metadata with additional event tags.
+    pub async fn set_metadata_with_tags(
+        &self,
+        metadata: &Metadata,
+        tags: Vec<Tag>,
+    ) -> Result<Id, Error> {
+        let metadata_event = self.build_metadata_event(metadata, tags)?;
         self.send_event(metadata_event).await
     }
 
@@ -718,6 +735,26 @@ impl std::fmt::Display for Client {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn tagged_metadata_preserves_profile_content_and_signer() {
+        let keys = Keys::generate();
+        let client = Client::new(&keys, Options::new());
+        let metadata = Metadata {
+            picture: Some(crate::nostr::DEFAULT_AVATAR.to_string()),
+            ..Metadata::default()
+        };
+        let tag = Tag::new_tag("t", "gnostr");
+        let event = client
+            .build_metadata_event(&metadata, vec![tag.clone()])
+            .unwrap();
+        event.verify(None).unwrap();
+        assert_eq!(event.kind, EventKind::Metadata);
+        assert_eq!(event.pubkey, keys.public_key());
+        assert_eq!(event.tags, vec![tag]);
+        let profile: Metadata = serde_json::from_str(&event.content).unwrap();
+        assert_eq!(profile, metadata);
+    }
 
     fn test_private_key(seed: u8) -> crate::nostr::PrivateKey {
         crate::nostr::PrivateKey(

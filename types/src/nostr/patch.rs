@@ -5,8 +5,8 @@ use std::time::Duration;
 use url::Url;
 
 use crate::nostr::{
-    client::{local_relay_urls, Options},
-    Client, Error, EventBuilder, EventKind, Id, Keys, Tag,
+    Client, Error, Event, EventBuilder, EventKind, Id, Keys, Tag,
+    client::{Options, local_relay_urls},
 };
 
 const ONLINE_RELAYS_GPS_CSV: &[u8] = include_bytes!("online_relays_gps.csv");
@@ -57,11 +57,31 @@ pub fn get_relay_urls() -> Vec<String> {
     relays
 }
 
-/// Build and publish a NIP-34 patch event.
-///
-/// The event is of kind [`EventKind::Patches`] and carries an `identifier`
-/// (`d` tag) and a `commit` tag. If `build_manifest_event_id` is provided, an
-/// `e` tag referencing it is added.
+/// Build a signed NIP-34 patch with identifier, commit, and `gnostr` hashtag tags.
+/// An optional manifest event is referenced with an `e` tag.
+pub fn build_patch_event(
+    keys: &Keys,
+    d_tag_value: &str,
+    commit_id: &str,
+    patch_content: &str,
+    build_manifest_event_id: Option<&Id>,
+) -> Result<Event, Error> {
+    let mut tags = vec![
+        Tag::new_identifier(d_tag_value.to_string()),
+        Tag::new_tag("commit", commit_id),
+        Tag::new_tag("t", "gnostr"),
+    ];
+
+    if let Some(event_id) = build_manifest_event_id {
+        tags.push(Tag::new_event(*event_id, None, None));
+    }
+
+    EventBuilder::new(EventKind::Patches, patch_content.to_string(), tags)
+        .to_event(&keys.secret_key()?)
+        .map_err(|err| Error::Custom(err.into()))
+}
+
+/// Build and publish a tagged NIP-34 patch event.
 pub async fn publish_patch_event(
     keys: &Keys,
     relay_urls: &[String],
@@ -71,18 +91,13 @@ pub async fn publish_patch_event(
     build_manifest_event_id: Option<&Id>,
 ) -> Result<Id, Error> {
     install_rustls_crypto_provider();
-
-    let mut tags = vec![
-        Tag::new_identifier(d_tag_value.to_string()),
-        Tag::new_tag("commit", commit_id),
-    ];
-
-    if let Some(event_id) = build_manifest_event_id {
-        tags.push(Tag::new_event(*event_id, None, None));
-    }
-
-    let event = EventBuilder::new(EventKind::Patches, patch_content.to_string(), tags)
-        .to_event(&keys.secret_key()?)?;
+    let event = build_patch_event(
+        keys,
+        d_tag_value,
+        commit_id,
+        patch_content,
+        build_manifest_event_id,
+    )?;
 
     log::info!(
         "Signed NIP-34 patch event: id={}, pubkey={}, kind={:?}, commit={}, identifier={}, relays={}",
@@ -111,6 +126,25 @@ pub async fn publish_patch_event(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn patch_has_gnostr_hashtag_and_preserves_manifest_reference() {
+        let keys = Keys::generate();
+        let manifest = Id::mock();
+        let event = build_patch_event(&keys, "repo", "commit", "patch", Some(&manifest)).unwrap();
+        event.verify(None).unwrap();
+        assert_eq!(event.pubkey, keys.public_key());
+        assert_eq!(event.kind, EventKind::Patches);
+        assert!(event.tags.contains(&Tag::new_tag("t", "gnostr")));
+        assert!(event.tags.contains(&Tag::new_tag("commit", "commit")));
+        assert!(
+            event
+                .tags
+                .contains(&Tag::new_identifier("repo".to_string()))
+        );
+        assert!(event.tags.contains(&Tag::new_event(manifest, None, None)));
+        assert_eq!(event.content, "patch");
+    }
 
     #[test]
     fn test_get_relay_urls_includes_local_and_csv() {

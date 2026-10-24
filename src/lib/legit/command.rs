@@ -72,7 +72,7 @@ pub async fn create_event_with_custom_tags(
     content: &str,
     custom_tags: HashMap<String, Vec<String>>,
 ) -> anyhow::Result<(Event, PreEvent)> {
-    let mut tags = Vec::new();
+    let mut tags = vec![Tag::new(&["t", "gnostr"])];
     for (tag_name, tag_values) in custom_tags {
         info!("tag_name={:?}", tag_name);
         info!("tag_values={:?}", tag_values);
@@ -112,7 +112,7 @@ pub async fn create_unsigned_event(
     content: &str,
     custom_tags: HashMap<String, Vec<String>>,
 ) -> anyhow::Result<PreEvent> {
-    let mut tags = Vec::new();
+    let mut tags = vec![Tag::new(&["t", "gnostr"])];
     for (tag_name, tag_values) in custom_tags {
         if let Some(value) = tag_values.get(0) {
             tags.push(Tag::new(&[&tag_name, value]));
@@ -135,7 +135,7 @@ pub async fn create_kind_event(
     content: &str,
     custom_tags: HashMap<String, Vec<String>>,
 ) -> anyhow::Result<(Event, PreEvent)> {
-    let mut tags = Vec::new();
+    let mut tags = vec![Tag::new(&["t", "gnostr"])];
     for (tag_name, tag_values) in custom_tags {
         if let Some(value) = tag_values.get(0) {
             tags.push(Tag::new(&[&tag_name, value]));
@@ -222,6 +222,7 @@ pub async fn create_event(
     info!("pubkey={}", pubkey_keys.as_hex_string());
 
     let mut tags: Vec<Tag> = Vec::new();
+    tags.push(Tag::new(&["t", "gnostr"]));
     tags.push(Tag::new_pubkey(pubkey_keys, None, None));
     tags.push(Tag::new(&["gnostr", "1 2 3 4 11 22 33 44"]));
     tags.push(Tag::new(&["gnostr", "1 2 3 4 11 22 33"]));

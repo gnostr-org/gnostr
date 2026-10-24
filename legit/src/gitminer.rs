@@ -9,7 +9,7 @@ use super::worker::Worker;
 use gnostr_asyncgit::types::Keys;
 use gnostr_types::nostr::patch::{get_relay_urls, publish_patch_event};
 use gnostr_types::nostr::{
-    client::Options as ClientOptions, patch::install_rustls_crypto_provider, Client, Metadata,
+    client::Options as ClientOptions, patch::install_rustls_crypto_provider, Client, Metadata, Tag,
     DEFAULT_AVATAR, DEFAULT_BANNER,
 };
 use std::time::Duration;
@@ -317,13 +317,16 @@ impl Gitminer {
                         "Failed to configure commit metadata relays"
                     })?;
                     client.connect().await;
-                    let metadata_id = client.set_metadata(&metadata).await.map_err(|err| {
-                        error!(
-                            "Failed to publish metadata for commit {}: {}",
-                            head_hash, err
-                        );
-                        "Failed to publish commit profile metadata"
-                    })?;
+                    let metadata_id = client
+                        .set_metadata_with_tags(&metadata, vec![Tag::new_tag("t", "gnostr")])
+                        .await
+                        .map_err(|err| {
+                            error!(
+                                "Failed to publish metadata for commit {}: {}",
+                                head_hash, err
+                            );
+                            "Failed to publish commit profile metadata"
+                        })?;
                     info!(
                         "Published commit profile metadata: id={}, commit={}, pubkey={}",
                         metadata_id,

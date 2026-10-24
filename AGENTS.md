@@ -392,6 +392,7 @@ literal private keys in documentation, logs, or shell history.
 Without `--nsec`, a kind-0 profile event with the gnostr avatar/banner is sent
 before the NIP-34 patch, using the same commit-derived key and selected relays.
 An explicit `--nsec` never triggers automatic profile metadata publication.
+All legit-generated events carry the hashtag tag `["t","gnostr"]` (`#gnostr`).
 
 ## Verification summary
 
