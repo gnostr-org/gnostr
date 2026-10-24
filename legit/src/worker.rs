@@ -27,6 +27,15 @@ impl Worker {
         timestamp: OffsetDateTime,
         tx: mpsc::Sender<(u32, String, String)>,
     ) -> Worker {
+        debug!(
+            "[Worker {}] Initializing: target={}, tree={}, parent={}, message bytes={}, timestamp={}",
+            id,
+            target,
+            tree,
+            parent,
+            message.len(),
+            timestamp
+        );
         Worker {
             id,
             digest: sha1::Sha1::new(),
@@ -52,7 +61,7 @@ impl Worker {
         let mut value = 0u32;
         loop {
             if value % 50000 == 0 {
-                info!(
+                debug!(
                     "[Worker {}] Still mining; iteration value {} for target {}",
                     self.id, value, self.target
                 );
@@ -65,12 +74,19 @@ impl Worker {
                     "[Worker {}] Target hash found! Hash: {}, Value: {}",
                     self.id, result, value
                 );
-                let _ = self.tx.send((self.id, raw, result));
+                match self.tx.send((self.id, raw, result)) {
+                    Ok(()) => debug!("[Worker {}] Sent mined commit to coordinator", self.id),
+                    Err(err) => debug!(
+                        "[Worker {}] Coordinator disconnected before receiving mined commit: {}",
+                        self.id, err
+                    ),
+                }
                 break;
             }
 
             value += 1;
         }
+        debug!("[Worker {}] Stopped after finding a matching commit", self.id);
     }
 
     fn generate_blob(&mut self, value: u32, tstamp: &str) -> (String, String) {
@@ -91,8 +107,13 @@ impl Worker {
             value
         );
         let blob = format!("commit {}\0{}", raw.len(), raw);
-        debug!("raw");
-        debug!("blob");
+        trace!(
+            "[Worker {}] Candidate {}: raw bytes={}, blob bytes={}",
+            self.id,
+            value,
+            raw.len(),
+            blob.len()
+        );
         (raw, blob)
     }
 
@@ -100,6 +121,8 @@ impl Worker {
         self.digest.reset();
         self.digest.input_str(blob);
 
-        self.digest.result_str()
+        let hash = self.digest.result_str();
+        trace!("[Worker {}] Candidate hash: {}", self.id, hash);
+        hash
     }
 }

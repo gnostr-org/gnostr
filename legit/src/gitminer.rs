@@ -38,6 +38,7 @@ impl std::fmt::Debug for Gitminer {
 
 impl Clone for Gitminer {
     fn clone(&self) -> Self {
+        debug!("Reopening repository {} for miner clone", self.opts.repo);
         let repo = gnostr_asyncgit::git2::Repository::open(&self.opts.repo)
             .expect("Failed to open repository during clone");
         Self {
@@ -50,6 +51,7 @@ impl Clone for Gitminer {
 
 impl Gitminer {
     pub fn new(opts: Options) -> Result<Gitminer, &'static str> {
+        debug!("Opening mining repository {}", opts.repo);
         let repo = match gnostr_asyncgit::git2::Repository::open(&opts.repo) {
             Ok(r) => r,
             Err(e) => {
@@ -57,6 +59,7 @@ impl Gitminer {
                 return Err("Failed to open repository");
             }
         };
+        debug!("Opened mining repository at {}", repo.path().display());
 
         let author = Gitminer::load_author(&repo)?;
         debug!("Gitminer initialized with author: {}", author);
@@ -102,7 +105,13 @@ impl Gitminer {
         }
 
         info!("Waiting for a worker to find a valid commit hash...");
-        let (_, blob, hash) = rx.recv().unwrap();
+        let (worker_id, blob, hash) = rx.recv().unwrap();
+        debug!(
+            "Received mined commit from worker {}: hash={}, bytes={}",
+            worker_id,
+            hash,
+            blob.len()
+        );
         info!("Received hash {} from a worker.", hash);
 
         match self.write_commit(&hash, &blob) {
@@ -118,6 +127,12 @@ impl Gitminer {
     }
 
     fn write_commit(&self, hash: &String, blob: &String) -> Result<(), &'static str> {
+        debug!(
+            "Persisting mined commit {} ({} bytes) in {}",
+            hash,
+            blob.len(),
+            self.opts.repo
+        );
         Gitminer::ensure_gnostr_dirs_exist(Path::new(&self.opts.repo))?;
         debug!("Writing commit for hash: {}", hash);
         info!("Writing mined commit {}", hash);
@@ -175,6 +190,11 @@ impl Gitminer {
             .arg(&command_str)
             .output()
             .map_err(|_| "Failed to execute git command")?;
+        debug!(
+            "Git write/reset command exited with status {}; stdout={}",
+            output.status,
+            String::from_utf8_lossy(&output.stdout)
+        );
 
         if !output.status.success() {
             eprintln!("Failed git command: {}", command_str);
@@ -191,6 +211,11 @@ impl Gitminer {
         let keys = Keys::parse(padded_head.clone())
             .ok_or("Failed to derive Nostr keys from mined commit")?;
         let relay_urls = get_relay_urls();
+        debug!(
+            "Selected {} relay(s) for NIP-34 publication of commit {}",
+            relay_urls.len(),
+            head
+        );
         let patch_content = self.patch_content_for_commit(head)?;
         info!(
             "Fetched patch content for {} ({} bytes)",
@@ -209,6 +234,7 @@ impl Gitminer {
         // this blocking call is safe whether or not the caller already runs
         // inside a Tokio runtime (e.g. during #[tokio::test]).
         std::thread::spawn(move || {
+            debug!("Creating dedicated NIP-34 publishing runtime for {}", head_hash);
             let runtime = tokio::runtime::Runtime::new().expect("Failed to create async runtime");
             runtime.block_on(async move {
                 info!(
@@ -233,11 +259,13 @@ impl Gitminer {
         .join()
         .map_err(|_| "NIP-34 patch event thread panicked")?;
 
+        debug!("NIP-34 publishing thread joined for {}", head);
         info!("Submitted NIP-34 patch event for {}", repo_path);
         Ok(())
     }
 
     fn patch_content_for_commit(&self, head: &str) -> Result<String, &'static str> {
+        debug!("Generating patch for commit {} in {}", head, self.opts.repo);
         let output = Command::new("git")
             .args([
                 "show",
@@ -252,9 +280,16 @@ impl Gitminer {
             .map_err(|_| "Failed to generate patch content")?;
 
         if !output.status.success() {
+            error!(
+                "git show failed for {}: status={}, stderr={}",
+                head,
+                output.status,
+                String::from_utf8_lossy(&output.stderr)
+            );
             return Err("Failed to generate patch content");
         }
 
+        debug!("Generated {} patch bytes for {}", output.stdout.len(), head);
         String::from_utf8(output.stdout).map_err(|_| "Patch content was not valid UTF-8")
     }
 
@@ -304,6 +339,7 @@ impl Gitminer {
         std::fs::create_dir_all(&reflog_path)
             .map_err(|_| "Failed to create .gnostr/reflog directory")?;
 
+        debug!("Storage directories ready in {}", gnostr_path.display());
         Ok(())
     }
 
@@ -336,13 +372,14 @@ impl Gitminer {
     fn ensure_no_unstaged_changes(
         repo: &mut gnostr_asyncgit::git2::Repository,
     ) -> Result<(), &'static str> {
-        debug!("Ensuring no unstaged changes.");
+        debug!("Checking for unstaged changes in {}", repo.path().display());
         let mut opts = gnostr_asyncgit::git2::StatusOptions::new();
         let mut m = gnostr_asyncgit::git2::Status::empty();
         let statuses = match repo.statuses(Some(&mut opts)) {
             Ok(s) => s,
             Err(_) => return Err("Failed to get statuses"),
         };
+        debug!("Inspecting {} repository status entries", statuses.len());
 
         m.insert(gnostr_asyncgit::git2::Status::WT_NEW);
         m.insert(gnostr_asyncgit::git2::Status::WT_MODIFIED);
@@ -356,6 +393,11 @@ impl Gitminer {
                 None => return Err("Failed to get status entry"),
             };
             if status_entry.status().intersects(m) {
+                debug!(
+                    "Unstaged change blocks mining: path={:?}, status={:?}",
+                    status_entry.path(),
+                    status_entry.status()
+                );
                 return Err("Please stash all unstaged changes before running.");
             }
         }

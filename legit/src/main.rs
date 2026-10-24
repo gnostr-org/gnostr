@@ -51,23 +51,14 @@ fn main() -> io::Result<()> {
     info!("Starting gnostr-legit");
 
     let start = Instant::now();
-    println!("start={:?}", start);
-
-    let elapsed = start.elapsed();
-    println!("Elapsed: {:?}", elapsed);
-
-    // Or get it in specific units:
-    println!("Elapsed seconds: {}", elapsed.as_secs());
-    println!("Elapsed milliseconds: {}", elapsed.as_millis());
-
-    let _now = chrono::Local::now();
-
-    // This will now correctly output formatted calendar time
-    println!("{}", _now.format("%d/%m/%Y %T"));
+    debug!("Mining session started at {}", chrono::Local::now());
 
     let count = thread::available_parallelism()?.get();
     assert!(count >= 1_usize);
-    println!("{}={}", std::any::type_name_of_val(&count), count);
+    debug!(
+        "Available logical processors: {}; requested worker threads: {:?}",
+        count, args.threads
+    );
     let _sha256 = Sha256::new();
     //sha256.input_str(count);
     //let ip_address_hash: String = format!("{:X}", sha256.finalize());
@@ -82,11 +73,22 @@ fn main() -> io::Result<()> {
         kind: None,
     };
 
-    let _state = repo::state(&opts.repo);
+    debug!(
+        "Mining configuration: repo={}, prefix={}, threads={}, message parts={}, timestamp={}",
+        opts.repo,
+        opts.target,
+        opts.threads,
+        opts.message.len(),
+        opts.timestamp
+    );
+    let state = repo::state(&opts.repo);
+    debug!("Repository state before mining: {:?}", state);
 
+    debug!("Initializing git miner");
     let mut miner = match Gitminer::new(opts) {
         Ok(m) => m,
         Err(e) => {
+            error!("Failed to start git miner: {}", e);
             eprintln!("Failed to start git miner: {}", e);
             std::process::exit(1);
         }
@@ -95,6 +97,7 @@ fn main() -> io::Result<()> {
     let hash = match miner.mine() {
         Ok(s) => s,
         Err(e) => {
+            error!("Failed to generate commit: {}", e);
             eprintln!("Failed to generate commit: {}", e);
             std::process::exit(1);
         }
@@ -106,12 +109,12 @@ fn main() -> io::Result<()> {
         hash,
         duration.as_secs()
     );
-    let elapsed = start.elapsed();
-    println!("Elapsed: {:?}", elapsed);
-
-    // Or get it in specific units:
-    println!("Elapsed seconds: {}", elapsed.as_secs());
-    println!("Elapsed milliseconds: {}", elapsed.as_millis());
+    debug!(
+        "Mining session completed: hash={}, elapsed={:?}, elapsed_ms={}",
+        hash,
+        duration,
+        duration.as_millis()
+    );
     Ok(())
 }
 

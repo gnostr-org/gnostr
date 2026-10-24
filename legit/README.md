@@ -37,6 +37,18 @@ gnostr-legit --version
 Without flags, it uses the current repository, prefix `000`, available CPU
 parallelism, and `default commit message`. Thread counts must be positive.
 
+Enable debug diagnostics for repository discovery, CPU/thread selection, mining,
+storage, and NIP-34 publication with:
+
+```bash
+RUST_LOG=gnostr_legit=debug gnostr-legit --repo . --prefix 000 -m "subject"
+```
+
+Debug output goes to stderr; the successful commit summary stays on stdout.
+Use `RUST_LOG=gnostr_legit=trace` for per-candidate sizes and full hashes; trace
+logging is extremely verbose and slows mining. Library callers configure their
+own logger.
+
 To create a commit with a subject and a multi-line body, use the `-m` flag multiple times. The first instance of `-m` will be the commit subject, and each subsequent instance will be a new line in the commit body.
 
 ### Command Syntax
