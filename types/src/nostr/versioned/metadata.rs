@@ -1,5 +1,6 @@
 use std::fmt;
 
+use crate::nostr::{DEFAULT_AVATAR, DEFAULT_BANNER};
 use serde::{
     de::{Deserialize, Deserializer, MapAccess, Visitor},
     ser::{Serialize, SerializeMap, Serializer},
@@ -32,18 +33,23 @@ pub struct MetadataV1 {
 
 impl Default for MetadataV1 {
     fn default() -> Self {
+        let mut other = Map::new();
+        let _ = other.insert(
+            "banner".to_string(),
+            Value::String(DEFAULT_BANNER.to_string()),
+        );
         MetadataV1 {
             name: None,
             about: None,
-            picture: None,
+            picture: Some(DEFAULT_AVATAR.to_string()),
             nip05: None,
-            other: Map::new(),
+            other,
         }
     }
 }
 
 impl MetadataV1 {
-    /// Create new empty Metadata
+    /// Create metadata with the default gnostr avatar and banner.
     pub fn new() -> MetadataV1 {
         MetadataV1::default()
     }
@@ -131,7 +137,13 @@ impl<'de> Visitor<'de> for MetadataV1Visitor {
             let _ = map.insert(key, value);
         }
 
-        let mut m: MetadataV1 = Default::default();
+        let mut m = MetadataV1 {
+            name: None,
+            about: None,
+            picture: None,
+            nip05: None,
+            other: Map::new(),
+        };
 
         if let Some(Value::String(s)) = map.remove("name") {
             m.name = Some(s);
@@ -155,6 +167,24 @@ impl<'de> Visitor<'de> for MetadataV1Visitor {
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[test]
+    fn default_metadata_serializes_gnostr_artwork() {
+        let value = serde_json::to_value(MetadataV1::default()).unwrap();
+        assert_eq!(value["picture"], DEFAULT_AVATAR);
+        assert_eq!(value["banner"], DEFAULT_BANNER);
+    }
+
+    #[test]
+    fn deserialization_does_not_inject_default_artwork() {
+        let missing: MetadataV1 = serde_json::from_str("{}").unwrap();
+        assert!(missing.picture.is_none());
+        assert!(missing.other.is_empty());
+
+        let nulls: MetadataV1 = serde_json::from_str(r#"{"picture":null,"banner":null}"#).unwrap();
+        assert!(nulls.picture.is_none());
+        assert_eq!(nulls.other.get("banner"), Some(&Value::Null));
+    }
 
     crate::test_serde! {MetadataV1, test_metadata_serde}
 

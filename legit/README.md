@@ -53,13 +53,31 @@ uses the gnostr avatar and banner from `gnostr-types`, then publishes the NIP-34
 patch with the same key to the same relays. Both event IDs are logged.
 Metadata publication errors are reported and stop publication of the patch.
 With an explicit `--nsec`, no profile metadata is published or overwritten.
+`gnostr_types::nostr::Metadata::default()` and `Metadata::new()` supply these
+avatar/banner URLs. Deserializing existing profiles preserves missing or null
+artwork fields rather than inserting the defaults.
 All legit-generated events include the Nostr hashtag tag `["t","gnostr"]`,
 including kind-0 profiles and NIP-34 patches, so clients can discover `#gnostr`.
 After a patch is sent, a kind-1 announcement is sent to the same relays with the
 same signing key. Its content is `nostr:note1...` referencing the patch event,
-and its tags include `["e","<patch event ID>"]` and `["t","gnostr"]`.
+and its tags include `["e","<patch event ID>","","mention"]` and `["t","gnostr"]`.
 The announcement event ID is logged separately. Announcement errors propagate;
 the already-published patch is not rolled back.
+
+The patch and announcement also include a `p` tag for the parent commit's public
+key, derived from its zero-padded Git hash. They reference the parent's actual
+patch event with `["e","<parent patch event ID>","","reply"]` when known.
+Event IDs are cached under the repository's Git directory in
+`gnostr/patch-events/<commit hash>` immediately after successful patch sending.
+If the parent is not cached, a bounded relay lookup checks its signature,
+commit tag, kind, and derived author, choosing the oldest matching event
+(event ID breaks timestamp ties). Missing parents or failed lookups are logged;
+publication continues as a chain root with the parent `p` but no parent `e`.
+Corrupted caches and cache I/O failures are reported as errors.
+Parent public keys are deterministic; Nostr event IDs are not derivable solely
+from Git hashes. An explicit `--nsec` can sign with a different public key, so
+relay discovery by the derived identity cannot find that parent's patch without
+the local cache.
 
 Enable debug diagnostics for repository discovery, CPU/thread selection, mining,
 storage, and NIP-34 publication with:

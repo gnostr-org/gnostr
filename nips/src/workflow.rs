@@ -277,7 +277,7 @@ where
     ));
     let runtime = tokio::runtime::Runtime::new()?;
     runtime.block_on(async {
-        publish_patch_event(&keys, &relay_urls, &repo_name, &commit_hash, &patch, None).await
+        publish_patch_event(&keys, &relay_urls, &repo_name, &commit_hash, &patch, None, None).await
     })?;
 
     log(format!("proposal published {commit_hash}"));

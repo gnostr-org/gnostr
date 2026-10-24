@@ -392,10 +392,18 @@ literal private keys in documentation, logs, or shell history.
 Without `--nsec`, a kind-0 profile event with the gnostr avatar/banner is sent
 before the NIP-34 patch, using the same commit-derived key and selected relays.
 An explicit `--nsec` never triggers automatic profile metadata publication.
+`gnostr_types::nostr::Metadata::default()` and `Metadata::new()` include the
+default avatar and banner URLs; deserialization does not inject these defaults.
 All legit-generated events carry the hashtag tag `["t","gnostr"]` (`#gnostr`).
 After the patch is sent, a kind-1 note references its event ID as `nostr:note1...`
 in the content and an `e` tag. The note uses the same signing key and relays,
 includes `["t","gnostr"]`, and logs its own event ID.
+Both patch and note include the parent commit-derived `p` tag. A cached or
+relay-discovered parent patch ID adds an `e` tag marked `reply`; the note's own
+patch reference is marked `mention`. Cache entries live in the Git directory at
+`gnostr/patch-events/<commit hash>`. Missing parent events produce chain roots,
+not fabricated event IDs. Parent public keys are derived deterministically from
+zero-padded Git hashes; actual event IDs must be cached or discovered.
 
 ## Verification summary
 

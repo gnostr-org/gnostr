@@ -7,10 +7,12 @@ use std::thread;
 // use git2::*;
 use super::worker::Worker;
 use gnostr_asyncgit::types::Keys;
-use gnostr_types::nostr::patch::{build_patch_announcement, get_relay_urls, publish_patch_event};
+use gnostr_types::nostr::patch::{
+    build_patch_announcement, get_relay_urls, publish_patch_event, ParentCommitLink,
+};
 use gnostr_types::nostr::{
-    client::Options as ClientOptions, patch::install_rustls_crypto_provider, Client, Metadata, Tag,
-    DEFAULT_AVATAR, DEFAULT_BANNER,
+    client::Options as ClientOptions, patch::install_rustls_crypto_provider, Client, Event,
+    EventKind, Filter, Id, Metadata, PublicKey, Tag,
 };
 use std::time::Duration;
 use time_0_3::OffsetDateTime;
@@ -141,7 +143,7 @@ impl Gitminer {
 
         match self.write_commit(&hash, &blob) {
             Ok(_) => {
-                self.send_nip34_patch_event(&hash)?;
+                self.send_nip34_patch_event(&hash, &parent)?;
                 Ok(hash)
             }
             Err(e) => {
@@ -231,20 +233,123 @@ impl Gitminer {
     }
 
     fn commit_profile_metadata(&self) -> Option<Metadata> {
-        if self.signing_keys.is_some() {
-            return None;
-        }
-        let mut metadata = Metadata {
-            picture: Some(DEFAULT_AVATAR.to_string()),
-            ..Metadata::default()
-        };
-        let _ = metadata
-            .other
-            .insert("banner".to_string(), DEFAULT_BANNER.into());
-        Some(metadata)
+        self.signing_keys.is_none().then(Metadata::default)
     }
 
-    fn send_nip34_patch_event(&self, head: &str) -> Result<(), &'static str> {
+    fn cache_patch_event(cache_dir: &Path, commit: &str, event_id: Id) -> Result<(), &'static str> {
+        std::fs::create_dir_all(cache_dir)
+            .and_then(|_| {
+                std::fs::write(
+                    cache_dir.join(commit),
+                    format!("{}\n", event_id.as_hex_string()),
+                )
+            })
+            .map_err(|err| {
+                error!(
+                    "Failed to cache patch event {} for commit {}: {}",
+                    event_id, commit, err
+                );
+                "Failed to cache patch event"
+            })
+    }
+
+    fn select_parent_patch(events: Vec<Event>, commit: &str, pubkey: PublicKey) -> Option<Id> {
+        events
+            .into_iter()
+            .filter(|event| {
+                event.pubkey == pubkey
+                    && event.kind == EventKind::Patches
+                    && event
+                        .tags
+                        .iter()
+                        .any(|tag| tag.tagname() == "commit" && tag.value() == commit)
+            })
+            .filter(|event| match event.verify(None) {
+                Ok(()) => true,
+                Err(err) => {
+                    warn!("Ignoring invalid parent patch event {}: {}", event.id, err);
+                    false
+                }
+            })
+            .min_by_key(|event| (event.created_at, event.id))
+            .map(|event| event.id)
+    }
+
+    async fn resolve_parent(
+        client: &Client,
+        cache_dir: &Path,
+        commit: &str,
+    ) -> Result<ParentCommitLink, &'static str> {
+        let keys = Keys::parse(format!("{:0>64}", commit)).ok_or_else(|| {
+            error!("Failed to derive public key for parent commit {}", commit);
+            "Failed to derive parent commit identity"
+        })?;
+        let pubkey = keys.public_key();
+        info!(
+            "Parent commit identity: commit={}, pubkey={}",
+            commit, pubkey
+        );
+        let event_id = match std::fs::read_to_string(cache_dir.join(commit)) {
+            Ok(value) => Some(Id::try_from_hex_string(value.trim()).map_err(|err| {
+                error!(
+                    "Invalid cached patch event ID for parent commit {}: {}",
+                    commit, err
+                );
+                "Invalid cached parent patch event ID"
+            })?),
+            Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
+                let mut filter = Filter::new();
+                filter
+                    .add_author(&pubkey.into())
+                    .add_event_kind(EventKind::Patches);
+                filter.limit = Some(32);
+                let events = tokio::time::timeout(
+                    Duration::from_secs(8),
+                    client.get_events_of(vec![filter], Some(Duration::from_secs(2))),
+                )
+                .await;
+                let event_id = match events {
+                    Ok(Ok(events)) => Self::select_parent_patch(events, commit, pubkey),
+                    Ok(Err(err)) => {
+                        warn!("Parent patch lookup failed for commit {}: {}", commit, err);
+                        None
+                    }
+                    Err(err) => {
+                        warn!(
+                            "Parent patch lookup timed out for commit {}: {}",
+                            commit, err
+                        );
+                        None
+                    }
+                };
+                if let Some(event_id) = event_id {
+                    Self::cache_patch_event(cache_dir, commit, event_id)?;
+                }
+                event_id
+            }
+            Err(err) => {
+                error!(
+                    "Failed to read cached patch event for parent commit {}: {}",
+                    commit, err
+                );
+                return Err("Failed to read cached parent patch event");
+            }
+        };
+        if let Some(event_id) = event_id {
+            info!(
+                "Linked parent patch: commit={}, pubkey={}, event_id={}",
+                commit, pubkey, event_id
+            );
+        } else {
+            warn!(
+                "No parent patch found for commit {}; publishing as a chain root with parent pubkey {} but no parent e tag",
+                commit, pubkey
+            );
+        }
+        Ok(ParentCommitLink { pubkey, event_id })
+    }
+
+    fn send_nip34_patch_event(&self, head: &str, parent: &str) -> Result<(), &'static str> {
         info!("Preparing NIP-34 patch event for mined commit {}", head);
         let keys = match &self.signing_keys {
             Some(keys) => keys.clone(),
@@ -289,6 +394,8 @@ impl Gitminer {
         let head_hash = head.to_string();
         let repo_path = self.opts.repo.clone();
         let metadata = self.commit_profile_metadata();
+        let parent_hash = parent.to_string();
+        let cache_dir = self.repo.path().join("gnostr/patch-events");
 
         // Spawn a dedicated OS thread with its own Tokio runtime so that
         // this blocking call is safe whether or not the caller already runs
@@ -310,6 +417,7 @@ impl Gitminer {
                     "Failed to configure commit event relays"
                 })?;
                 client.connect().await;
+                let parent = Self::resolve_parent(&client, &cache_dir, &parent_hash).await?;
                 if let Some(metadata) = metadata {
                     debug!("Commit profile metadata: {:?}", metadata);
                     info!(
@@ -346,6 +454,7 @@ impl Gitminer {
                     &head_hash,
                     &patch_content,
                     None,
+                    Some(&parent),
                 )
                 .await
                 .map_err(|err| {
@@ -359,7 +468,8 @@ impl Gitminer {
                     "Published NIP-34 patch event: id={}, commit={}, repository={}",
                     event_id, head_hash, repo_name
                 );
-                let announcement = build_patch_announcement(&keys, event_id).map_err(|err| {
+                Self::cache_patch_event(&cache_dir, &head_hash, event_id)?;
+                let announcement = build_patch_announcement(&keys, event_id, Some(&parent)).map_err(|err| {
                     error!("Failed to build announcement for patch {}: {}", event_id, err);
                     "Failed to build patch announcement"
                 })?;
@@ -544,6 +654,7 @@ impl Gitminer {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use gnostr_types::nostr::{EventBuilder, Unixtime, DEFAULT_AVATAR, DEFAULT_BANNER};
 
     fn miner() -> (tempfile::TempDir, Gitminer) {
         let directory = tempfile::tempdir().unwrap();
@@ -583,5 +694,77 @@ mod tests {
         let miner = miner.with_signing_keys(Keys::generate());
         assert!(miner.commit_profile_metadata().is_none());
         assert!(miner.clone().commit_profile_metadata().is_none());
+    }
+
+    #[test]
+    fn parent_cache_preserves_actual_event_id_and_missing_parent_becomes_root() {
+        let directory = tempfile::tempdir().unwrap();
+        let commit = "000d93aaec00000000000000000000000000000000";
+        let keys = Keys::parse(format!("{:0>64}", commit)).unwrap();
+        let client = Client::new(&keys, ClientOptions::new());
+        let runtime = tokio::runtime::Runtime::new().unwrap();
+        let root = runtime
+            .block_on(Gitminer::resolve_parent(&client, directory.path(), commit))
+            .unwrap();
+        assert_eq!(root.pubkey, keys.public_key());
+        assert_eq!(root.event_id, None);
+
+        let event_id = Id::mock();
+        Gitminer::cache_patch_event(directory.path(), commit, event_id).unwrap();
+        let linked = runtime
+            .block_on(Gitminer::resolve_parent(&client, directory.path(), commit))
+            .unwrap();
+        assert_eq!(linked.pubkey, keys.public_key());
+        assert_eq!(linked.event_id, Some(event_id));
+
+        std::fs::write(directory.path().join(commit), "corrupted event ID").unwrap();
+        assert!(runtime
+            .block_on(Gitminer::resolve_parent(&client, directory.path(), commit))
+            .is_err());
+    }
+
+    #[test]
+    fn parent_discovery_checks_signature_author_kind_and_commit_before_selecting_oldest() {
+        let commit = "000d93aaec00000000000000000000000000000000";
+        let keys = Keys::parse(format!("{:0>64}", commit)).unwrap();
+        let event = |keys: &Keys, kind, commit: &str, timestamp| {
+            EventBuilder::new(
+                kind,
+                "patch".to_string(),
+                vec![Tag::new_tag("commit", commit)],
+            )
+            .created_at(Unixtime(timestamp))
+            .to_event(&keys.secret_key().unwrap())
+            .unwrap()
+        };
+        let oldest = event(&keys, EventKind::Patches, commit, 2);
+        let another = EventBuilder::new(
+            EventKind::Patches,
+            "another signed patch".to_string(),
+            vec![Tag::new_tag("commit", commit)],
+        )
+        .created_at(Unixtime(2))
+        .to_event(&keys.secret_key().unwrap())
+        .unwrap();
+        let expected = oldest.id.min(another.id);
+        let mut invalid = event(&keys, EventKind::Patches, commit, 1);
+        invalid.content.push_str("tampered");
+        let events = vec![
+            event(&Keys::generate(), EventKind::Patches, commit, 1),
+            event(&keys, EventKind::TextNote, commit, 1),
+            event(&keys, EventKind::Patches, "other commit", 1),
+            invalid,
+            event(&keys, EventKind::Patches, commit, 3),
+            oldest,
+            another,
+        ];
+        assert_eq!(
+            Gitminer::select_parent_patch(events.clone(), commit, keys.public_key()),
+            Some(expected)
+        );
+        assert_eq!(
+            Gitminer::select_parent_patch(events[..4].to_vec(), commit, keys.public_key()),
+            None
+        );
     }
 }

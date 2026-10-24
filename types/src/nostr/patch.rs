@@ -5,11 +5,29 @@ use std::time::Duration;
 use url::Url;
 
 use crate::nostr::{
-    Client, Error, Event, EventBuilder, EventKind, Id, Keys, Tag,
+    Client, Error, Event, EventBuilder, EventKind, Id, Keys, PublicKey, Tag,
     client::{Options, local_relay_urls},
 };
 
 const ONLINE_RELAYS_GPS_CSV: &[u8] = include_bytes!("online_relays_gps.csv");
+
+/// The deterministic parent commit identity and its published patch event, if known.
+#[derive(Clone, Copy, Debug)]
+pub struct ParentCommitLink {
+    /// Public key derived from the zero-padded parent Git commit hash.
+    pub pubkey: PublicKey,
+    /// Actual Nostr patch event ID, never a padded Git hash.
+    pub event_id: Option<Id>,
+}
+
+fn append_parent_tags(tags: &mut Vec<Tag>, parent: Option<&ParentCommitLink>) {
+    if let Some(parent) = parent {
+        tags.push(Tag::new_pubkey(parent.pubkey, None, None));
+        if let Some(event_id) = parent.event_id {
+            tags.push(Tag::new_event(event_id, None, Some("reply".to_string())));
+        }
+    }
+}
 
 /// Install the `ring` rustls crypto provider.
 ///
@@ -65,6 +83,7 @@ pub fn build_patch_event(
     commit_id: &str,
     patch_content: &str,
     build_manifest_event_id: Option<&Id>,
+    parent: Option<&ParentCommitLink>,
 ) -> Result<Event, Error> {
     let mut tags = vec![
         Tag::new_identifier(d_tag_value.to_string()),
@@ -75,6 +94,7 @@ pub fn build_patch_event(
     if let Some(event_id) = build_manifest_event_id {
         tags.push(Tag::new_event(*event_id, None, None));
     }
+    append_parent_tags(&mut tags, parent);
 
     EventBuilder::new(EventKind::Patches, patch_content.to_string(), tags)
         .to_event(&keys.secret_key()?)
@@ -82,14 +102,20 @@ pub fn build_patch_event(
 }
 
 /// Build a kind-1 announcement with a `nostr:note` content reference and `e`/`t` tags.
-pub fn build_patch_announcement(keys: &Keys, patch_event_id: Id) -> Result<Event, Error> {
+pub fn build_patch_announcement(
+    keys: &Keys,
+    patch_event_id: Id,
+    parent: Option<&ParentCommitLink>,
+) -> Result<Event, Error> {
+    let mut tags = vec![
+        Tag::new_event(patch_event_id, None, Some("mention".to_string())),
+        Tag::new_tag("t", "gnostr"),
+    ];
+    append_parent_tags(&mut tags, parent);
     EventBuilder::new(
         EventKind::TextNote,
         format!("nostr:{}", patch_event_id.as_bech32_string()),
-        vec![
-            Tag::new_event(patch_event_id, None, None),
-            Tag::new_tag("t", "gnostr"),
-        ],
+        tags,
     )
     .to_event(&keys.secret_key()?)
     .map_err(|err| Error::Custom(err.into()))
@@ -103,6 +129,7 @@ pub async fn publish_patch_event(
     commit_id: &str,
     patch_content: &str,
     build_manifest_event_id: Option<&Id>,
+    parent: Option<&ParentCommitLink>,
 ) -> Result<Id, Error> {
     install_rustls_crypto_provider();
     let event = build_patch_event(
@@ -111,6 +138,7 @@ pub async fn publish_patch_event(
         commit_id,
         patch_content,
         build_manifest_event_id,
+        parent,
     )?;
 
     log::info!(
@@ -144,8 +172,8 @@ mod tests {
     #[test]
     fn patch_announcement_references_patch_and_uses_same_signer() {
         let keys = Keys::generate();
-        let patch = build_patch_event(&keys, "repo", "commit", "patch", None).unwrap();
-        let note = build_patch_announcement(&keys, patch.id).unwrap();
+        let patch = build_patch_event(&keys, "repo", "commit", "patch", None, None).unwrap();
+        let note = build_patch_announcement(&keys, patch.id, None).unwrap();
         note.verify(None).unwrap();
         assert_eq!(note.kind, EventKind::TextNote);
         assert_eq!(note.pubkey, patch.pubkey);
@@ -156,7 +184,7 @@ mod tests {
         assert_eq!(
             note.tags,
             vec![
-                Tag::new_event(patch.id, None, None),
+                Tag::new_event(patch.id, None, Some("mention".to_string())),
                 Tag::new_tag("t", "gnostr"),
             ]
         );
@@ -166,7 +194,8 @@ mod tests {
     fn patch_has_gnostr_hashtag_and_preserves_manifest_reference() {
         let keys = Keys::generate();
         let manifest = Id::mock();
-        let event = build_patch_event(&keys, "repo", "commit", "patch", Some(&manifest)).unwrap();
+        let event =
+            build_patch_event(&keys, "repo", "commit", "patch", Some(&manifest), None).unwrap();
         event.verify(None).unwrap();
         assert_eq!(event.pubkey, keys.public_key());
         assert_eq!(event.kind, EventKind::Patches);
@@ -179,6 +208,74 @@ mod tests {
         );
         assert!(event.tags.contains(&Tag::new_event(manifest, None, None)));
         assert_eq!(event.content, "patch");
+    }
+
+    #[test]
+    fn patch_and_announcement_link_to_parent_event_and_identity() {
+        let keys = Keys::generate();
+        let parent = ParentCommitLink {
+            pubkey: Keys::generate().public_key(),
+            event_id: Some(Id::mock()),
+        };
+        let manifest = Id::mock();
+        let patch = build_patch_event(
+            &keys,
+            "repo",
+            "commit",
+            "patch",
+            Some(&manifest),
+            Some(&parent),
+        )
+        .unwrap();
+        assert!(patch.tags.contains(&Tag::new_event(manifest, None, None)));
+        let note = build_patch_announcement(&keys, patch.id, Some(&parent)).unwrap();
+        for event in [&patch, &note] {
+            event.verify(None).unwrap();
+            assert!(
+                event
+                    .tags
+                    .contains(&Tag::new_pubkey(parent.pubkey, None, None))
+            );
+            assert!(event.tags.contains(&Tag::new_event(
+                parent.event_id.unwrap(),
+                None,
+                Some("reply".to_string())
+            )));
+            assert!(event.tags.contains(&Tag::new_tag("t", "gnostr")));
+        }
+        assert!(
+            note.tags
+                .contains(&Tag::new_event(patch.id, None, Some("mention".to_string())))
+        );
+    }
+
+    #[test]
+    fn undiscovered_parent_keeps_identity_without_a_fabricated_event_reference() {
+        let keys = Keys::generate();
+        let parent = ParentCommitLink {
+            pubkey: Keys::generate().public_key(),
+            event_id: None,
+        };
+        let patch =
+            build_patch_event(&keys, "repo", "commit", "patch", None, Some(&parent)).unwrap();
+        patch.verify(None).unwrap();
+        assert!(
+            patch
+                .tags
+                .contains(&Tag::new_pubkey(parent.pubkey, None, None))
+        );
+        assert!(!patch.tags.iter().any(|tag| tag.tagname() == "e"));
+        let note = build_patch_announcement(&keys, patch.id, Some(&parent)).unwrap();
+        note.verify(None).unwrap();
+        assert!(
+            note.tags
+                .contains(&Tag::new_pubkey(parent.pubkey, None, None))
+        );
+        assert!(
+            note.tags
+                .contains(&Tag::new_event(patch.id, None, Some("mention".to_string()),))
+        );
+        assert!(!note.tags.iter().any(|tag| tag.marker() == "reply"));
     }
 
     #[test]
