@@ -86,8 +86,11 @@ uses the gnostr avatar and banner from `gnostr-types`, then publishes the NIP-34
 patch with the same key to the same relays. Before the patch, each generated
 profile also publishes a NIP-02 kind-3 follow list containing
 `npub1gulj0vlre2dcpxltznw790wcds382wpkxg6kt444hvmefpdmm9wqtqv4vx`
-(the identity derived from SHA-256 of the empty string), signed with the same
-commit-derived key and sent to the same relays. This follow list includes
+(the identity derived from SHA-256 of the empty string) and the parent commit's
+profile, derived from its zero-padded hash. The parent is the first parent for a
+merge; following it does not require discovering a parent patch event.
+Duplicate follows are omitted. The list is signed with the same commit-derived
+key and sent to the same relays. This follow list includes
 `#gnostr` and the commit nonce. All event IDs are logged.
 Metadata or follow-list publication errors are reported and stop publication
 of the patch. With an explicit `--nsec`, neither profile metadata nor a follow

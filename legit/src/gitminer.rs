@@ -305,21 +305,21 @@ impl Gitminer {
         })
     }
 
-    fn commit_profile_follow_event(keys: &Keys, nonce_tag: Tag) -> anyhow::Result<Event> {
+    fn commit_profile_follow_event(
+        keys: &Keys,
+        parent: &PublicKey,
+        nonce_tag: Tag,
+    ) -> anyhow::Result<Event> {
         let followed = PublicKey::try_from_bech32_string(
             "npub1gulj0vlre2dcpxltznw790wcds382wpkxg6kt444hvmefpdmm9wqtqv4vx",
             true,
         )?;
-        EventBuilder::new(
-            EventKind::ContactList,
-            String::new(),
-            vec![
-                Tag::new_tag("p", &followed.as_hex_string()),
-                Tag::new_tag("t", "gnostr"),
-                nonce_tag,
-            ],
-        )
-        .to_event(&keys.secret_key()?)
+        let mut tags = vec![Tag::new_tag("p", &followed.as_hex_string())];
+        if parent != &followed {
+            tags.push(Tag::new_tag("p", &parent.as_hex_string()));
+        }
+        tags.extend([Tag::new_tag("t", "gnostr"), nonce_tag]);
+        EventBuilder::new(EventKind::ContactList, String::new(), tags).to_event(&keys.secret_key()?)
     }
 
     fn mined_commit_nonce(blob: &str) -> Result<&str, &'static str> {
@@ -553,7 +553,7 @@ impl Gitminer {
                         head_hash,
                         keys.public_key()
                     );
-                    let follows = Self::commit_profile_follow_event(&keys, nonce_tag).map_err(
+                    let follows = Self::commit_profile_follow_event(&keys, &parent.pubkey, nonce_tag).map_err(
                         |err| {
                             error!(
                                 "Failed to build follow list for commit {}: {}",
@@ -570,10 +570,11 @@ impl Gitminer {
                         "Failed to publish commit profile follow list"
                     })?;
                     info!(
-                        "Published commit profile follow list: id={}, commit={}, pubkey={}",
+                        "Published commit profile follow list: id={}, commit={}, pubkey={}, parent_pubkey={}",
                         follows_id,
                         head_hash,
-                        keys.public_key()
+                        keys.public_key(),
+                        parent.pubkey
                     );
                 }
                 info!(
@@ -842,10 +843,16 @@ mod tests {
     }
 
     #[test]
-    fn commit_profile_follows_empty_sha256_identity_with_signed_kind_3() {
+    fn commit_profile_follows_parent_and_empty_sha256_identity_with_signed_kind_3() {
         let keys = Keys::generate();
+        let parent = Keys::parse(format!(
+            "{:0>64}",
+            "000b3840ed5d6b9a6795d687fcb4cd948969b7a8"
+        ))
+        .unwrap()
+        .public_key();
         let nonce = commit_nonce_tag("01-00000122").unwrap();
-        let event = Gitminer::commit_profile_follow_event(&keys, nonce.clone()).unwrap();
+        let event = Gitminer::commit_profile_follow_event(&keys, &parent, nonce.clone()).unwrap();
         event.verify(None).unwrap();
         assert_eq!(event.kind, EventKind::ContactList);
         assert_eq!(event.pubkey, keys.public_key());
@@ -859,9 +866,16 @@ mod tests {
             event.tags,
             vec![
                 Tag::new_tag("p", &followed.as_hex_string()),
+                Tag::new_tag("p", &parent.as_hex_string()),
                 Tag::new_tag("t", "gnostr"),
-                nonce,
+                nonce.clone(),
             ]
+        );
+        let event = Gitminer::commit_profile_follow_event(&keys, &followed, nonce).unwrap();
+        event.verify(None).unwrap();
+        assert_eq!(
+            event.tags.iter().filter(|tag| tag.tagname() == "p").count(),
+            1
         );
     }
 

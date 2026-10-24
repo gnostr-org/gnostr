@@ -404,7 +404,9 @@ Its `name` and `display_name` are both `gnostr@<commit short hash>`, using the
 first seven hexadecimal characters of the mined commit hash.
 Generated profiles also publish a kind-3 NIP-02 follow list for
 `npub1gulj0vlre2dcpxltznw790wcds382wpkxg6kt444hvmefpdmm9wqtqv4vx`,
-the empty-SHA-256 identity, before the patch. It uses the same signer and relays,
+the empty-SHA-256 identity, and the profile derived from the padded first-parent
+commit hash, before the patch. Parent follows do not require a known parent
+patch event ID, and duplicate follows are omitted. It uses the same signer and relays,
 includes `#gnostr` and the commit nonce, and logs its event ID. Follow-list errors
 propagate. An explicit `--nsec` never triggers automatic profile metadata or
 follow-list publication.
