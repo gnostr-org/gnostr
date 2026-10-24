@@ -70,6 +70,13 @@ damus implements the following [Nostr Implementation Possibilities][nips]
     Ignore also hides it and disconnects it. Add or turning Ignore off explicitly
     allows the relay again. Disabling auto-subscribe stops new automatic additions,
     without disconnecting existing relays.
+  - Passive `#gnostr` discovery runs asynchronously on every connected relay,
+    including automatically added relays. Relays advertising NIP-50 also get
+    a separate `search: "gnostr"` filter (OR, not AND, with the hashtag filter).
+    Searches stay subscribed for live events after the initial bounded history,
+    resume after reconnect, and merge matching posts/Git events into Home
+    without changing your current screen. Relays without NIP-50 still get
+    hashtag discovery; unrestricted full-text search is not assumed.
   - Find more relays to add: https://nostr.info/relays/
 - Public Key (pubkey): Your public, personal address and how people can find and tag you
 - Secret Key: Your _private_ key unique to you. Never share your private key publically and share with other clients at your own risk!

@@ -44,6 +44,8 @@ class HomeModel: ObservableObject {
     let notifications_subid = UUID().description
     let dms_subid = UUID().description
     let init_subid = UUID().description
+    let gnostr_subid = UUID().description
+    private var gnostr_last_seen: [String: Int64] = [:]
 
     @Published var new_events: NewEventsBits = NewEventsBits()
     @Published var notifications: [NostrEvent] = []
@@ -76,6 +78,17 @@ class HomeModel: ObservableObject {
     func process_event(sub_id: String, relay_id: String, ev: NostrEvent) {
         if has_sub_id_event(sub_id: sub_id, ev_id: ev.id) {
             return
+        }
+
+        if sub_id == gnostr_subid {
+            guard event_mentions_gnostr(ev) else { return }
+            guard ev.pubkey.count == 64, ev.sig.count == 128, validate_event(ev: ev) == .ok else {
+                print("Ignoring invalid gnostr search event \(ev.id) from \(relay_id)")
+                return
+            }
+            has_event[sub_id, default: []].insert(ev.id)
+            let timestamp = min(ev.created_at, Int64(Date().timeIntervalSince1970))
+            gnostr_last_seen[relay_id] = max(gnostr_last_seen[relay_id] ?? 0, timestamp)
         }
 
         let last_k = get_last_event_of_kind(relay_id: relay_id, kind: ev.kind)
@@ -210,6 +223,7 @@ class HomeModel: ObservableObject {
         case .ws_event(let ev):
             switch ev {
             case .connected:
+                send_gnostr_filters(relay_id: relay_id)
                 if !done_init {
                     self.loading = true
                     send_initial_filters(relay_id: relay_id)
@@ -241,7 +255,7 @@ class HomeModel: ObservableObject {
             switch ev {
             case .event(let sub_id, let ev):
                 // globally handle likes
-                let always_process = sub_id == notifications_subid || sub_id == contacts_subid || sub_id == home_subid || sub_id == dms_subid || sub_id == init_subid || ev.known_kind == .like || ev.known_kind == .contacts || ev.known_kind == .metadata
+                let always_process = sub_id == gnostr_subid || sub_id == notifications_subid || sub_id == contacts_subid || sub_id == home_subid || sub_id == dms_subid || sub_id == init_subid || ev.known_kind == .like || ev.known_kind == .contacts || ev.known_kind == .metadata
                 if !always_process {
                     // TODO: other views like threads might have their own sub ids, so ignore those events... or should we?
                     return
@@ -252,9 +266,32 @@ class HomeModel: ObservableObject {
                 //self.events.insert(NostrEvent(content: "NOTICE from \(relay_id): \(msg)", pubkey: "system"), at: 0)
                 print(msg)
 
-            case .eose:
-                self.loading = false
+            case .eose(let sub_id):
+                if sub_id != gnostr_subid {
+                    self.loading = false
+                }
                 break
+            }
+        }
+    }
+
+    func send_gnostr_filters(relay_id: String) {
+        let since = gnostr_last_seen[relay_id].map { max(0, $0 - 600) }
+        pool.send(.subscribe(.init(filters: gnostr_discovery_filters(supports_search: false, since: since),
+                                   sub_id: gnostr_subid)), to: [relay_id])
+        Task { @MainActor [weak self] in
+            guard let self = self, let relay = self.pool.get_relay(relay_id) else { return }
+            do {
+                let information = try await self.pool.load_relay_information(relay.descriptor.url)
+                guard information.supportsSearch, relay.connection.isConnected,
+                      self.pool.get_relay(relay_id) != nil,
+                      !self.pool.is_relay_ignored(relay.descriptor.url),
+                      !self.pool.is_relay_removed(relay.descriptor.url) else { return }
+                self.pool.send(.subscribe(.init(
+                    filters: gnostr_discovery_filters(supports_search: true, since: since),
+                    sub_id: self.gnostr_subid)), to: [relay_id])
+            } catch {
+                print("Cannot check NIP-50 search support for \(relay_id): \(error)")
             }
         }
     }
@@ -426,7 +463,7 @@ class HomeModel: ObservableObject {
             return
         }
 
-        if sub_id == home_subid {
+        if sub_id == home_subid || sub_id == gnostr_subid {
             let _ = insert_home_event(ev)
         } else if sub_id == notifications_subid {
             handle_notification(ev: ev)
@@ -478,6 +515,24 @@ class HomeModel: ObservableObject {
                 return true
             }
         }
+    }
+}
+
+func gnostr_discovery_filters(supports_search: Bool, since: Int64? = nil) -> [NostrFilter] {
+    var hashtag = NostrFilter.filter_hashtag(["gnostr"])
+    hashtag.limit = 500
+    hashtag.since = since
+    guard supports_search else { return [hashtag] }
+    var text = NostrFilter.filter_since(since ?? 0)
+    text.since = since
+    text.search = "gnostr"
+    text.limit = 500
+    return [hashtag, text]
+}
+
+func event_mentions_gnostr(_ event: NostrEvent) -> Bool {
+    return event.content.localizedCaseInsensitiveContains("gnostr") || event.tags.contains {
+        $0.count >= 2 && $0[0] == "t" && $0[1].lowercased() == "gnostr"
     }
 }
 

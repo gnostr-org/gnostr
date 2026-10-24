@@ -18,6 +18,7 @@ struct NostrFilter: Codable {
     var authors: [String]?
     var hashtag: [String]? = nil
     var tags: [String: [String]]? = nil
+    var search: String? = nil
 
     private enum CodingKeys : String, CodingKey {
         case ids
@@ -30,10 +31,11 @@ struct NostrFilter: Codable {
         case authors
         case limit
         case tags = "#d"
+        case search
     }
 
     public static func copy(from: NostrFilter) -> NostrFilter {
-        return NostrFilter(ids: from.ids, kinds: from.kinds, referenced_ids: from.referenced_ids, pubkeys: from.pubkeys, since: from.since, until: from.until, authors: from.authors, hashtag: from.hashtag)
+        return from
     }
 
     public static func filter_hashtag(_ htags: [String]) -> NostrFilter {
