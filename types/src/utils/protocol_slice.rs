@@ -405,7 +405,7 @@ pub fn run_directory_walk(path: &Path, depth: usize, logging: bool) -> io::Resul
         &mut empty_dirs,
     )?;
     for line in lines {
-        println!("{line}");
+        info!("{line}");
     }
     Ok(DirectoryWalk { files, empty_dirs })
 }
