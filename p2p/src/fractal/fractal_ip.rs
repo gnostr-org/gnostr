@@ -28,12 +28,13 @@ struct Cli {
     #[arg(long, conflicts_with = "file")]
     recursive: Option<PathBuf>,
 
-    /// After recursive reconstruction, git clone the reconstructed directory to PATH.
+    /// Walk INPUT recursively, reconstruct to OUTPUT, and git clone OUTPUT to
+    /// OUTPUT_repo.
     ///
-    /// If --recursive is omitted, --clone implies --recursive . and
-    /// --out example.reconstructed.dir.
-    #[arg(long)]
-    clone: Option<PathBuf>,
+    /// Requires exactly two paths: <INPUT> <OUTPUT>.
+    /// If --recursive/--out are also given, they override these values.
+    #[arg(long, num_args = 2, value_name = "PATH")]
+    clone: Option<Vec<PathBuf>>,
 
     /// Limit recursive directory walking to N levels.
     #[arg(long)]
@@ -113,10 +114,15 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     let mut recursive = cli.recursive;
     let mut out = cli.out;
-    if cli.clone.is_some() && recursive.is_none() {
-        recursive = Some(PathBuf::from("."));
+    if let Some(ref clone) = cli.clone {
+        if clone.len() != 2 {
+            return Err("--clone requires exactly two paths: <INPUT> <OUTPUT>".into());
+        }
+        if recursive.is_none() {
+            recursive = Some(clone[0].clone());
+        }
         if out.is_none() {
-            out = Some(PathBuf::from("example.reconstructed.dir"));
+            out = Some(clone[1].clone());
         }
     }
 
@@ -139,8 +145,12 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 "recursively reconstructed directory to {}",
                 out_path.display()
             );
-            if let Some(ref clone_path) = cli.clone {
-                clone_and_verify_reconstructed_repo(out_path, clone_path)?;
+            if cli.clone.is_some() {
+                let clone_dest = out_path.with_file_name(format!(
+                    "{}_repo",
+                    out_path.file_name().unwrap_or_default().to_string_lossy()
+                ));
+                clone_and_verify_reconstructed_repo(out_path, &clone_dest)?;
             }
             return Ok(());
         }
