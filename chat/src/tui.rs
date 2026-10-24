@@ -118,6 +118,7 @@ struct ChatApp {
     username: String,
     focus: Focus,
     show_help: bool,
+    show_alt_screen: bool,
     messages: Vec<Msg>,
     selected: usize,
     input: Input,
@@ -137,6 +138,7 @@ impl ChatApp {
             username,
             focus: Focus::Composer,
             show_help: false,
+            show_alt_screen: false,
             messages: Vec::new(),
             selected: 0,
             input: Input::new(String::new()),
@@ -211,6 +213,14 @@ impl ChatApp {
             return Ok(false);
         }
 
+        if self.show_alt_screen {
+            match key.code {
+                KeyCode::Esc | KeyCode::Char('\\') => self.show_alt_screen = false,
+                _ => {}
+            }
+            return Ok(false);
+        }
+
         if key.modifiers.contains(KeyModifiers::CONTROL) && matches!(key.code, KeyCode::Char('c')) {
             debug!("handle_key: ctrl-c exit requested");
             return Ok(true);
@@ -260,6 +270,7 @@ impl ChatApp {
                 self.status = "message queued".to_string();
             }
             KeyCode::Char('?') => self.show_help = true,
+            KeyCode::Char('\\') => self.show_alt_screen = true,
             _ => {
                 self.input.handle_event(&Event::Key(key));
             }
@@ -311,6 +322,7 @@ impl ChatApp {
                 return Ok(true);
             }
             KeyCode::Char('?') | KeyCode::F(1) => self.show_help = true,
+            KeyCode::Char('\\') => self.show_alt_screen = true,
             KeyCode::Up | KeyCode::Char('k') => {
                 self.selected = self.selected.saturating_sub(1);
             }
@@ -359,7 +371,9 @@ impl ChatApp {
             }
         }
 
-        if self.show_help {
+        if self.show_alt_screen {
+            self.draw_alt_screen(frame, frame.area());
+        } else if self.show_help {
             self.draw_help_overlay(frame, frame.area());
         }
     }
@@ -631,6 +645,7 @@ impl ChatApp {
             Line::from("home/end and pgup/pgdn jump in the timeline"),
             Line::from("t/l/r/f toggle header/left/right/footer panels (timeline focus)"),
             Line::from("space toggle all panels (timeline focus)"),
+            Line::from("\\ open the alternate diagnostics screen"),
             Line::from("? or F1 open and close this overlay"),
             Line::from("esc leaves the composer or closes help"),
         ])
@@ -638,6 +653,137 @@ impl ChatApp {
         .block(Block::default().title("help").borders(Borders::ALL));
 
         frame.render_widget(help, popup);
+    }
+
+    fn draw_alt_screen(&self, frame: &mut Frame, area: Rect) {
+        frame.render_widget(Clear, area);
+
+        let metrics = self.p2p_clock.get_metrics();
+        let clock_status = match metrics.status {
+            ClockStatus::Init => "init".to_string(),
+            ClockStatus::Synced => "synced".to_string(),
+            ClockStatus::Slewing => "slewing".to_string(),
+            ClockStatus::Unreliable(ref reason) => format!("unreliable:{reason}"),
+        };
+        let clock_status_style = match metrics.status {
+            ClockStatus::Init => Style::default().fg(Color::Gray),
+            ClockStatus::Synced => Style::default().fg(Color::Green),
+            ClockStatus::Slewing => Style::default().fg(Color::Yellow),
+            ClockStatus::Unreliable(_) => Style::default().fg(Color::Red),
+        };
+
+        let clock_lines = vec![
+            Line::from(vec![
+                Span::styled("utc: ", Style::default().fg(Color::Magenta)),
+                Span::raw(self.p2p_clock.now_utc().format("%H:%M:%S").to_string()),
+            ]),
+            Line::from(vec![
+                Span::styled("status: ", Style::default().fg(Color::Magenta)),
+                Span::styled(&clock_status, clock_status_style),
+            ]),
+            Line::from(vec![
+                Span::styled("offset_ms: ", Style::default().fg(Color::Magenta)),
+                Span::raw(format!("{:+}", metrics.offset_ms)),
+            ]),
+            Line::from(vec![
+                Span::styled("slew_rate: ", Style::default().fg(Color::Magenta)),
+                Span::raw(format!("{:.6}", metrics.slew_rate)),
+            ]),
+            Line::from(vec![
+                Span::styled("last_sync_secs_ago: ", Style::default().fg(Color::Magenta)),
+                Span::raw(format!("{}s", metrics.last_sync_secs_ago)),
+            ]),
+        ];
+
+        let mut peer_lines: Vec<Line> = vec![Line::from(vec![
+            Span::styled("peers: ", Style::default().fg(Color::Magenta)),
+            Span::raw(self.connected_peers.len().to_string()),
+        ])];
+        for (peer_id, endpoint) in &self.connected_peers {
+            peer_lines.push(Line::from(vec![
+                Span::raw("  "),
+                Span::styled(peer_id, Style::default().fg(Color::Cyan)),
+                Span::raw(" via "),
+                Span::raw(endpoint),
+            ]));
+        }
+
+        let fractal_lines: Vec<Line> = {
+            #[cfg(feature = "fractal")]
+            {
+                let mut lines = vec![Line::from(vec![
+                    Span::styled("fractal: ", Style::default().fg(Color::Magenta)),
+                    Span::raw(self.perfect_ip_progress.len().to_string()),
+                ])];
+                if self.perfect_ip_progress.is_empty() {
+                    lines.push(Line::from("  no transfers"));
+                } else {
+                    for (root, (received, total)) in &self.perfect_ip_progress {
+                        let label = if *received == usize::MAX {
+                            format!("  {root}: complete")
+                        } else {
+                            format!("  {root}: {received}/{total}")
+                        };
+                        lines.push(Line::from(label));
+                    }
+                }
+                lines
+            }
+            #[cfg(not(feature = "fractal"))]
+            {
+                vec![Line::from(vec![
+                    Span::styled("fractal: ", Style::default().fg(Color::Magenta)),
+                    Span::raw("disabled"),
+                ])]
+            }
+        };
+
+        let message_lines: Vec<Line> = self
+            .messages
+            .iter()
+            .rev()
+            .take(20)
+            .map(|msg| {
+                let body = msg.body().replace('\n', " ");
+                Line::from(format!("[{}] {}", msg.from, body))
+            })
+            .collect();
+
+        let chunks = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+            .split(area);
+
+        let left = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+            .split(chunks[0]);
+
+        Paragraph::new(clock_lines)
+            .block(Block::default().title("bft clock").borders(Borders::ALL))
+            .render(left[0], frame.buffer_mut());
+
+        Paragraph::new(peer_lines)
+            .block(Block::default().title("peers").borders(Borders::ALL))
+            .render(left[1], frame.buffer_mut());
+
+        let right = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Percentage(40), Constraint::Percentage(60)])
+            .split(chunks[1]);
+
+        Paragraph::new(fractal_lines)
+            .block(Block::default().title("fractal").borders(Borders::ALL))
+            .render(right[0], frame.buffer_mut());
+
+        Paragraph::new(message_lines)
+            .block(
+                Block::default()
+                    .title("recent messages")
+                    .borders(Borders::ALL),
+            )
+            .wrap(Wrap { trim: true })
+            .render(right[1], frame.buffer_mut());
     }
 
     fn selected_message(&self) -> Option<&Msg> {
