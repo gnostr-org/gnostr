@@ -43,7 +43,7 @@ log = "0.4.24"
 nostr-sdk = { version = "0.44.1" }
 predicates = "3.1.3"
 rand = "0.7.3"
-ratatui = { version = "0.29", default-features = false, features = [
+ratatui = { workspace = true, default-features = false, features = [
     "crossterm",
 ] }
 regex = "1.11.1"

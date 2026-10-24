@@ -42,6 +42,9 @@ vendor/*/**
 !vendor/gitui
 !vendor/gitui/*
 !vendor/gitui/*/**
+!vendor/tui-textarea
+!vendor/tui-textarea/*
+!vendor/tui-textarea/*/**
 !vendor/ngit-cli
 !vendor/ngit-cli/**
 

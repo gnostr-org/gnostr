@@ -2,6 +2,8 @@ pub mod blockhash;
 pub mod blockheight;
 pub mod ipfs;
 pub mod nostr;
+#[cfg(feature = "tui")]
+pub mod tui;
 pub mod utils;
 pub mod weeble;
 pub mod wobble;

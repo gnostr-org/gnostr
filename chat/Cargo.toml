@@ -79,7 +79,7 @@ libp2p = { version = "0.54.1", features = [
 once_cell = "1.21.3"
 parking_lot = "0.12.3"
 proctitle = "0.1.1"
-ratatui = { version = "0.29", default-features = false, features = [
+ratatui = { workspace = true, default-features = false, features = [
     "crossterm",
 ] }
 reqwest = { workspace = true }
@@ -96,7 +96,7 @@ tracing-subscriber = { version = "0.3.22", default-features = false, features = 
     "fmt",
     "parking_lot",
 ] }
-tui-input = "0.14.0"
+tui-input = { workspace = true }
 ureq = { version = "2.12.1", features = ["json", "charset"] }
 
 [dev-dependencies]

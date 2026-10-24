@@ -10,7 +10,7 @@ edition = "2021"
 anyhow = "1.0.97"
 async-trait = "0.1.88"
 clap = { version = "4.5.32", features = ["derive", "env"] }
-crossterm = "0.28.1"
+crossterm = "0.29"
 futures = "0.3.31"
 futures-timer = "3.0.3"
 gnostr-chat = { version = ">=972835.1842.830997", path = "../../../chat" }
@@ -41,7 +41,7 @@ libp2p-webrtc = { version = "0.10.0-alpha", features = ["tokio", "pem"] }
 rustls = { workspace = true }
 quick-protobuf = "0.8.1"
 rand = "0.10.0"
-ratatui = "0.29.0"
+ratatui = "0.30.2"
 serde_json = "1.0.140"
 signal-hook = "0.3.17"
 tokio = { version = "1.47.1", features = ["full"] }
