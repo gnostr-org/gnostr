@@ -27,7 +27,7 @@ struct NIP34SearchControls: View {
                             } label: {
                                 HStack(spacing: 5) {
                                     Image(systemName: selected ? "largecircle.fill.circle" : "circle")
-                                    Text("\(kind) \(NostrKind.nip34_kind_name(kind))")
+                                    Text("\(String(kind)) \(NostrKind.nip34_kind_name(kind))")
                                 }
                                 .font(.caption)
                             }
