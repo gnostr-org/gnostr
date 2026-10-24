@@ -1,7 +1,7 @@
 ##[workspace]
 [package]
 name = "rust-libp2p-webrtc-peer"
-version = "972835.1842.830997"
+version = "972974.1842.657316"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -13,7 +13,7 @@ clap = { version = "4.5.32", features = ["derive", "env"] }
 crossterm = "0.29"
 futures = "0.3.31"
 futures-timer = "3.0.3"
-gnostr-chat = { version = ">=972835.1842.830997", path = "../../../chat" }
+gnostr-chat = { version = ">=972974.1842.657316", path = "../../../chat" }
 hex = "0.4.3"
 libp2p = { version = "0.57.0", features = [
   "identify",

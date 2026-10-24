@@ -1,6 +1,6 @@
 [package]
 name = "gnostr_types_ffi"
-version = "972835.1842.830997"
+version = "972974.1842.657316"
 edition = "2021"
 
 [workspace]

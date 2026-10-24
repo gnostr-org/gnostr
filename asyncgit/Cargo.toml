@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-asyncgit"
-version = "972835.1842.830997"
+version = "972974.1842.657316"
 authors = [
     "gnostr <admin@gnostr.org>",
     "extrawurst <mail@rusticorn.com>",
@@ -130,7 +130,11 @@ pbkdf2 = { workspace = true }
 pretty_env_logger = { workspace = true }
 rand = "0.8.5"
 rand_core = { workspace = true }
-ratatui = { workspace = true, features = ["crossterm", "serde", "underline-color"], optional = true }
+ratatui = { workspace = true, features = [
+    "crossterm",
+    "serde",
+    "underline-color",
+], optional = true }
 rayon = "1.10"
 rayon-core = "1.12"
 regex = "1.11.1"
