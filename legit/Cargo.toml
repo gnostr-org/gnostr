@@ -23,6 +23,7 @@ vendored-openssl = ["gnostr-asyncgit/vendored-openssl"]
 [dependencies]
 argparse = "0.2.2"
 clap = { version = "4.5.20", features = ["derive", "env", "cargo"] }
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
 env_logger = "0.10.0"
 gnostr-asyncgit = { workspace = true, features = ["vendor-openssl"] }
 gnostr-types = { workspace = true }

@@ -3,6 +3,7 @@
 #[macro_use]
 extern crate log;
 extern crate env_logger;
+use std::fmt::Debug;
 use std::convert::TryInto;
 use std::time::Instant;
 //use std::mem::size_of;
@@ -29,7 +30,12 @@ fn main() -> io::Result<()> {
     info!("Starting gnostr-legit");
 
     let start = Instant::now();
-    //println!("{}", datetime.format("%d/%m/%Y %T"));
+
+let _now = chrono::Local::now();
+    
+    // This will now correctly output formatted calendar time
+    println!("{}", _now.format("%d/%m/%Y %T"));
+
 
     let count = thread::available_parallelism()?.get();
     assert!(count >= 1_usize);
