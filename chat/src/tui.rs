@@ -269,7 +269,39 @@ impl ChatApp {
         Ok(false)
     }
 
+    fn handle_panel_toggle(&mut self, key: KeyEvent) -> bool {
+        let (target, label) = match key.code {
+            KeyCode::Char('t') => {
+                self.panel_state.header.toggle_between(0.0, 1.0);
+                ("header", self.panel_state.header.target() > 0.5)
+            }
+            KeyCode::Char('l') => {
+                self.panel_state.left_sidebar.toggle_between(0.0, 1.0);
+                ("left", self.panel_state.left_sidebar.target() > 0.5)
+            }
+            KeyCode::Char('r') => {
+                self.panel_state.right_sidebar.toggle_between(0.0, 1.0);
+                ("right", self.panel_state.right_sidebar.target() > 0.5)
+            }
+            KeyCode::Char('f') => {
+                self.panel_state.footer.toggle_between(0.0, 1.0);
+                ("footer", self.panel_state.footer.target() > 0.5)
+            }
+            KeyCode::Char(' ') => {
+                self.panel_state.toggle_all();
+                ("all", self.panel_state.header.target() > 0.5)
+            }
+            _ => return false,
+        };
+        self.status = format!("{target} panel {}", if label { "opened" } else { "closed" });
+        true
+    }
+
     fn handle_timeline_key(&mut self, key: KeyEvent) -> Result<bool> {
+        if self.handle_panel_toggle(key) {
+            return Ok(false);
+        }
+
         match key.code {
             KeyCode::Esc | KeyCode::Tab => {
                 self.focus = Focus::Composer;
@@ -593,6 +625,8 @@ impl ChatApp {
             Line::from("/crawler <nip> search crawler bucket providers"),
             Line::from("j/k or arrows move through the timeline"),
             Line::from("home/end and pgup/pgdn jump in the timeline"),
+            Line::from("t/l/r/f toggle header/left/right/footer panels (timeline focus)"),
+            Line::from("space toggle all panels (timeline focus)"),
             Line::from("? or F1 open and close this overlay"),
             Line::from("esc leaves the composer or closes help"),
         ])
