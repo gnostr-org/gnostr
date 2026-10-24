@@ -67,8 +67,7 @@ fn main() -> io::Result<()> {
 
     let count = thread::available_parallelism()?.get();
     assert!(count >= 1_usize);
-    //println!("{}={}", type_of(count), (count as i32));
-    //println!("{}={}", type_of(count), (count as i64));
+    println!("{}={}", std::any::type_name_of_val(&count), count);
     let _sha256 = Sha256::new();
     //sha256.input_str(count);
     //let ip_address_hash: String = format!("{:X}", sha256.finalize());
