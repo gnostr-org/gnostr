@@ -6,6 +6,7 @@ use std::sync::mpsc::channel;
 use std::thread;
 // use git2::*;
 use super::worker::Worker;
+use crypto::{digest::Digest, sha1::Sha1, sha2::Sha256};
 use gnostr_asyncgit::types::Keys;
 use gnostr_types::nostr::patch::{
     build_patch_announcement_with_tags, commit_nonce_tag, get_relay_urls,
@@ -315,8 +316,24 @@ impl Gitminer {
             true,
         )?;
         let mut tags = vec![Tag::new_tag("p", &followed.as_hex_string())];
-        if parent != &followed {
-            tags.push(Tag::new_tag("p", &parent.as_hex_string()));
+        for payload in [b"".as_slice(), b"blob 0\0", b"tree 0\0"] {
+            let mut sha256 = Sha256::new();
+            sha256.input(payload);
+            let mut sha1 = Sha1::new();
+            sha1.input(payload);
+            for hash in [sha256.result_str(), sha1.result_str()] {
+                let identity = Keys::parse(format!("{:0>64}", hash)).ok_or_else(|| {
+                    anyhow::anyhow!("Failed to derive empty-hash follow identity")
+                })?;
+                let tag = Tag::new_tag("p", &identity.public_key().as_hex_string());
+                if !tags.contains(&tag) {
+                    tags.push(tag);
+                }
+            }
+        }
+        let parent_tag = Tag::new_tag("p", &parent.as_hex_string());
+        if !tags.contains(&parent_tag) {
+            tags.push(parent_tag);
         }
         tags.extend([Tag::new_tag("t", "gnostr"), nonce_tag]);
         EventBuilder::new(EventKind::ContactList, String::new(), tags).to_event(&keys.secret_key()?)
@@ -843,8 +860,23 @@ mod tests {
     }
 
     #[test]
-    fn commit_profile_follows_parent_and_empty_sha256_identity_with_signed_kind_3() {
-        let keys = Keys::generate();
+    fn commit_profile_follows_all_empty_hash_identities_and_parent_with_signed_kind_3() {
+        let hashes = [
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+            "473a0f4c3be8a93681a267e3b1e9a7dcda1185436fe141f7749120a303721813",
+            "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+            "6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321",
+            "4b825dc642cb6eb9a060e54bf8d69288fbee4904",
+        ];
+        let identities = hashes
+            .iter()
+            .map(|hash| Keys::parse(format!("{:0>64}", hash)).unwrap())
+            .collect::<Vec<_>>();
+        let mut root_tags = identities
+            .iter()
+            .map(|keys| Tag::new_tag("p", &keys.public_key().as_hex_string()))
+            .collect::<Vec<_>>();
         let parent = Keys::parse(format!(
             "{:0>64}",
             "000b3840ed5d6b9a6795d687fcb4cd948969b7a8"
@@ -852,31 +884,37 @@ mod tests {
         .unwrap()
         .public_key();
         let nonce = commit_nonce_tag("01-00000122").unwrap();
-        let event = Gitminer::commit_profile_follow_event(&keys, &parent, nonce.clone()).unwrap();
-        event.verify(None).unwrap();
-        assert_eq!(event.kind, EventKind::ContactList);
-        assert_eq!(event.pubkey, keys.public_key());
-        assert!(event.content.is_empty());
         let followed = PublicKey::try_from_bech32_string(
             "npub1gulj0vlre2dcpxltznw790wcds382wpkxg6kt444hvmefpdmm9wqtqv4vx",
             true,
         )
         .unwrap();
-        assert_eq!(
-            event.tags,
-            vec![
-                Tag::new_tag("p", &followed.as_hex_string()),
+        let followed_tag = Tag::new_tag("p", &followed.as_hex_string());
+        root_tags.retain(|tag| tag != &followed_tag);
+        root_tags.insert(0, followed_tag);
+        for keys in &identities {
+            let event =
+                Gitminer::commit_profile_follow_event(keys, &parent, nonce.clone()).unwrap();
+            event.verify(None).unwrap();
+            assert_eq!(event.kind, EventKind::ContactList);
+            assert_eq!(event.pubkey, keys.public_key());
+            assert!(event.content.is_empty());
+            let mut expected = root_tags.clone();
+            expected.extend([
                 Tag::new_tag("p", &parent.as_hex_string()),
                 Tag::new_tag("t", "gnostr"),
                 nonce.clone(),
-            ]
-        );
-        let event = Gitminer::commit_profile_follow_event(&keys, &followed, nonce).unwrap();
-        event.verify(None).unwrap();
-        assert_eq!(
-            event.tags.iter().filter(|tag| tag.tagname() == "p").count(),
-            1
-        );
+            ]);
+            assert_eq!(event.tags, expected);
+
+            let event =
+                Gitminer::commit_profile_follow_event(keys, &keys.public_key(), nonce.clone())
+                    .unwrap();
+            event.verify(None).unwrap();
+            let mut expected = root_tags.clone();
+            expected.extend([Tag::new_tag("t", "gnostr"), nonce.clone()]);
+            assert_eq!(event.tags, expected);
+        }
     }
 
     #[test]

@@ -84,10 +84,15 @@ and `display_name` are both `gnostr@<commit short hash>`, using the first seven
 hexadecimal characters of the mined commit hash (for example, `gnostr@000dba5`). The profile
 uses the gnostr avatar and banner from `gnostr-types`, then publishes the NIP-34
 patch with the same key to the same relays. Before the patch, each generated
-profile also publishes a NIP-02 kind-3 follow list containing
+profile also publishes a NIP-02 kind-3 follow list containing identities derived
+from both SHA-1 and SHA-256 of the empty string, empty Git blob (`blob 0\0`),
+and empty Git tree (`tree 0\0`). SHA-1 hashes are left-padded to 64 hexadecimal
+characters before key derivation. The explicitly configured follow
 `npub1gulj0vlre2dcpxltznw790wcds382wpkxg6kt444hvmefpdmm9wqtqv4vx`
-(the identity derived from SHA-256 of the empty string) and the parent commit's
-profile, derived from its zero-padded hash. The parent is the first parent for a
+is retained alongside these hash-derived identities. These publicly known identities are also
+used as deterministic regression-test signers; they are not secure accounts.
+The list also contains the parent commit's profile, derived from its
+zero-padded hash. The parent is the first parent for a
 merge; following it does not require discovering a parent patch event.
 Duplicate follows are omitted. The list is signed with the same commit-derived
 key and sent to the same relays. This follow list includes
