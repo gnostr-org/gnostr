@@ -102,6 +102,29 @@ fn is_git_repo(path: &Path) -> bool {
         .unwrap_or(false)
 }
 
+fn is_bare_git_repo(path: &Path) -> bool {
+    Command::new("git")
+        .arg("-C")
+        .arg(path)
+        .args(["rev-parse", "--is-bare-repository"])
+        .output()
+        .map(|output| {
+            output.status.success() && String::from_utf8_lossy(&output.stdout).trim() == "true"
+        })
+        .unwrap_or(false)
+}
+
+fn with_git_extension(path: &Path) -> PathBuf {
+    let s = path.as_os_str().to_string_lossy();
+    if s.ends_with(".git") {
+        path.to_path_buf()
+    } else {
+        let mut s = path.as_os_str().to_os_string();
+        s.push(".git");
+        PathBuf::from(s)
+    }
+}
+
 pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let cli = Cli::parse();
 
@@ -119,7 +142,10 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         return Err("--clone requires exactly two paths: <INPUT> <OUTPUT>".into());
     }
     let input = &clone[0];
-    let out = &clone[1];
+    let mut out = clone[1].clone();
+    if is_bare_git_repo(input) {
+        out = with_git_extension(&out);
+    }
 
     let use_recursive = cli.recursive || is_git_repo(input);
 
@@ -143,9 +169,9 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         info!("recursive depth: {}", depth);
         info!("logging flag is: {:?}", cli.logging);
         let walk = run_directory_walk(input, depth, cli.logging.is_some())?;
-        reconstruct_directory(walk, out)?;
+        reconstruct_directory(walk, &out)?;
         println!("recursively reconstructed directory to {}", out.display());
-        clone_and_verify_reconstructed_repo(out, &clone_dest)?;
+        clone_and_verify_reconstructed_repo(&out, &clone_dest)?;
         return Ok(());
     }
 
@@ -181,7 +207,7 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     let reconstructed = reconstruct_payload(&batch.packets);
     let reconstructed_sha256 = sha256_hex(&reconstructed);
-    fs::write(out, &reconstructed)?;
+    fs::write(&out, &reconstructed)?;
 
     println!("peer reconstructed {}", out.display());
     println!("peer sha256: {reconstructed_sha256}");
