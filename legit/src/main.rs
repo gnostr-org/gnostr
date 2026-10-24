@@ -30,9 +30,10 @@ fn main() -> io::Result<()> {
     info!("Starting gnostr-legit");
 
     let start = Instant::now();
+	println!("start={:?}", start);
 
-let _now = chrono::Local::now();
-    
+    let _now = chrono::Local::now();
+
     // This will now correctly output formatted calendar time
     println!("{}", _now.format("%d/%m/%Y %T"));
 
