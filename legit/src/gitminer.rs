@@ -33,6 +33,7 @@ pub struct Gitminer {
     repo: gnostr_asyncgit::git2::Repository,
     author: String,
     signing_keys: Option<Keys>,
+    depth: usize,
 }
 
 impl std::fmt::Debug for Gitminer {
@@ -41,6 +42,7 @@ impl std::fmt::Debug for Gitminer {
             .field("opts", &self.opts)
             .field("repo_path", &self.repo.path())
             .field("author", &self.author)
+            .field("depth", &self.depth)
             .field(
                 "signing_pubkey",
                 &self
@@ -62,6 +64,7 @@ impl Clone for Gitminer {
             repo,
             author: self.author.clone(),
             signing_keys: self.signing_keys.clone(),
+            depth: self.depth,
         }
     }
 }
@@ -86,6 +89,7 @@ impl Gitminer {
             repo,
             author,
             signing_keys: None,
+            depth: 0,
         })
     }
 
@@ -93,6 +97,46 @@ impl Gitminer {
     pub fn with_signing_keys(mut self, keys: Keys) -> Self {
         self.signing_keys = Some(keys);
         self
+    }
+
+    /// Append up to `depth` first-parent hashes, starting at the existing HEAD.
+    pub fn with_depth(mut self, depth: usize) -> Self {
+        self.depth = depth;
+        self
+    }
+
+    fn mining_message(&self, parent: &str) -> Result<String, gnostr_asyncgit::git2::Error> {
+        let mut message = match self.opts.message.as_slice() {
+            [] => String::new(),
+            [one] => one.clone(),
+            [first, rest @ ..] => format!("{first}\n\n{}", rest.join("\n")),
+        };
+        if self.depth == 0 {
+            return Ok(message);
+        }
+
+        let mut history = self.repo.revwalk()?;
+        history.push(gnostr_asyncgit::git2::Oid::from_str(parent)?)?;
+        history.simplify_first_parent()?;
+        let hashes = history
+            .take(self.depth)
+            .map(|id| id.map(|id| id.to_string()))
+            .collect::<Result<Vec<_>, _>>()?;
+        for hash in &hashes {
+            debug!("Including first-parent commit {} in mined message", hash);
+        }
+        info!(
+            "Including {} first-parent commit hash(es), requested depth={}",
+            hashes.len(),
+            self.depth
+        );
+        if !hashes.is_empty() {
+            if !message.is_empty() {
+                message.push_str("\n\n");
+            }
+            message.push_str(&hashes.join("\n"));
+        }
+        Ok(message)
     }
 
     pub fn mine(&mut self) -> Result<String, &'static str> {
@@ -110,17 +154,20 @@ impl Gitminer {
         };
         debug!("Tree: {}, Parent: {}", tree, parent);
         info!("Prepared tree {} and parent {}", tree, parent);
+        let message = self.mining_message(&parent).map_err(|err| {
+            error!(
+                "Failed to prepare commit history for parent {}: {}",
+                parent, err
+            );
+            "Failed to prepare commit history"
+        })?;
 
         let (tx, rx) = channel();
 
         for i in 0..self.opts.threads {
             let target = self.opts.target.clone();
             let author = self.author.clone();
-            let msg = match self.opts.message.as_slice() {
-                [] => String::new(),
-                [one] => one.clone(),
-                [first, rest @ ..] => format!("{first}\n\n{}", rest.join("\n")),
-            };
+            let msg = message.clone();
             let wtx = tx.clone();
             let ts = self.opts.timestamp.clone();
             let (wtree, wparent) = (tree.clone(), parent.clone());
@@ -733,6 +780,78 @@ mod tests {
         let miner = miner.with_signing_keys(Keys::generate());
         assert!(miner.commit_profile_metadata().is_none());
         assert!(miner.clone().commit_profile_metadata().is_none());
+    }
+
+    #[test]
+    fn depth_appends_first_parent_hashes_before_nonce_and_stops_at_root() {
+        use gnostr_asyncgit::git2::{Oid, Signature};
+
+        let (_directory, mut miner) = miner();
+        miner.opts.message = vec![
+            "subject".to_string(),
+            "body one".to_string(),
+            "body two".to_string(),
+        ];
+        let (root, main, tip, tree_id) = {
+            let repo = &miner.repo;
+            let tree_id = repo.index().unwrap().write_tree().unwrap();
+            let tree = repo.find_tree(tree_id).unwrap();
+            let signature = Signature::now("Test", "test@example.com").unwrap();
+            let commit = |message: &str, ids: &[Oid]| {
+                let parents = ids
+                    .iter()
+                    .map(|id| repo.find_commit(*id).unwrap())
+                    .collect::<Vec<_>>();
+                let parents = parents.iter().collect::<Vec<_>>();
+                repo.commit(None, &signature, &signature, message, &tree, &parents)
+                    .unwrap()
+            };
+            let root = commit("root", &[]);
+            let main = commit("main", &[root]);
+            let side = commit("side branch", &[root]);
+            let tip = commit("merge", &[main, side]);
+            (root, main, tip, tree_id)
+        };
+        miner
+            .repo
+            .reference("refs/heads/main", tip, true, "test history")
+            .unwrap();
+        miner.repo.set_head("refs/heads/main").unwrap();
+        let parent = miner.repo.head().unwrap().target().unwrap().to_string();
+        let original = "subject\n\nbody one\nbody two";
+        assert_eq!(miner.mining_message(&parent).unwrap(), original);
+
+        let miner = miner.with_depth(2);
+        let message = format!("{}\n\n{}\n{}", original, tip, main);
+        assert_eq!(miner.mining_message(&parent).unwrap(), message);
+        assert_eq!(miner.clone().mining_message(&parent).unwrap(), message);
+
+        let (tx, rx) = channel();
+        Worker::new(
+            1,
+            String::new(),
+            tree_id.to_string(),
+            parent.clone(),
+            miner.author.clone(),
+            message.clone(),
+            miner.opts.timestamp,
+            tx,
+        )
+        .work();
+        let (_, blob, _) = rx.recv().unwrap();
+        let body = blob.split_once("\n\n").unwrap().1;
+        assert_eq!(body, format!("{}\n\n01-00000000", message));
+        assert_eq!(Gitminer::mined_commit_nonce(&blob).unwrap(), "01-00000000");
+
+        let miner = miner.with_depth(usize::MAX);
+        assert_eq!(
+            miner.mining_message(&parent).unwrap(),
+            format!("{}\n\n{}\n{}\n{}", original, tip, main, root)
+        );
+        assert_eq!(
+            miner.with_depth(0).mining_message(&parent).unwrap(),
+            original
+        );
     }
 
     #[test]

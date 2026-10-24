@@ -38,6 +38,10 @@ struct Args {
     #[arg(short, long, default_value = "default commit message")]
     message: Vec<String>,
 
+    /// Include up to this many first-parent commit hashes before the commit nonce
+    #[arg(long, default_value_t = 0, value_name = "INT")]
+    depth: usize,
+
     /// NIP-34 signing key: 64-character hex (SHA-256) or nsec1... private key
     #[arg(long, global = true, value_name = "KEY")]
     nsec: Option<String>,
@@ -61,13 +65,13 @@ where
     let matches = command.try_get_matches_from_mut(iter)?;
     let args = Args::from_arg_matches(&matches)?;
     if args.command.is_some()
-        && ["prefix", "threads", "message"]
+        && ["prefix", "threads", "message", "depth"]
             .iter()
             .any(|name| matches.value_source(name) == Some(clap::parser::ValueSource::CommandLine))
     {
         return Err(command.error(
             clap::error::ErrorKind::ArgumentConflict,
-            "Mining options --prefix, --threads, and --message cannot be combined with compose",
+            "Mining options --prefix, --threads, --message, and --depth cannot be combined with compose",
         ));
     }
     Ok(args)
@@ -140,7 +144,7 @@ fn main() -> io::Result<()> {
 
     debug!("Initializing git miner");
     let mut miner = match Gitminer::new(opts) {
-        Ok(m) => m,
+        Ok(m) => m.with_depth(args.depth),
         Err(e) => {
             eprintln!("Failed to start git miner: {}", e);
             std::process::exit(1);
@@ -186,6 +190,7 @@ mod tests {
         assert_eq!(args.prefix, "000");
         assert_eq!(args.threads, None);
         assert_eq!(args.message, ["default commit message"]);
+        assert_eq!(args.depth, 0);
         assert!(parse_signing_keys(args.nsec).unwrap().is_none());
         assert!(args.command.is_none());
     }
@@ -219,6 +224,9 @@ mod tests {
         assert!(
             parse_args_from(["gnostr-legit", "--prefix", "000", "compose", "grasp-list"]).is_err()
         );
+        assert!(
+            parse_args_from(["gnostr-legit", "--depth", "2", "compose", "grasp-list"]).is_err()
+        );
     }
 
     #[test]
@@ -235,12 +243,22 @@ mod tests {
             "subject",
             "--message",
             "body",
+            "--depth",
+            "2",
         ])
         .unwrap();
         assert_eq!(args.repo, "/tmp/my repo");
         assert_eq!(args.prefix, "0000");
         assert_eq!(args.threads, Some(2));
         assert_eq!(args.message, ["subject", "body"]);
+        assert_eq!(args.depth, 2);
+    }
+
+    #[test]
+    fn cli_rejects_invalid_history_depths() {
+        for depth in ["-1", "abc", "1.5", "18446744073709551616"] {
+            assert!(parse_args_from(["gnostr-legit", "--depth", depth]).is_err());
+        }
     }
 
     #[test]

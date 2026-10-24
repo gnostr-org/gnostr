@@ -37,6 +37,27 @@ gnostr-legit --version
 Without flags, it uses the current repository, prefix `000`, available CPU
 parallelism, and `default commit message`. Thread counts must be positive.
 
+Use `--depth N` to append up to `N` existing first-parent commit hashes to the
+commit body, starting with the current HEAD and continuing newest-first through
+its first parents. Merged-branch commits are excluded. Each full hash is on its
+own line in the final paragraph before the blank line and mining nonce:
+
+```text
+subject
+
+body
+
+<full HEAD commit hash>
+<full HEAD first-parent commit hash>
+
+01-00000122
+```
+
+For example, `gnostr-legit --depth 3 -m "subject" -m "body"`. The default is
+`--depth 0`, which leaves the message unchanged. Negative and non-integer depths
+are rejected; requests beyond the available history stop at the root. This flag
+applies to mining, not `compose`. Library callers use `Gitminer::with_depth(N)`.
+
 Use `--nsec "$NOSTR_PRIVATE_KEY"` to sign the published NIP-34 patch event with
 your own key. It accepts a 64-character hex private key (such as a SHA-256 digest)
 or a bech32 `nsec1...` private key. Invalid keys are rejected before mining.

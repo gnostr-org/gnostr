@@ -385,6 +385,12 @@ count unless `--repo`, `--prefix`, or `--threads` overrides them. Unstaged
 changes must be staged or stashed before mining. A successful mined commit is
 written locally and its NIP-34 patch event is published to the selected relays.
 
+The standalone `gnostr-legit --depth N` includes up to `N` full first-parent
+hashes starting at the existing HEAD, newest-first, as the final commit-body
+paragraph before the blank line and nonce. Merged branches are excluded;
+`--depth 0` (the default) preserves the message. Requests beyond available
+history stop at the root. `--depth` is mining-only, not a `compose` option.
+
 Add `--nsec "$NOSTR_PRIVATE_KEY"` after `--` to sign the event with a
 64-character hex/SHA-256 or `nsec1...` private key. Without it, the signing key
 is derived from the public commit hash and is not a secure identity. Never put
