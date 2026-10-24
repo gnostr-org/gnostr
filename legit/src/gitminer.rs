@@ -311,11 +311,7 @@ impl Gitminer {
         parent: &PublicKey,
         nonce_tag: Tag,
     ) -> anyhow::Result<Event> {
-        let followed = PublicKey::try_from_bech32_string(
-            "npub1gulj0vlre2dcpxltznw790wcds382wpkxg6kt444hvmefpdmm9wqtqv4vx",
-            true,
-        )?;
-        let mut tags = vec![Tag::new_tag("p", &followed.as_hex_string())];
+        let mut tags = Vec::new();
         for payload in [b"".as_slice(), b"blob 0\0", b"tree 0\0"] {
             let mut sha256 = Sha256::new();
             sha256.input(payload);
@@ -873,7 +869,7 @@ mod tests {
             .iter()
             .map(|hash| Keys::parse(format!("{:0>64}", hash)).unwrap())
             .collect::<Vec<_>>();
-        let mut root_tags = identities
+        let root_tags = identities
             .iter()
             .map(|keys| Tag::new_tag("p", &keys.public_key().as_hex_string()))
             .collect::<Vec<_>>();
@@ -884,14 +880,6 @@ mod tests {
         .unwrap()
         .public_key();
         let nonce = commit_nonce_tag("01-00000122").unwrap();
-        let followed = PublicKey::try_from_bech32_string(
-            "npub1gulj0vlre2dcpxltznw790wcds382wpkxg6kt444hvmefpdmm9wqtqv4vx",
-            true,
-        )
-        .unwrap();
-        let followed_tag = Tag::new_tag("p", &followed.as_hex_string());
-        root_tags.retain(|tag| tag != &followed_tag);
-        root_tags.insert(0, followed_tag);
         for keys in &identities {
             let event =
                 Gitminer::commit_profile_follow_event(keys, &parent, nonce.clone()).unwrap();

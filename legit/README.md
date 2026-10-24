@@ -87,9 +87,8 @@ patch with the same key to the same relays. Before the patch, each generated
 profile also publishes a NIP-02 kind-3 follow list containing identities derived
 from both SHA-1 and SHA-256 of the empty string, empty Git blob (`blob 0\0`),
 and empty Git tree (`tree 0\0`). SHA-1 hashes are left-padded to 64 hexadecimal
-characters before key derivation. The explicitly configured follow
-`npub1gulj0vlre2dcpxltznw790wcds382wpkxg6kt444hvmefpdmm9wqtqv4vx`
-is retained alongside these hash-derived identities. These publicly known identities are also
+characters before key derivation. Only these six verified hash-derived
+identities and the parent profile are followed. These publicly known identities are also
 used as deterministic regression-test signers; they are not secure accounts.
 The list also contains the parent commit's profile, derived from its
 zero-padded hash. The parent is the first parent for a

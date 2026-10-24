@@ -405,9 +405,8 @@ first seven hexadecimal characters of the mined commit hash.
 Generated profiles also publish a kind-3 NIP-02 follow list for all six
 identities derived from SHA-1/SHA-256 of the empty string, empty Git blob, and
 empty Git tree, plus the profile derived from the padded first-parent commit
-hash, before the patch. The explicitly configured
-`npub1gulj0vlre2dcpxltznw790wcds382wpkxg6kt444hvmefpdmm9wqtqv4vx`
-is retained too. SHA-1 hashes are left-padded to 64 hex characters.
+hash, before the patch. No extra fixed npub is followed.
+SHA-1 hashes are left-padded to 64 hex characters.
 The six publicly known identities also serve as regression-test signers,
 never as secure accounts. Parent follows do not require a known parent
 patch event ID, and duplicate follows are omitted. It uses the same signer and relays,
