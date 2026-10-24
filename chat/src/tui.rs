@@ -369,6 +369,7 @@ impl ChatApp {
         let topic = self.topic.clone();
         let username = self.username.clone();
         let status = self.status.clone();
+        let header_status = status.clone();
         let focus = self.focus;
         let messages = self.messages.clone();
         let messages_for_sidebar = messages.clone();
@@ -405,7 +406,13 @@ impl ChatApp {
             .header_title("gnostr-chat")
             .header_height(4)
             .header_content(move |_state, area, buf| {
-                let lines = vec![
+                let clock_width = 32.min(area.width);
+                let chunks = Layout::default()
+                    .direction(Direction::Horizontal)
+                    .constraints([Constraint::Min(0), Constraint::Length(clock_width)])
+                    .split(area);
+
+                let left_lines = vec![
                     Line::from(vec![
                         Span::styled("topic: ", Style::default().fg(Color::Magenta)),
                         Span::raw(&topic),
@@ -415,16 +422,30 @@ impl ChatApp {
                         Span::raw(&username),
                     ]),
                     Line::from(vec![
-                        Span::styled("utc: ", Style::default().fg(Color::Magenta)),
-                        Span::raw(&clock_now),
-                        Span::raw("  "),
-                        Span::styled("p2p: ", Style::default().fg(Color::Magenta)),
-                        Span::raw(format!("{header_clock_status} {header_clock_offset}")),
+                        Span::styled("status: ", Style::default().fg(Color::Magenta)),
+                        Span::raw(&header_status),
                     ]),
                 ];
-                Paragraph::new(lines)
+                Paragraph::new(left_lines)
                     .wrap(Wrap { trim: true })
-                    .render(area, buf);
+                    .render(chunks[0], buf);
+
+                let right_lines = vec![
+                    Line::from(vec![
+                        Span::styled("utc: ", Style::default().fg(Color::Magenta)),
+                        Span::raw(&clock_now),
+                    ]),
+                    Line::from(vec![
+                        Span::styled("p2p: ", Style::default().fg(Color::Magenta)),
+                        Span::styled(&header_clock_status, clock_status_style),
+                        Span::raw(" "),
+                        Span::raw(&header_clock_offset),
+                    ]),
+                ];
+                Paragraph::new(right_lines)
+                    .wrap(Wrap { trim: true })
+                    .block(Block::default().title("p2p time").borders(Borders::ALL))
+                    .render(chunks[1], buf);
             })
             .left_title("status")
             .left_content(move |_state, area, buf| {
