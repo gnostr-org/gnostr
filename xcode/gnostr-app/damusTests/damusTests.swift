@@ -472,6 +472,43 @@ class damusTests: XCTestCase {
         XCTAssertEqual(preview.body, "\n+\t  indented\n+https://example.com/image.png\n+#not-markdown\n")
     }
 
+    func testTagRowsFoldAfterTwoRenderedRowsNotAfterTwoTags() {
+        let twoRows = [
+            0: CGRect(x: 0, y: 0, width: 80, height: 20),
+            1: CGRect(x: 88, y: 0, width: 80, height: 20),
+            2: CGRect(x: 0, y: 28, width: 80, height: 20),
+            3: CGRect(x: 88, y: 28, width: 80, height: 20),
+        ]
+        let unfolded = TagRowPreview(frames: twoRows)
+        XCTAssertFalse(unfolded.is_foldable)
+        XCTAssertEqual(unfolded.visible_indices, [0, 1, 2, 3])
+        XCTAssertEqual(unfolded.height, 48)
+        var threeRows = twoRows
+        threeRows[4] = CGRect(x: 0, y: 56, width: 80, height: 20)
+        let folded = TagRowPreview(frames: threeRows)
+        XCTAssertTrue(folded.is_foldable)
+        XCTAssertEqual(folded.visible_indices, [0, 1, 2, 3])
+        XCTAssertEqual(folded.height, 48)
+    }
+
+    func testTagRowsUseMeasuredHeightsAndRecomputeAfterWrapping() {
+        let wide = TagRowPreview(frames: [
+            0: CGRect(x: 0, y: 0, width: 100, height: 40),
+            1: CGRect(x: 108, y: 0, width: 100, height: 20),
+            2: CGRect(x: 0, y: 48, width: 100, height: 32),
+        ])
+        XCTAssertFalse(wide.is_foldable)
+        XCTAssertEqual(wide.height, 80)
+        let narrow = TagRowPreview(frames: [
+            0: CGRect(x: 0, y: 0, width: 100, height: 40),
+            1: CGRect(x: 0, y: 48, width: 100, height: 20),
+            2: CGRect(x: 0, y: 76, width: 100, height: 32),
+        ])
+        XCTAssertTrue(narrow.is_foldable)
+        XCTAssertEqual(narrow.visible_indices, [0, 1])
+        XCTAssertEqual(narrow.height, 68)
+    }
+
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
     }
