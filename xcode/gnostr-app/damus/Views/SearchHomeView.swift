@@ -13,6 +13,7 @@ struct SearchHomeView: View {
     @StateObject var model: SearchHomeModel
     @State var search: String = ""
     @EnvironmentObject var user_settings: UserSettingsStore
+    @State private var is_active = false
     
     var SearchInput: some View {
         ZStack(alignment: .leading) {
@@ -93,15 +94,17 @@ struct SearchHomeView: View {
             print("search change 1")
         }
         .onChange(of: user_settings.nip34_only) { enabled in
+            guard is_active else { return }
             model.unsubscribe()
             model.subscribe(nip34_only: enabled, selected_kinds: user_settings.search_nip34_kinds)
         }
         .onChange(of: user_settings.search_nip34_kinds) { selection in
-            guard user_settings.nip34_only else { return }
+            guard is_active, user_settings.nip34_only else { return }
             model.unsubscribe()
             model.subscribe(nip34_only: true, selected_kinds: selection)
         }
         .onAppear {
+            is_active = true
             if model.events.isEmpty || model.nip34_only != user_settings.nip34_only ||
                 model.selected_nip34_kinds != user_settings.search_nip34_kinds {
                 model.subscribe(nip34_only: user_settings.nip34_only,
@@ -109,6 +112,7 @@ struct SearchHomeView: View {
             }
         }
         .onDisappear {
+            is_active = false
             model.unsubscribe()
         }
     }

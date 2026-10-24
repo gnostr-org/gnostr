@@ -79,7 +79,8 @@ damus implements the following [Nostr Implementation Possibilities][nips]
     hashtag discovery; unrestricted full-text search is not assumed.
   - The app-wide header keeps the NIP-34 only toggle and per-kind controls
     available across tabs and navigation destinations, including profiles,
-    threads, search results, and Settings. It filters Global Search and
+    threads, search results, and Settings. The Settings gear sits immediately
+    to the right of the toggle. It filters Global Search and
     search-result timelines. Switching it resubscribes with Git-only kinds and
     clears stale results; switching it off restores ordinary posts alongside
     Git events. Explicit repository-kind searches keep their original scope.

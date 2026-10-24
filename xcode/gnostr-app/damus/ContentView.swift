@@ -44,10 +44,19 @@ enum FilterState : Int {
 
 struct NIP34SearchControls: View {
     @EnvironmentObject var user_settings: UserSettingsStore
+    let open_settings: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Toggle("NIP-34 only", isOn: $user_settings.nip34_only)
+            HStack(spacing: 16) {
+                Toggle("NIP-34 only", isOn: $user_settings.nip34_only)
+                Button(action: open_settings) {
+                    Image(systemName: "gear")
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Settings")
+                .accessibilityIdentifier("global-settings")
+            }
             if user_settings.nip34_only {
                 ScrollView(.horizontal, showsIndicators: true) {
                     HStack(spacing: 16) {
@@ -68,6 +77,7 @@ struct NIP34SearchControls: View {
                             }
                             .buttonStyle(.borderless)
                             .accessibilityValue(selected ? "On" : "Off")
+                            .accessibilityIdentifier("nip34-kind-\(kind)")
                         }
                     }
                     .padding(.vertical, 4)
@@ -101,6 +111,7 @@ struct ContentView: View {
     @State var profile_open: Bool = false
     @State var thread_open: Bool = false
     @State var search_open: Bool = false
+    @State var settings_open: Bool = false
     @State var filter_state : FilterState = .posts_and_replies
     @StateObject var home: HomeModel = HomeModel()
     @StateObject var user_settings = UserSettingsStore()
@@ -166,6 +177,10 @@ struct ContentView: View {
             NavigationLink(destination: MaybeSearchView, isActive: $search_open) {
                 EmptyView()
             }
+            NavigationLink(destination: ConfigView(state: damus).environmentObject(user_settings),
+                           isActive: $settings_open) {
+                EmptyView()
+            }
             switch selected_timeline {
             case .search:
                 SearchHomeView(damus_state: damus_state!, model: SearchHomeModel(damus_state: damus_state!))
@@ -223,7 +238,7 @@ struct ContentView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             if let damus = self.damus_state {
-                NIP34SearchControls()
+                NIP34SearchControls(open_settings: { settings_open = true })
                     .padding(.horizontal)
                     .padding(.vertical, 8)
                 Divider()
@@ -245,6 +260,7 @@ struct ContentView: View {
                                     }
                                 }
                                 .buttonStyle(PlainButtonStyle())
+                                .accessibilityLabel("Your profile")
                             }
 
                             ToolbarItem(placement: .navigationBarTrailing) {
@@ -254,11 +270,6 @@ struct ContentView: View {
                                             .font(.callout)
                                             .foregroundColor(.gray)
                                     }
-
-                                    NavigationLink(destination: ConfigView(state: damus_state!).environmentObject(user_settings)) {
-                                        Label("", systemImage: "gear")
-                                    }
-                                    .buttonStyle(PlainButtonStyle())
                                 }
                             }
                         }

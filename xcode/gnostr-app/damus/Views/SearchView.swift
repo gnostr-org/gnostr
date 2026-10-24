@@ -12,6 +12,7 @@ struct SearchView: View {
     @StateObject var search: SearchModel
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var user_settings: UserSettingsStore
+    @State private var is_active = false
     
     var body: some View {
         TimelineView(events: $search.events, loading: $search.loading, damus: appstate, show_friend_icon: true, filter: {
@@ -23,19 +24,22 @@ struct SearchView: View {
                 dismiss()
             }
             .onAppear() {
+                is_active = true
                 search.subscribe(nip34_only: user_settings.nip34_only,
                                  selected_kinds: user_settings.search_nip34_kinds)
             }
             .onChange(of: user_settings.nip34_only) { enabled in
+                guard is_active else { return }
                 search.unsubscribe()
                 search.subscribe(nip34_only: enabled, selected_kinds: user_settings.search_nip34_kinds)
             }
             .onChange(of: user_settings.search_nip34_kinds) { selection in
-                guard user_settings.nip34_only else { return }
+                guard is_active, user_settings.nip34_only else { return }
                 search.unsubscribe()
                 search.subscribe(nip34_only: true, selected_kinds: selection)
             }
             .onDisappear() {
+                is_active = false
                 search.unsubscribe()
             }
     }
