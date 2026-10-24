@@ -764,7 +764,7 @@ func validate_event(ev: NostrEvent) -> ValidationResult {
     if !ok {
         return .bad_sig
     }
-    var raw_id_bytes = raw_id.bytes
+    var raw_id_bytes = [UInt8](raw_id)
     
     ok = secp256k1_schnorrsig_verify(ctx, &sig64, &raw_id_bytes, raw_id.count, &xonly_pubkey) > 0
     return ok ? .ok : .bad_sig
@@ -778,3 +778,4 @@ func inner_event_or_self(ev: NostrEvent) -> NostrEvent {
     
     return inner_ev
 }
+
