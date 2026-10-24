@@ -9,9 +9,21 @@ A twitter-like [nostr][nostr] client for iPhone, iPad and MacOS.
 ## Building from source
 
 Open `gnostr.xcodeproj` and build the `gnostr` scheme, or run `./build.sh`
-to build for My Mac. The CCAN helpers use the checked-in
-`damus-c/config.h` for Apple Clang; no configure or header-generation step
-is required.
+to build for My Mac. The `Configure damus-c` build phase runs
+`damus-c/configurator` before compilation to generate `damus-c-config.h`
+in the target's DerivedSources directory. `damus-c/config.h` includes that
+generated header.
+
+The configurator compiles feature probes with the selected compiler, SDK,
+deployment target, and architectures. It never executes target binaries,
+so it also works when cross-compiling. Unsupported optional features use
+the bundled CCAN fallbacks; compiler/setup failures stop the build.
+
+For standalone C builds, run `CC=clang sh damus-c/configurator
+build/damus-c/damus-c-config.h` and add `-Ibuild/damus-c` to compilation.
+Additional compiler flags can follow the output path. Xcode supplies
+`CC`, `SDKROOT`, `ARCHS`, and deployment settings automatically. Unaligned
+SHA-256 loads remain disabled for correctness.
 
 ## Spec Compliance
 

@@ -670,6 +670,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 4CE6DF0727F7A08200C66700 /* Build configuration list for PBXNativeTarget "gnostr" */;
 			buildPhases = (
+				A1C0F1002F00000000000001 /* Configure damus-c */,
 				4CE6DEDF27F7A08100C66700 /* Sources */,
 				4CE6DEE027F7A08100C66700 /* Frameworks */,
 				4CE6DEE127F7A08100C66700 /* Resources */,
@@ -807,6 +808,25 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		A1C0F1002F00000000000001 /* Configure damus-c */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/damus-c/configurator",
+			);
+			name = "Configure damus-c";
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/damus-c/damus-c-config.h",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "sh \"$SRCROOT/damus-c/configurator\" \"$SCRIPT_OUTPUT_FILE_0\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		4CE6DEDF27F7A08100C66700 /* Sources */ = {
@@ -1110,6 +1130,10 @@
 				DEVELOPMENT_TEAM = M684FYCYG6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(DERIVED_FILE_DIR)/damus-c",
+				);
 				INFOPLIST_FILE = damus/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = gnostr;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
@@ -1151,6 +1175,10 @@
 				DEVELOPMENT_TEAM = M684FYCYG6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(DERIVED_FILE_DIR)/damus-c",
+				);
 				INFOPLIST_FILE = damus/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = gnostr;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
