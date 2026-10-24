@@ -20,6 +20,29 @@ pub struct ParentCommitLink {
     pub event_id: Option<Id>,
 }
 
+impl ParentCommitLink {
+    /// Event tags identifying this parent commit and its patch event.
+    pub fn tags(&self) -> Vec<Tag> {
+        let mut tags = Vec::new();
+        append_parent_tags(&mut tags, Some(self));
+        tags
+    }
+}
+
+/// Preserve the Git worker/counter nonce without using NIP-13's `nonce` tag.
+pub fn commit_nonce_tag(nonce: &str) -> Result<Tag, Error> {
+    let (worker, counter) = nonce.split_once('-').ok_or(Error::InvalidOperation)?;
+    if worker.len() < 2
+        || !worker.bytes().all(|byte| byte.is_ascii_digit())
+        || worker.parse::<u32>().is_err()
+        || counter.len() != 8
+        || !counter.bytes().all(|byte| byte.is_ascii_hexdigit())
+    {
+        return Err(Error::InvalidOperation);
+    }
+    Ok(Tag::new_tag("commit-nonce", nonce))
+}
+
 fn append_parent_tags(tags: &mut Vec<Tag>, parent: Option<&ParentCommitLink>) {
     if let Some(parent) = parent {
         tags.push(Tag::new_pubkey(parent.pubkey, None, None));
@@ -85,6 +108,27 @@ pub fn build_patch_event(
     build_manifest_event_id: Option<&Id>,
     parent: Option<&ParentCommitLink>,
 ) -> Result<Event, Error> {
+    let mut tags = Vec::new();
+    append_parent_tags(&mut tags, parent);
+    build_patch_event_with_tags(
+        keys,
+        d_tag_value,
+        commit_id,
+        patch_content,
+        build_manifest_event_id,
+        &tags,
+    )
+}
+
+/// Build a signed patch with additional tags, such as parent links and commit nonce.
+pub fn build_patch_event_with_tags(
+    keys: &Keys,
+    d_tag_value: &str,
+    commit_id: &str,
+    patch_content: &str,
+    build_manifest_event_id: Option<&Id>,
+    extra_tags: &[Tag],
+) -> Result<Event, Error> {
     let mut tags = vec![
         Tag::new_identifier(d_tag_value.to_string()),
         Tag::new_tag("commit", commit_id),
@@ -94,7 +138,7 @@ pub fn build_patch_event(
     if let Some(event_id) = build_manifest_event_id {
         tags.push(Tag::new_event(*event_id, None, None));
     }
-    append_parent_tags(&mut tags, parent);
+    tags.extend_from_slice(extra_tags);
 
     EventBuilder::new(EventKind::Patches, patch_content.to_string(), tags)
         .to_event(&keys.secret_key()?)
@@ -107,11 +151,22 @@ pub fn build_patch_announcement(
     patch_event_id: Id,
     parent: Option<&ParentCommitLink>,
 ) -> Result<Event, Error> {
+    let mut tags = Vec::new();
+    append_parent_tags(&mut tags, parent);
+    build_patch_announcement_with_tags(keys, patch_event_id, &tags)
+}
+
+/// Build a signed patch announcement with additional commit-proof tags.
+pub fn build_patch_announcement_with_tags(
+    keys: &Keys,
+    patch_event_id: Id,
+    extra_tags: &[Tag],
+) -> Result<Event, Error> {
     let mut tags = vec![
         Tag::new_event(patch_event_id, None, Some("mention".to_string())),
         Tag::new_tag("t", "gnostr"),
     ];
-    append_parent_tags(&mut tags, parent);
+    tags.extend_from_slice(extra_tags);
     EventBuilder::new(
         EventKind::TextNote,
         format!("nostr:{}", patch_event_id.as_bech32_string()),
@@ -140,7 +195,38 @@ pub async fn publish_patch_event(
         build_manifest_event_id,
         parent,
     )?;
+    send_patch_event(keys, relay_urls, event, commit_id, d_tag_value).await
+}
 
+/// Publish a patch with extra signed tags without altering existing callers.
+pub async fn publish_patch_event_with_tags(
+    keys: &Keys,
+    relay_urls: &[String],
+    d_tag_value: &str,
+    commit_id: &str,
+    patch_content: &str,
+    build_manifest_event_id: Option<&Id>,
+    extra_tags: &[Tag],
+) -> Result<Id, Error> {
+    install_rustls_crypto_provider();
+    let event = build_patch_event_with_tags(
+        keys,
+        d_tag_value,
+        commit_id,
+        patch_content,
+        build_manifest_event_id,
+        extra_tags,
+    )?;
+    send_patch_event(keys, relay_urls, event, commit_id, d_tag_value).await
+}
+
+async fn send_patch_event(
+    keys: &Keys,
+    relay_urls: &[String],
+    event: Event,
+    commit_id: &str,
+    d_tag_value: &str,
+) -> Result<Id, Error> {
     log::info!(
         "Signed NIP-34 patch event: id={}, pubkey={}, kind={:?}, commit={}, identifier={}, relays={}",
         event.id,
@@ -168,6 +254,52 @@ pub async fn publish_patch_event(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::nostr::nip13::NIP13Event;
+
+    #[test]
+    fn commit_nonce_is_signed_without_claiming_nip13_proof_of_work() {
+        let keys = Keys::generate();
+        let parent = ParentCommitLink {
+            pubkey: Keys::generate().public_key(),
+            event_id: Some(Id::mock()),
+        };
+        let nonce = commit_nonce_tag("01-00000122").unwrap();
+        let mut tags = parent.tags();
+        tags.push(nonce.clone());
+        let patch =
+            build_patch_event_with_tags(&keys, "repo", "commit", "patch", None, &tags).unwrap();
+        let note = build_patch_announcement_with_tags(&keys, patch.id, &tags).unwrap();
+        let profile = Client::new(&keys, Options::new())
+            .build_metadata_event(
+                &crate::nostr::Metadata::default(),
+                vec![Tag::new_tag("t", "gnostr"), nonce.clone()],
+            )
+            .unwrap();
+        for event in [&patch, &note, &profile] {
+            event.verify(None).unwrap();
+            assert!(event.tags.contains(&nonce));
+            assert!(event.tags.contains(&Tag::new_tag("t", "gnostr")));
+            assert!(event.nonce_data().is_none());
+        }
+        assert!(patch.tags.contains(&Tag::new_event(
+            parent.event_id.unwrap(),
+            None,
+            Some("reply".to_string()),
+        )));
+        assert_eq!(
+            commit_nonce_tag("100-00000122").unwrap().value(),
+            "100-00000122"
+        );
+        for invalid in [
+            "1-00000122",
+            "01-0000012g",
+            "01-000001222",
+            "01-122",
+            "4294967296-00000122",
+        ] {
+            assert!(commit_nonce_tag(invalid).is_err());
+        }
+    }
 
     #[test]
     fn patch_announcement_references_patch_and_uses_same_signer() {

@@ -58,6 +58,10 @@ avatar/banner URLs. Deserializing existing profiles preserves missing or null
 artwork fields rather than inserting the defaults.
 All legit-generated events include the Nostr hashtag tag `["t","gnostr"]`,
 including kind-0 profiles and NIP-34 patches, so clients can discover `#gnostr`.
+Mined profiles, patches, and kind-1 announcements also carry
+`["commit-nonce","<worker>-<counter>"]`, copied exactly from the commit's final
+nonce line (for example `01-00000122`). This is Git mining proof, not the
+decimal `nonce` tag used for Nostr NIP-13 event proof-of-work.
 After a patch is sent, a kind-1 announcement is sent to the same relays with the
 same signing key. Its content is `nostr:note1...` referencing the patch event,
 and its tags include `["e","<patch event ID>","","mention"]` and `["t","gnostr"]`.
@@ -78,6 +82,76 @@ Parent public keys are deterministic; Nostr event IDs are not derivable solely
 from Git hashes. An explicit `--nsec` can sign with a different public key, so
 relay discovery by the derived identity cannot find that parent's patch without
 the local cache.
+
+## Compose NIP-34 events without mining
+
+`gnostr-legit compose` prints one signed event as JSON. It does not mine, change
+Git, publish metadata or announcements, or contact relays unless `--publish` is
+specified. Publication also requires an explicit `--relay`; repeat it for
+multiple destinations. Relay logs confirm WebSocket writes, not acceptance.
+
+Use the global `--nsec "$NOSTR_PRIVATE_KEY"` to choose the signer. Without it,
+composition uses the key derived from the current Git HEAD, without creating a
+commit. This publicly derivable identity is not secure. With an explicit key,
+composition works outside a Git repository.
+
+| Subcommand | Kind | Required event inputs |
+|---|---|---|
+| `repo-announcement` | 30617 | `--identifier`, `--root-commit` |
+| `repo-state` | 30618 | `--identifier`; optional repeated `--ref NAME=VALUE` |
+| `patch` | 1617 | `--repository`, `--commit`, format-patch content |
+| `pull-request` | 1618 | `--repository`, `--subject`, `--commit`, `--clone-url` |
+| `pull-request-update` | 1619 | `--repository`, `--event`, `--author`, `--commit`, `--clone-url` |
+| `issue` | 1621 | `--repository`, content |
+| `reply` | 1111 | `--repository`, `--event`, `--author`, `--root-kind`, content |
+| `reply --legacy` | 1622 | Same inputs; deprecated Git reply format |
+| `status open/applied/closed/draft` | 1630-1633 | `--repository`, `--event`, `--author` |
+| `grasp-list` | 10317 | Optional repeated `--server` |
+
+`--repository` accepts `30617:<owner public key>:<identifier>` or `naddr1...`.
+Event references accept hex or `note1...`; public keys accept hex or `npub1...`.
+Commit hashes must be full 40-character Git hashes. Use `--content` for literal
+text or `--content-file PATH` for UTF-8 files (`-` reads stdin).
+Every event includes `["t","gnostr"]`; repeat `--hashtag` for additional labels.
+For manually composed events, `--commit-nonce 01-00000122` attaches the same
+validated Git mining nonce tag without treating it as NIP-13 proof-of-work.
+Use each subcommand's `--help` for optional fields.
+
+```bash
+# Compose only: stdout contains signed JSON and its full event ID.
+gnostr-legit --nsec "$NOSTR_PRIVATE_KEY" compose issue \
+  --repository "30617:$OWNER_PUBKEY:gnostr" \
+  --subject "Issue title" --content "Issue description"
+
+# Publish only to explicitly chosen relays.
+gnostr-legit --nsec "$NOSTR_PRIVATE_KEY" compose --publish \
+  --relay wss://relay.example.com issue \
+  --repository "30617:$OWNER_PUBKEY:gnostr" --content "Issue description"
+
+# Compose a patch for HEAD without mining or publishing.
+git format-patch -1 --stdout HEAD | gnostr-legit compose patch \
+  --repository "30617:$OWNER_PUBKEY:gnostr" \
+  --commit "$(git rev-parse HEAD)" \
+  --parent-commit "$(git rev-parse HEAD^)" --content-file -
+```
+
+Patch composition accepts `--previous-patch` for the actual parent/revision
+event ID and derives a parent `p` tag from `--parent-commit`. It performs no
+automatic relay lookup. Replies use current NIP-22 root/parent tags by default;
+`--reply-event`, `--reply-author`, and `--reply-kind` together target a nested
+reply. Applied statuses support `--merge-commit`, repeated `--applied-commit`,
+and repeated `--applied-patch`; these fields are rejected for other statuses.
+Repository announcement `--monitor-relay` values describe monitored relays,
+independently of `--relay` publication destinations.
+
+The focused runner uses existing cached Rust dependencies without invoking
+Cargo, and prints verbose progress banners:
+
+```bash
+./scripts/run-legit-chain-tests.py
+```
+
+## Debug logging
 
 Enable debug diagnostics for repository discovery, CPU/thread selection, mining,
 storage, and NIP-34 publication with:

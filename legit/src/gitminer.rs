@@ -8,7 +8,8 @@ use std::thread;
 use super::worker::Worker;
 use gnostr_asyncgit::types::Keys;
 use gnostr_types::nostr::patch::{
-    build_patch_announcement, get_relay_urls, publish_patch_event, ParentCommitLink,
+    build_patch_announcement_with_tags, commit_nonce_tag, get_relay_urls,
+    publish_patch_event_with_tags, ParentCommitLink,
 };
 use gnostr_types::nostr::{
     client::Options as ClientOptions, patch::install_rustls_crypto_provider, Client, Event,
@@ -141,9 +142,10 @@ impl Gitminer {
         );
         info!("Received hash {} from a worker.", hash);
 
+        let nonce = Self::mined_commit_nonce(&blob)?;
         match self.write_commit(&hash, &blob) {
             Ok(_) => {
-                self.send_nip34_patch_event(&hash, &parent)?;
+                self.send_nip34_patch_event(&hash, &parent, nonce)?;
                 Ok(hash)
             }
             Err(e) => {
@@ -234,6 +236,17 @@ impl Gitminer {
 
     fn commit_profile_metadata(&self) -> Option<Metadata> {
         self.signing_keys.is_none().then(Metadata::default)
+    }
+
+    fn mined_commit_nonce(blob: &str) -> Result<&str, &'static str> {
+        let nonce = blob.rsplit_once("\n\n").map(|(_, nonce)| nonce);
+        match nonce {
+            Some(nonce) if commit_nonce_tag(nonce).is_ok() => Ok(nonce),
+            _ => {
+                error!("Mined commit does not contain a valid worker/counter nonce");
+                Err("Invalid mined commit nonce")
+            }
+        }
     }
 
     fn cache_patch_event(cache_dir: &Path, commit: &str, event_id: Id) -> Result<(), &'static str> {
@@ -349,7 +362,12 @@ impl Gitminer {
         Ok(ParentCommitLink { pubkey, event_id })
     }
 
-    fn send_nip34_patch_event(&self, head: &str, parent: &str) -> Result<(), &'static str> {
+    fn send_nip34_patch_event(
+        &self,
+        head: &str,
+        parent: &str,
+        nonce: &str,
+    ) -> Result<(), &'static str> {
         info!("Preparing NIP-34 patch event for mined commit {}", head);
         let keys = match &self.signing_keys {
             Some(keys) => keys.clone(),
@@ -396,6 +414,11 @@ impl Gitminer {
         let metadata = self.commit_profile_metadata();
         let parent_hash = parent.to_string();
         let cache_dir = self.repo.path().join("gnostr/patch-events");
+        let nonce_tag = commit_nonce_tag(nonce).map_err(|err| {
+            error!("Invalid mining nonce for commit {}: {}", head, err);
+            "Invalid mined commit nonce"
+        })?;
+        info!("Mined commit proof: commit={}, nonce={}", head, nonce);
 
         // Spawn a dedicated OS thread with its own Tokio runtime so that
         // this blocking call is safe whether or not the caller already runs
@@ -418,6 +441,8 @@ impl Gitminer {
                 })?;
                 client.connect().await;
                 let parent = Self::resolve_parent(&client, &cache_dir, &parent_hash).await?;
+                let mut commit_tags = parent.tags();
+                commit_tags.push(nonce_tag.clone());
                 if let Some(metadata) = metadata {
                     debug!("Commit profile metadata: {:?}", metadata);
                     info!(
@@ -426,7 +451,7 @@ impl Gitminer {
                         keys.public_key()
                     );
                     let metadata_id = client
-                        .set_metadata_with_tags(&metadata, vec![Tag::new_tag("t", "gnostr")])
+                        .set_metadata_with_tags(&metadata, vec![Tag::new_tag("t", "gnostr"), nonce_tag])
                         .await
                         .map_err(|err| {
                             error!(
@@ -447,14 +472,14 @@ impl Gitminer {
                     repo_name,
                     relay_urls.len()
                 );
-                let event_id = publish_patch_event(
+                let event_id = publish_patch_event_with_tags(
                     &keys,
                     &relay_urls,
                     &repo_name,
                     &head_hash,
                     &patch_content,
                     None,
-                    Some(&parent),
+                    &commit_tags,
                 )
                 .await
                 .map_err(|err| {
@@ -469,10 +494,13 @@ impl Gitminer {
                     event_id, head_hash, repo_name
                 );
                 Self::cache_patch_event(&cache_dir, &head_hash, event_id)?;
-                let announcement = build_patch_announcement(&keys, event_id, Some(&parent)).map_err(|err| {
-                    error!("Failed to build announcement for patch {}: {}", event_id, err);
-                    "Failed to build patch announcement"
-                })?;
+                let announcement =
+                    build_patch_announcement_with_tags(&keys, event_id, &commit_tags).map_err(
+                        |err| {
+                            error!("Failed to build announcement for patch {}: {}", event_id, err);
+                            "Failed to build patch announcement"
+                        },
+                    )?;
                 debug!(
                     "Publishing kind-1 patch announcement: id={}, pubkey={}, patch_event={}, content={}",
                     announcement.id,
@@ -694,6 +722,14 @@ mod tests {
         let miner = miner.with_signing_keys(Keys::generate());
         assert!(miner.commit_profile_metadata().is_none());
         assert!(miner.clone().commit_profile_metadata().is_none());
+    }
+
+    #[test]
+    fn mined_nonce_is_the_exact_final_worker_counter_not_an_earlier_body_line() {
+        let blob = "tree example\n\nsubject\n\nEarlier proof 99-00000001\n\n01-00000122";
+        assert_eq!(Gitminer::mined_commit_nonce(blob).unwrap(), "01-00000122");
+        assert!(Gitminer::mined_commit_nonce("tree example\n\nsubject").is_err());
+        assert!(Gitminer::mined_commit_nonce("tree example\n\n01-invalid").is_err());
     }
 
     #[test]

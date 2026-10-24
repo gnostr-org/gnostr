@@ -21,12 +21,14 @@ default = []
 vendored-openssl = ["gnostr-asyncgit/vendored-openssl"]
 
 [dependencies]
+anyhow = { workspace = true }
 clap = { workspace = true }
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
 env_logger = "0.10.0"
 gnostr-asyncgit = { workspace = true, features = ["vendor-openssl"] }
 gnostr-types = { workspace = true }
 log = "0.4"
+serde_json = { workspace = true }
 rust-crypto = "^0.2"
 time-0-3 = { package = "time", version = "0.3.34", features = [
     "formatting",

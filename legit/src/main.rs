@@ -7,22 +7,23 @@ use std::convert::TryInto;
 use std::fmt::Debug;
 use std::time::Instant;
 //use std::mem::size_of;
-use clap::{CommandFactory, Parser};
+use clap::{CommandFactory, FromArgMatches, Parser, Subcommand};
 use crypto::sha2::Sha256;
 use gitminer::Gitminer;
 use gnostr_asyncgit::git2::*;
 use gnostr_asyncgit::types::Keys;
 use std::{io, thread};
 
+mod compose;
 mod gitminer;
 mod repo;
 mod worker;
 
 #[derive(Parser)]
-#[command(version, about = "Generate git commit sha with a custom prefix")]
+#[command(version, about = "Mine git commits or compose NIP-34 events")]
 struct Args {
     /// Path to your git repository
-    #[arg(long, default_value = ".")]
+    #[arg(long, global = true, default_value = ".")]
     repo: String,
 
     /// Desired commit prefix
@@ -38,8 +39,38 @@ struct Args {
     message: Vec<String>,
 
     /// NIP-34 signing key: 64-character hex (SHA-256) or nsec1... private key
-    #[arg(long, value_name = "KEY")]
+    #[arg(long, global = true, value_name = "KEY")]
     nsec: Option<String>,
+
+    #[command(subcommand)]
+    command: Option<Command>,
+}
+
+#[derive(Subcommand)]
+enum Command {
+    /// Compose signed NIP-34 JSON without mining; publish only with --publish
+    Compose(compose::Compose),
+}
+
+fn parse_args_from<I, T>(iter: I) -> Result<Args, clap::Error>
+where
+    I: IntoIterator<Item = T>,
+    T: Into<std::ffi::OsString> + Clone,
+{
+    let mut command = Args::command();
+    let matches = command.try_get_matches_from_mut(iter)?;
+    let args = Args::from_arg_matches(&matches)?;
+    if args.command.is_some()
+        && ["prefix", "threads", "message"]
+            .iter()
+            .any(|name| matches.value_source(name) == Some(clap::parser::ValueSource::CommandLine))
+    {
+        return Err(command.error(
+            clap::error::ErrorKind::ArgumentConflict,
+            "Mining options --prefix, --threads, and --message cannot be combined with compose",
+        ));
+    }
+    Ok(args)
 }
 
 fn parse_signing_keys(nsec: Option<String>) -> Result<Option<Keys>, &'static str> {
@@ -59,7 +90,7 @@ fn parse_signing_keys(nsec: Option<String>) -> Result<Option<Keys>, &'static str
 //}
 
 fn main() -> io::Result<()> {
-    let args = Args::parse();
+    let args = parse_args_from(std::env::args_os()).unwrap_or_else(|err| err.exit());
     let signing_keys = parse_signing_keys(args.nsec).unwrap_or_else(|message| {
         Args::command()
             .error(clap::error::ErrorKind::ValueValidation, message)
@@ -67,6 +98,11 @@ fn main() -> io::Result<()> {
     });
     env_logger::init();
     info!("Starting gnostr-legit");
+    if let Some(Command::Compose(command)) = args.command {
+        return command
+            .run(signing_keys, &args.repo)
+            .map_err(|err| io::Error::new(io::ErrorKind::Other, format!("{:#}", err)));
+    }
 
     let start = Instant::now();
     debug!("Mining session started at {}", chrono::Local::now());
@@ -139,7 +175,7 @@ fn main() -> io::Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_signing_keys, Args};
+    use super::{parse_args_from, parse_signing_keys, Args};
     use clap::{error::ErrorKind, Parser};
     use gnostr_asyncgit::types::Keys;
 
@@ -151,6 +187,38 @@ mod tests {
         assert_eq!(args.threads, None);
         assert_eq!(args.message, ["default commit message"]);
         assert!(parse_signing_keys(args.nsec).unwrap().is_none());
+        assert!(args.command.is_none());
+    }
+
+    #[test]
+    fn compose_accepts_global_context_without_mining_options() {
+        let args = Args::try_parse_from([
+            "gnostr-legit",
+            "compose",
+            "grasp-list",
+            "--repo",
+            "/tmp/repo",
+            "--nsec",
+            &"1".repeat(64),
+        ])
+        .unwrap();
+        assert!(args.command.is_some());
+        assert_eq!(args.repo, "/tmp/repo");
+        assert!(parse_signing_keys(args.nsec).unwrap().is_some());
+        let args = parse_args_from([
+            "gnostr-legit",
+            "--repo",
+            "/tmp/repo",
+            "--nsec",
+            &"1".repeat(64),
+            "compose",
+            "grasp-list",
+        ])
+        .unwrap();
+        assert!(args.command.is_some());
+        assert!(
+            parse_args_from(["gnostr-legit", "--prefix", "000", "compose", "grasp-list"]).is_err()
+        );
     }
 
     #[test]

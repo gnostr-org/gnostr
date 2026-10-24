@@ -1,18 +1,24 @@
 #!/usr/bin/env python3
-"""Run focused legit metadata/chain tests with cached dependencies, without Cargo.
+"""Run focused legit metadata/chain/composition tests without Cargo.
 
 Run from any directory; CARGO_TARGET_DIR is respected. Additional arguments are
 forwarded to the Rust test runner. First populate the cache with your normal
 gnostr-legit build workflow. Relay-list configuration smoke tests are excluded.
 """
 
+import base64
+import hashlib
 import json
 import os
 from pathlib import Path
+import re
+import queue
 import shutil
+import socket
 import subprocess
 import sys
 import tempfile
+import threading
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -41,15 +47,21 @@ def dependency(name, manifest):
 
 
 def source_module(name, relative_path):
-    path = json.dumps(str(ROOT / relative_path))
+    path = json.dumps(str(ROOT / relative_path), ensure_ascii=False)
     return f"#[path = {path}] pub mod {name};"
 
 
 def harness():
-    return "\n".join(
+    main = (ROOT / "legit/src/main.rs").read_text()
+    main = re.sub(
+        r"^mod (\w+);$",
+        lambda match: source_module(match[1], f"legit/src/{match[1]}.rs").replace("pub mod", "mod", 1),
+        main,
+        flags=re.MULTILINE,
+    )
+    return main + "\n" + "\n".join(
         [
             "extern crate self as gnostr_types;",
-            "#[macro_use] extern crate log;",
             "pub use cached_gnostr_types::test_serde;",
             "pub mod nostr {",
             "pub use cached_gnostr_types::nostr::*;",
@@ -64,10 +76,128 @@ def harness():
             "pub use client::Client;",
             source_module("patch", "types/src/nostr/patch.rs"),
             "}",
-            source_module("gitminer", "legit/src/gitminer.rs"),
-            source_module("worker", "legit/src/worker.rs"),
         ]
     )
+
+
+def read_exact(connection, length):
+    data = bytearray()
+    while len(data) < length:
+        part = connection.recv(length - len(data))
+        if not part:
+            raise RuntimeError("Relay connection closed before the complete event arrived")
+        data.extend(part)
+    return bytes(data)
+
+
+def receive_event(listener, results):
+    try:
+        connection, _ = listener.accept()
+        with connection:
+            connection.settimeout(5)
+            request = bytearray()
+            while not request.endswith(b"\r\n\r\n"):
+                request.extend(read_exact(connection, 1))
+                if len(request) > 16384:
+                    raise RuntimeError("Oversized WebSocket handshake")
+            headers = dict(
+                line.split(": ", 1)
+                for line in request.decode().split("\r\n")[1:]
+                if ": " in line
+            )
+            key = next(value for name, value in headers.items() if name.lower() == "sec-websocket-key")
+            accept = base64.b64encode(
+                hashlib.sha1((key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11").encode()).digest()
+            ).decode()
+            connection.sendall(
+                ("HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\n"
+                 "Connection: Upgrade\r\nSec-WebSocket-Accept: " + accept + "\r\n\r\n").encode()
+            )
+            header = read_exact(connection, 2)
+            if header[0] != 0x81 or not header[1] & 0x80:
+                raise RuntimeError("Expected a complete, masked text WebSocket frame")
+            length = header[1] & 0x7F
+            if length == 126:
+                length = int.from_bytes(read_exact(connection, 2), "big")
+            elif length == 127:
+                length = int.from_bytes(read_exact(connection, 8), "big")
+            if length > 65536:
+                raise RuntimeError("Unexpectedly large smoke-test event")
+            mask = read_exact(connection, 4)
+            body = read_exact(connection, length)
+            results.put(json.loads(bytes(value ^ mask[index % 4] for index, value in enumerate(body))))
+    except (OSError, RuntimeError, ValueError, StopIteration) as error:
+        results.put(error)
+
+
+def run_cli(args, environment):
+    result = subprocess.run(args, capture_output=True, text=True, timeout=15, env=environment)
+    if result.stdout:
+        print(result.stdout, end="", flush=True)
+    if result.stderr:
+        print(result.stderr, end="", file=sys.stderr, flush=True)
+    return result
+
+
+def smoke_cli(binary, directory):
+    print("========== CHECKING CLI JSON / NO-GIT DRY RUN / OPT-IN PUBLICATION ==========", flush=True)
+    absent_repo = directory / "not-a-git-repository"
+    environment = dict(
+        os.environ,
+        HOME=str(directory / "home"),
+        XDG_CONFIG_HOME=str(directory / "config"),
+        XDG_DATA_HOME=str(directory / "data"),
+        APPDATA=str(directory / "config"),
+        LOCALAPPDATA=str(directory / "data"),
+    )
+    with socket.socket() as listener:
+        listener.bind(("127.0.0.1", 0))
+        listener.listen(1)
+        relay = f"ws://127.0.0.1:{listener.getsockname()[1]}"
+        # This is a publicly known test fixture, never a user signing key.
+        args = [
+            str(binary), "--repo", str(absent_repo), "--nsec", "1" * 64,
+            "compose", "--relay", relay, "grasp-list", "--server", "wss://grasp.example.com",
+        ]
+        dry_run = run_cli(args, environment)
+        dry_run.check_returncode()
+        event = json.loads(dry_run.stdout)
+        if event["kind"] != 10317 or ["t", "gnostr"] not in event["tags"] or len(event["id"]) != 64:
+            raise RuntimeError(f"Invalid composed event: {dry_run.stdout}")
+        print(f"Dry-run JSON event ID: {event['id']}", flush=True)
+        if absent_repo.exists():
+            raise RuntimeError("Composition unexpectedly created a Git repository")
+        listener.settimeout(0.25)
+        try:
+            connection, _ = listener.accept()
+        except socket.timeout:
+            pass
+        else:
+            connection.close()
+            raise RuntimeError("Dry-run composition unexpectedly contacted a relay")
+
+        missing_relay = run_cli([str(binary), "compose", "--publish", "grasp-list"], environment)
+        if missing_relay.returncode == 0 or "--relay" not in missing_relay.stderr:
+            raise RuntimeError("--publish did not require an explicit relay")
+
+        listener.settimeout(5)
+        results = queue.Queue()
+        receiver = threading.Thread(target=receive_event, args=(listener, results))
+        receiver.start()
+        publish_args = args.copy()
+        publish_args.insert(publish_args.index("compose") + 1, "--publish")
+        try:
+            published = run_cli(publish_args, environment)
+        finally:
+            receiver.join(timeout=10)
+        published.check_returncode()
+        received = results.get(timeout=1)
+        if isinstance(received, Exception):
+            raise received
+        event = json.loads(published.stdout)
+        if received != ["EVENT", event]:
+            raise RuntimeError("The relay did not receive exactly the event printed as JSON")
+        print(f"Opt-in relay received JSON event ID: {event['id']}", flush=True)
 
 
 def main():
@@ -105,7 +235,7 @@ def main():
             "tempfile", "tokio", "tokio_tungstenite", "tracing", "url",
         ]:
             command.extend(["--extern", f"{name}={dependency(name, types)}"])
-        for name in ["crypto", "gnostr_asyncgit", "time_0_3"]:
+        for name in ["clap", "chrono", "crypto", "env_logger", "gnostr_asyncgit", "time_0_3"]:
             command.extend(["--extern", f"{name}={dependency(name, legit)}"])
         if shutil.which("pkg-config"):
             native = subprocess.run(
@@ -120,9 +250,19 @@ def main():
                     "Warning: system libgit2 not found; attempting cached native linkage.",
                     file=sys.stderr,
                 )
-        print("========== COMPILING FOCUSED METADATA / PARENT-CHAIN TESTS ==========", flush=True)
-        subprocess.run(command, check=True)
-        print("========== RUNNING FOCUSED METADATA / PARENT-CHAIN TESTS ==========", flush=True)
+        print("========== COMPILING LEGIT METADATA / CHAIN / COMPOSITION TESTS ==========", flush=True)
+        package = (ROOT / "Cargo.toml").read_text().split("[workspace.package]", 1)[1].split("\n[", 1)[0]
+        version = re.search(r'^version\s*=\s*"([^"]+)"', package, re.MULTILINE)
+        if version is None:
+            sys.exit("Could not read workspace.package.version from Cargo.toml")
+        environment = dict(
+            os.environ,
+            CARGO_PKG_NAME="gnostr-legit",
+            CARGO_PKG_VERSION=version[1],
+            CARGO_MANIFEST_DIR=str(ROOT / "legit"),
+        )
+        subprocess.run(command, check=True, env=environment)
+        print("========== RUNNING LEGIT METADATA / CHAIN / COMPOSITION TESTS ==========", flush=True)
         subprocess.run(
             [
                 str(binary), "--nocapture",
@@ -131,7 +271,14 @@ def main():
             ],
             check=True,
         )
-    print("========== METADATA / PARENT-CHAIN TESTS PASSED ==========", flush=True)
+        print("========== COMPILING CLI SMOKE-TEST BINARY ==========", flush=True)
+        cli_binary = directory / ("gnostr-legit.exe" if os.name == "nt" else "gnostr-legit")
+        cli_command = command.copy()
+        cli_command.remove("--test")
+        cli_command[cli_command.index("-o") + 1] = str(cli_binary)
+        subprocess.run(cli_command, check=True, env=environment)
+        smoke_cli(cli_binary, directory)
+    print("========== LEGIT METADATA / CHAIN / COMPOSITION TESTS PASSED ==========", flush=True)
 
 
 if __name__ == "__main__":

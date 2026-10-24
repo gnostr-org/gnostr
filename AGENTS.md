@@ -395,6 +395,9 @@ An explicit `--nsec` never triggers automatic profile metadata publication.
 `gnostr_types::nostr::Metadata::default()` and `Metadata::new()` include the
 default avatar and banner URLs; deserialization does not inject these defaults.
 All legit-generated events carry the hashtag tag `["t","gnostr"]` (`#gnostr`).
+Mined metadata, patches, and announcements preserve the exact final Git nonce
+as `["commit-nonce","<worker>-<counter>"]` (for example `01-00000122`), separate
+from the decimal NIP-13 `nonce` tag.
 After the patch is sent, a kind-1 note references its event ID as `nostr:note1...`
 in the content and an `e` tag. The note uses the same signing key and relays,
 includes `["t","gnostr"]`, and logs its own event ID.
@@ -404,6 +407,16 @@ patch reference is marked `mention`. Cache entries live in the Git directory at
 `gnostr/patch-events/<commit hash>`. Missing parent events produce chain roots,
 not fabricated event IDs. Parent public keys are derived deterministically from
 zero-padded Git hashes; actual event IDs must be cached or discovered.
+
+`gnostr-legit compose <subcommand>` composes signed JSON without mining,
+mutating Git, or automatically publishing other events. It supports repository
+announcements/state, patches, PRs/updates, issues, current NIP-22 replies (plus
+legacy 1622), all four statuses, and grasp lists. Use `--publish --relay <URL>`
+to send; otherwise no relay is contacted. `--nsec` selects explicit keys, or
+the existing HEAD supplies the publicly derivable signer. See
+`legit/README.md` and `gnostr-legit compose --help` for syntax.
+`./scripts/run-legit-chain-tests.py` validates metadata, parent chains, and
+composition using cached dependencies without invoking Cargo.
 
 ## Verification summary
 
