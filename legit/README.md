@@ -26,6 +26,17 @@ git log | grep "0000006"
 
 ## Usage
 
+The standalone `gnostr-legit` binary uses workspace Clap for argument parsing:
+
+```bash
+gnostr-legit --repo . --prefix 000 --threads 2 -m "subject" -m "body"
+gnostr-legit --help
+gnostr-legit --version
+```
+
+Without flags, it uses the current repository, prefix `000`, available CPU
+parallelism, and `default commit message`. Thread counts must be positive.
+
 To create a commit with a subject and a multi-line body, use the `-m` flag multiple times. The first instance of `-m` will be the commit subject, and each subsequent instance will be a new line in the commit body.
 
 ### Command Syntax

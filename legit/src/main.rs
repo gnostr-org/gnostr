@@ -3,11 +3,11 @@
 #[macro_use]
 extern crate log;
 extern crate env_logger;
-use std::fmt::Debug;
 use std::convert::TryInto;
+use std::fmt::Debug;
 use std::time::Instant;
 //use std::mem::size_of;
-use argparse::{ArgumentParser, Store};
+use clap::Parser;
 use crypto::sha2::Sha256;
 use gitminer::Gitminer;
 use gnostr_asyncgit::git2::*;
@@ -16,6 +16,26 @@ use std::{io, thread};
 mod gitminer;
 mod repo;
 mod worker;
+
+#[derive(Debug, Parser)]
+#[command(version, about = "Generate git commit sha with a custom prefix")]
+struct Args {
+    /// Path to your git repository
+    #[arg(long, default_value = ".")]
+    repo: String,
+
+    /// Desired commit prefix
+    #[arg(short = 'p', long, default_value = "000")]
+    prefix: String,
+
+    /// Number of worker threads (defaults to available parallelism)
+    #[arg(short = 't', long, value_parser = clap::value_parser!(u32).range(1..))]
+    threads: Option<u32>,
+
+    /// Commit message; repeat for additional lines
+    #[arg(short, long, default_value = "default commit message")]
+    message: Vec<String>,
+}
 
 //fn convert_to_u32(v: usize) -> Option<i8> {
 //    if v > (std::i8::MAX as i32).try_into().unwrap() {
@@ -26,25 +46,24 @@ mod worker;
 //}
 
 fn main() -> io::Result<()> {
+    let args = Args::parse();
     env_logger::init();
     info!("Starting gnostr-legit");
 
     let start = Instant::now();
-	println!("start={:?}", start);
+    println!("start={:?}", start);
 
-let elapsed = start.elapsed();
+    let elapsed = start.elapsed();
     println!("Elapsed: {:?}", elapsed);
-    
+
     // Or get it in specific units:
     println!("Elapsed seconds: {}", elapsed.as_secs());
     println!("Elapsed milliseconds: {}", elapsed.as_millis());
-
 
     let _now = chrono::Local::now();
 
     // This will now correctly output formatted calendar time
     println!("{}", _now.format("%d/%m/%Y %T"));
-
 
     let count = thread::available_parallelism()?.get();
     assert!(count >= 1_usize);
@@ -55,16 +74,14 @@ let elapsed = start.elapsed();
     //let ip_address_hash: String = format!("{:X}", sha256.finalize());
 
     //TODO kind 1617 patch default
-    let mut opts = gitminer::Options {
-        threads: count.try_into().unwrap(),
-        target: "000".to_string(),
-        message: vec!["default commit message".to_string()],
-        repo: ".".to_string(),
+    let opts = gitminer::Options {
+        threads: args.threads.unwrap_or(count.try_into().unwrap()),
+        target: args.prefix,
+        message: args.message,
+        repo: args.repo,
         timestamp: time_0_3::OffsetDateTime::now_utc(),
         kind: None,
     };
-
-    parse_args_or_exit(&mut opts);
 
     let _state = repo::state(&opts.repo);
 
@@ -90,44 +107,70 @@ let elapsed = start.elapsed();
         hash,
         duration.as_secs()
     );
-let elapsed = start.elapsed();
+    let elapsed = start.elapsed();
     println!("Elapsed: {:?}", elapsed);
-    
+
     // Or get it in specific units:
     println!("Elapsed seconds: {}", elapsed.as_secs());
     println!("Elapsed milliseconds: {}", elapsed.as_millis());
     Ok(())
 }
 
-fn parse_args_or_exit(opts: &mut gitminer::Options) {
-    let mut ap = ArgumentParser::new();
-    ap.set_description("Generate git commit sha with a custom prefix");
+#[cfg(test)]
+mod tests {
+    use super::Args;
+    use clap::{error::ErrorKind, Parser};
 
-    ap.refer(&mut opts.repo)
-        .add_option(&["--repo"], Store, "Path to your git repository");
+    #[test]
+    fn cli_defaults() {
+        let args = Args::try_parse_from(["gnostr-legit"]).unwrap();
+        assert_eq!(args.repo, ".");
+        assert_eq!(args.prefix, "000");
+        assert_eq!(args.threads, None);
+        assert_eq!(args.message, ["default commit message"]);
+    }
 
-    ap.refer(&mut opts.target).add_option(
-        &["-p", "--prefix"],
-        Store,
-        "Desired commit prefix (required)",
-    );
-    //.required();
+    #[test]
+    fn cli_flags_and_repeated_messages() {
+        let args = Args::try_parse_from([
+            "gnostr-legit",
+            "--repo",
+            "/tmp/my repo",
+            "-p",
+            "0000",
+            "-t",
+            "2",
+            "-m",
+            "subject",
+            "--message",
+            "body",
+        ])
+        .unwrap();
+        assert_eq!(args.repo, "/tmp/my repo");
+        assert_eq!(args.prefix, "0000");
+        assert_eq!(args.threads, Some(2));
+        assert_eq!(args.message, ["subject", "body"]);
+    }
 
-    ap.refer(&mut opts.threads).add_option(
-        &["-t", "--threads"],
-        Store,
-        "Number of worker threads to use (default 8)",
-    );
+    #[test]
+    fn cli_rejects_invalid_worker_counts() {
+        for threads in ["0", "-1", "abc", "4294967296"] {
+            assert!(Args::try_parse_from(["gnostr-legit", "--threads", threads]).is_err());
+        }
+    }
 
-    ap.refer(&mut opts.message).add_option(
-        &["-m", "--message"],
-        argparse::Collect,
-        "Commit message to use (optional)",
-    );
-    //.required();
-
-    //ap.refer(&mut opts.timestamp)
-    //    .add_option(&["--timestamp"], Store, "Commit timestamp to use (default now)");
-
-    ap.parse_args_or_exit();
+    #[test]
+    fn cli_help_and_version() {
+        for (flag, kind) in [
+            ("--help", ErrorKind::DisplayHelp),
+            ("--version", ErrorKind::DisplayVersion),
+        ] {
+            assert_eq!(
+                Args::try_parse_from(["gnostr-legit", flag])
+                    .unwrap_err()
+                    .kind(),
+                kind
+            );
+        }
+    }
 }
