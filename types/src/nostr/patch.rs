@@ -72,13 +72,6 @@ pub async fn publish_patch_event(
 ) -> Result<Id, Error> {
     install_rustls_crypto_provider();
 
-    let mut client = Client::new(
-        keys,
-        Options::new().send_timeout(Some(Duration::from_secs(1))),
-    );
-    client.add_relays(relay_urls.to_vec()).await?;
-    client.connect().await;
-
     let mut tags = vec![
         Tag::new_identifier(d_tag_value.to_string()),
         Tag::new_tag("commit", commit_id),
@@ -90,6 +83,27 @@ pub async fn publish_patch_event(
 
     let event = EventBuilder::new(EventKind::Patches, patch_content.to_string(), tags)
         .to_event(&keys.secret_key()?)?;
+
+    log::info!(
+        "Signed NIP-34 patch event: id={}, pubkey={}, kind={:?}, commit={}, identifier={}, relays={}",
+        event.id,
+        event.pubkey,
+        event.kind,
+        commit_id,
+        d_tag_value,
+        relay_urls.len()
+    );
+    if log::log_enabled!(log::Level::Debug) {
+        let event_json = serde_json::to_string(&event).map_err(|err| Error::Custom(err.into()))?;
+        log::debug!("NIP-34 patch event JSON: {}", event_json);
+    }
+
+    let mut client = Client::new(
+        keys,
+        Options::new().send_timeout(Some(Duration::from_secs(1))),
+    );
+    client.add_relays(relay_urls.to_vec()).await?;
+    client.connect().await;
 
     client.send_event(event).await
 }
