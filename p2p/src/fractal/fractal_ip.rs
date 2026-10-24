@@ -1,6 +1,7 @@
 use std::{fs, path::Path, path::PathBuf, process::Command};
 
 use crate::keypair_from_seed;
+use clap::Parser;
 use futures::StreamExt;
 use log::{debug, info};
 // pub use crate::perfect_ip_core::*;
@@ -12,139 +13,35 @@ use crate::fractal::fractal_ip_core::{
 use crate::message::{EventBuilder, EventKind, PrivateKey, Tag};
 use libp2p::{request_response, swarm::SwarmEvent};
 
-#[derive(Debug)]
-struct DemoArgs {
+#[derive(Debug, Parser)]
+#[command(name = "fractal_swarm_perfect_ip")]
+struct Cli {
+    /// Read a single file from PATH.
+    #[arg(long)]
     file: Option<PathBuf>,
+
+    /// Write reconstructed bytes to PATH.
+    #[arg(long)]
     out: Option<PathBuf>,
+
+    /// Walk PATH as a directory tree and preserve relative paths.
+    #[arg(long, conflicts_with = "file")]
     recursive: Option<PathBuf>,
+
+    /// After recursive reconstruction, git clone the reconstructed directory to PATH.
+    ///
+    /// If --recursive is omitted, --clone implies --recursive . and
+    /// --out example.reconstructed.dir.
+    #[arg(long)]
     clone: Option<PathBuf>,
-    depth: usize,
-    depth_set: bool,
+
+    /// Limit recursive directory walking to N levels.
+    #[arg(long)]
+    depth: Option<usize>,
+
+    /// Enable verbose logging (optional level, defaults to "info").
+    #[arg(long, num_args = 0..=1, default_missing_value = "info")]
     logging: Option<String>,
-    help: bool,
-}
-
-fn usage() {
-    println!(
-        "Usage: fractal_swarm_perfect_ip [--file PATH] [--out PATH] [--recursive PATH] [--clone PATH] [--depth N] [--logging] [--help]\n\
-         \n\
-         Options:\n\
-           --file PATH       Read a single file from PATH\n\
-          --out PATH        Write reconstructed bytes to PATH [default: example.reconstructed.bin]\n\
-          --recursive PATH   Walk PATH as a directory tree and preserve relative paths\n\
-          --clone PATH      After recursive reconstruction, git clone the reconstructed directory to PATH;\n                            if --recursive is omitted, --clone implies --recursive . and --out example.reconstructed.dir\n\
-          --depth N         Limit recursive directory walking to N levels [default: 3]\n\
-          --logging         Enable verbose logging\n\
-           --help            Show this help message\n"
-    );
-}
-
-fn parse_args() -> DemoArgs {
-    let mut args = std::env::args().skip(1).peekable();
-    let mut file = None;
-    let mut out = None;
-    let mut recursive = None;
-    let mut clone = None;
-    let mut depth = 3usize;
-    let mut depth_set = false;
-    let mut logging: Option<String> = None;
-    let mut help = false;
-
-    while let Some(arg) = args.next() {
-        if arg == "--help" || arg == "-h" {
-            help = true;
-        } else if arg == "--logging" {
-            logging = match args.peek() {
-                Some(next) if !next.starts_with('-') => args.next(),
-                _ => Some("info".to_string()),
-            };
-        } else if arg == "--recursive" {
-            recursive = match args.peek() {
-                Some(next) if !next.starts_with('-') => args.next().map(PathBuf::from),
-                _ => {
-                    help = true;
-                    None
-                }
-            };
-        } else if let Some(path) = arg.strip_prefix("--recursive=") {
-            recursive = Some(PathBuf::from(path));
-        } else if let Some(path) = arg.strip_prefix("--file=") {
-            file = Some(PathBuf::from(path));
-        } else if let Some(path) = arg.strip_prefix("--out=") {
-            out = Some(PathBuf::from(path));
-        } else if arg == "--out" {
-            out = match args.peek() {
-                Some(next) if !next.starts_with('-') => args.next().map(PathBuf::from),
-                _ => {
-                    help = true;
-                    None
-                }
-            };
-        } else if let Some(path) = arg.strip_prefix("--clone=") {
-            clone = Some(PathBuf::from(path));
-        } else if arg == "--clone" {
-            clone = match args.peek() {
-                Some(next) if !next.starts_with('-') => args.next().map(PathBuf::from),
-                _ => {
-                    help = true;
-                    None
-                }
-            };
-        } else if arg == "--file" {
-            file = match args.peek() {
-                Some(next) if !next.starts_with('-') => args.next().map(PathBuf::from),
-                _ => {
-                    help = true;
-                    None
-                }
-            };
-        } else if let Some(value) = arg.strip_prefix("--depth=") {
-            depth = value.parse().unwrap_or(3);
-            depth_set = true;
-        } else if arg == "--depth" {
-            depth = match args.peek() {
-                Some(next) if !next.starts_with('-') => args
-                    .next()
-                    .and_then(|value| value.parse().ok())
-                    .unwrap_or(3),
-                _ => {
-                    help = true;
-                    3
-                }
-            };
-            depth_set = true;
-        } else {
-            eprintln!("unrecognized argument: {arg}");
-            help = true;
-        }
-    }
-
-    if recursive.is_none() && depth_set {
-        help = true;
-    }
-    if recursive.is_some() && file.is_some() {
-        help = true;
-    }
-
-    let mut recursive = recursive;
-    let mut out = out;
-    if clone.is_some() && recursive.is_none() {
-        recursive = Some(PathBuf::from("."));
-        if out.is_none() {
-            out = Some(PathBuf::from("example.reconstructed.dir"));
-        }
-    }
-
-    DemoArgs {
-        file,
-        out,
-        recursive,
-        clone,
-        depth,
-        depth_set,
-        logging,
-        help,
-    }
 }
 
 fn clone_and_verify_reconstructed_repo(
@@ -205,47 +102,44 @@ fn git_output(repo: &Path, args: &[&str]) -> String {
 }
 
 pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let DemoArgs {
-        file,
-        out,
-        recursive,
-        clone,
-        depth,
-        depth_set,
-        logging,
-        help,
-    } = parse_args();
+    let cli = Cli::parse();
 
-    if let Some(ref level) = logging {
+    if let Some(ref level) = cli.logging {
         env_logger::Builder::from_env(env_logger::Env::default().default_filter_or(level)).init();
     }
 
-    if help {
-        usage();
-        return Ok(());
+    let depth = cli.depth.unwrap_or(3);
+    let depth_set = cli.depth.is_some();
+
+    let mut recursive = cli.recursive;
+    let mut out = cli.out;
+    if cli.clone.is_some() && recursive.is_none() {
+        recursive = Some(PathBuf::from("."));
+        if out.is_none() {
+            out = Some(PathBuf::from("example.reconstructed.dir"));
+        }
+    }
+
+    if depth_set && recursive.is_none() {
+        return Err("--depth is only valid with --recursive".into());
     }
 
     if let Some(ref root) = recursive {
-        if file.is_some() {
-            return Err("--file and --recursive are mutually exclusive".into());
-        }
-
         if !root.is_dir() {
-            usage();
-            return Ok(());
+            return Err(format!("--recursive path is not a directory: {}", root.display()).into());
         }
 
         info!("recursive walk root: {}", root.display());
         info!("recursive depth: {}", depth);
-        info!("logging flag is: {:?}", logging);
-        let walk = run_directory_walk(root, depth, logging.is_some())?;
+        info!("logging flag is: {:?}", cli.logging);
+        let walk = run_directory_walk(root, depth, cli.logging.is_some())?;
         if let Some(ref out_path) = out {
             reconstruct_directory(walk, out_path)?;
             println!(
                 "recursively reconstructed directory to {}",
                 out_path.display()
             );
-            if let Some(ref clone_path) = clone {
+            if let Some(ref clone_path) = cli.clone {
                 clone_and_verify_reconstructed_repo(out_path, clone_path)?;
             }
             return Ok(());
@@ -253,19 +147,7 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         return Ok(());
     }
 
-    // Commented out the old check to allow --depth when --recursive is used:
-    // if depth_set {
-    //     return Err("--depth is only valid with --recursive".into());
-    // }
-    if recursive.is_none() && depth_set {
-        return Err("--depth is only valid with --recursive".into());
-    }
-
-    let example_path = if let Some(ref root) = recursive {
-        root.clone()
-    } else {
-        file.unwrap_or_else(|| PathBuf::from("example.bin"))
-    };
+    let example_path = cli.file.unwrap_or_else(|| PathBuf::from("example.bin"));
 
     let original_bytes = if example_path.exists() {
         if example_path.is_dir() {
@@ -287,7 +169,7 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     println!("sender wrote {}", example_path.display());
     println!("sender sha256: {original_sha256}");
-    if logging.is_some() {
+    if cli.logging.is_some() {
         info!("perfect_ip packet batch: {} packets", batch.total_packets);
         for line in summarize_packets(&batch.packets) {
             debug!("{line}");
