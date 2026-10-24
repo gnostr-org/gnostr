@@ -355,17 +355,16 @@ pub fn list_directory(
                 info!("File: {}", relative.display());
                 info!("Batch size: {} packets", batch.total_packets);
 
-                lines.push(format!(
+                debug!(
                     "{indent}  perfect_ip packet batch: {} packets",
                     batch.total_packets
-                ));
+                );
                 for line in summarize_packets(&batch.packets) {
-                    debug!("{line}");
-                    lines.push(format!("{indent}  {line}"));
+                    debug!("{indent}  {line}");
                 }
                 for slice in &batch.packets {
                     let json = serde_json::to_string(slice).unwrap_or_default();
-                    lines.push(format!("{indent}  payload: {json}"));
+                    debug!("{indent}  payload: {json}");
                 }
             }
         } else {
