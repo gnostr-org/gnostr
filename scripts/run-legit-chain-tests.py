@@ -181,6 +181,17 @@ def smoke_cli(binary, directory):
         ):
             raise RuntimeError("Composed event did not meet its NIP-13 target")
         print(f"Mined dry-run JSON event ID: {mined['id']}", flush=True)
+        args[1:3] = ["--event-prefix", "FFF"]
+        prefix_run = run_cli(args, environment)
+        prefix_run.check_returncode()
+        prefixed = json.loads(prefix_run.stdout)
+        if (
+            not prefixed["id"].startswith("fff")
+            or len([tag for tag in prefixed["tags"] if tag[0] == "nonce"]) != 1
+            or next(tag for tag in prefixed["tags"] if tag[0] == "nonce")[2] != "0"
+        ):
+            raise RuntimeError("Composed event did not match its vanity prefix")
+        print(f"Prefix-mined dry-run JSON event ID: {prefixed['id']}", flush=True)
         if absent_repo.exists():
             raise RuntimeError("Composition unexpectedly created a Git repository")
         listener.settimeout(0.25)
@@ -213,6 +224,8 @@ def smoke_cli(binary, directory):
         event = json.loads(published.stdout)
         if received != ["EVENT", event]:
             raise RuntimeError("The relay did not receive exactly the event printed as JSON")
+        if not event["id"].startswith("fff"):
+            raise RuntimeError("Published event lost its vanity-prefix target")
         print(f"Opt-in relay received JSON event ID: {event['id']}", flush=True)
 
 

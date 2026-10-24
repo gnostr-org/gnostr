@@ -20,8 +20,8 @@ use tracing::{debug, info, warn};
 use url::Url;
 
 use crate::nostr::{
-    ClientMessage, Error, Event, EventBuilder, EventKind, Filter, Id, Keys, Metadata, PublicKey,
-    RelayMessage, RelayUrl, SubscriptionId, Tag,
+    ClientMessage, Error, Event, EventBuilder, EventKind, EventMining, Filter, Id, Keys, Metadata,
+    PublicKey, RelayMessage, RelayUrl, SubscriptionId, Tag,
     private_key::content_encryption::ContentEncryptionAlgorithm,
 };
 
@@ -406,15 +406,29 @@ impl Client {
         metadata: &Metadata,
         tags: Vec<Tag>,
     ) -> Result<Event, Error> {
+        self.build_metadata_event_with_mining(
+            metadata,
+            tags,
+            &EventMining::Difficulty(self.options.difficulty),
+        )
+    }
+
+    /// Build metadata with an independent bit or vanity-prefix target.
+    pub fn build_metadata_event_with_mining(
+        &self,
+        metadata: &Metadata,
+        tags: Vec<Tag>,
+        target: &EventMining,
+    ) -> Result<Event, Error> {
         let content = serde_json::to_string(metadata).map_err(|e| Error::Custom(e.into()))?;
 
         EventBuilder::new(EventKind::Metadata, content, tags)
-            .to_pow_event(
+            .to_mined_event(
                 &self
                     .keys
                     .secret_key()
                     .map_err(|e| Error::Custom(e.into()))?,
-                self.options.difficulty,
+                target,
             )
             .map_err(|e| Error::Custom(e.into()))
     }

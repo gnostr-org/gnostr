@@ -277,6 +277,18 @@ impl Compose {
 
     /// Build and sign one event with an independent NIP-13 bit target.
     pub fn build_with_pow(&self, keys: &Keys, difficulty: u8) -> Result<Event> {
+        self.build_with_mining(
+            keys,
+            &gnostr_types::nostr::EventMining::Difficulty(difficulty),
+        )
+    }
+
+    /// Build with an independent bit or hexadecimal-prefix target.
+    pub fn build_with_mining(
+        &self,
+        keys: &Keys,
+        target: &gnostr_types::nostr::EventMining,
+    ) -> Result<Event> {
         let secret = keys.secret_key()?;
         let (kind, content, mut tags) = match &self.event {
             EventCommand::RepoAnnouncement(args) => {
@@ -519,7 +531,7 @@ impl Compose {
         if let Some(nonce) = &self.commit_nonce {
             tags.push(commit_nonce_tag(nonce)?);
         }
-        EventBuilder::new(kind, content, tags).to_pow_event(&secret, difficulty)
+        EventBuilder::new(kind, content, tags).to_mined_event(&secret, target)
     }
 
     /// Print signed JSON; contact only explicitly selected relays with --publish.
@@ -534,6 +546,20 @@ impl Compose {
         repo: &str,
         difficulty: u8,
     ) -> Result<()> {
+        self.run_with_mining(
+            signing_keys,
+            repo,
+            &gnostr_types::nostr::EventMining::Difficulty(difficulty),
+        )
+    }
+
+    /// Compose with a bit or prefix target, retaining explicit publication opt-in.
+    pub fn run_with_mining(
+        &self,
+        signing_keys: Option<Keys>,
+        repo: &str,
+        target: &gnostr_types::nostr::EventMining,
+    ) -> Result<()> {
         let keys = match signing_keys {
             Some(keys) => keys,
             None => {
@@ -544,7 +570,7 @@ impl Compose {
                     .context("Failed to derive signing keys from HEAD")?
             }
         };
-        let event = self.build_with_pow(&keys, difficulty)?;
+        let event = self.build_with_mining(&keys, target)?;
         info!(
             "Composed NIP-34 event: id={}, kind={}, pubkey={}",
             event.id,
@@ -836,6 +862,19 @@ mod tests {
             assert_eq!(mined.kind, event.kind);
             assert_eq!(mined.content, event.content);
             assert!(event.tags.iter().all(|tag| mined.tags.contains(tag)));
+            let prefixed = command
+                .build_with_mining(
+                    &keys,
+                    &gnostr_types::nostr::EventMining::prefix("f").unwrap(),
+                )
+                .unwrap();
+            prefixed.verify(None).unwrap();
+            assert!(prefixed.id.as_hex_string().starts_with('f'));
+            assert_eq!(prefixed.pow(), 0);
+            assert_eq!(prefixed.nonce_data().unwrap().1, 0);
+            assert_eq!(prefixed.kind, event.kind);
+            assert_eq!(prefixed.content, event.content);
+            assert!(event.tags.iter().all(|tag| prefixed.tags.contains(tag)));
             assert_eq!(
                 event
                     .tags

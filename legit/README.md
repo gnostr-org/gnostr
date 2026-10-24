@@ -54,6 +54,23 @@ follow list, relay list, patch, and announcement before signing. It accepts
 prefix. The feature-gated bins wrapper exposes the same option. Library callers
 use `Gitminer::with_event_difficulty(BITS)` without changing `Options`.
 
+Use `--event-prefix HEX` instead to mine a literal hexadecimal event-ID prefix:
+
+```bash
+gnostr-legit --prefix 000 --event-prefix fff -m "subject"
+gnostr legit --event-prefix fff -m "subject"
+gnostr-legit --event-prefix fff compose grasp-list --server wss://grasp.example.com
+```
+
+The two event flags are mutually exclusive, including explicitly specifying
+`--event-difficulty 0`. Prefixes accept 1 through 64 hexadecimal characters,
+normalize uppercase, and apply to the same generated events and entrypoints.
+`--event-prefix 000` mines three zero hex digits; `--event-difficulty 000`
+still means zero bits and disables event mining. A nonzero prefix such as
+`fff` is vanity mining, not NIP-13 leading-zero PoW. Its decimal nonce tag
+declares target `0`, never a false leading-zero difficulty. Library callers
+use `EventMining::prefix(HEX)?` and `Gitminer::with_event_mining(target)`.
+
 Use `--depth N` to append up to `N` existing first-parent commits to the
 commit body, starting with the current HEAD and continuing newest-first through
 its first parents. Merged branches are not traversed. Ordinary commits use one

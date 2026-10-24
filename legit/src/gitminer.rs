@@ -9,13 +9,13 @@ use super::worker::Worker;
 use crypto::{digest::Digest, sha1::Sha1, sha2::Sha256};
 use gnostr_asyncgit::types::Keys;
 use gnostr_types::nostr::patch::{
-    build_patch_announcement_with_tags_and_pow, commit_nonce_tag, get_relay_urls,
-    publish_patch_event_with_tags_and_pow, ParentCommitLink,
+    build_patch_announcement_with_tags_and_mining, commit_nonce_tag, get_relay_urls,
+    publish_patch_event_with_tags_and_mining, ParentCommitLink,
 };
 use gnostr_types::nostr::{
     client::Options as ClientOptions, patch::install_rustls_crypto_provider, Client, Event,
-    EventBuilder, EventKind, Filter, Id, Metadata, PublicKey, RelayList, RelayListUsage, RelayUrl,
-    Tag,
+    EventBuilder, EventKind, EventMining, Filter, Id, Metadata, PublicKey, RelayList,
+    RelayListUsage, RelayUrl, Tag,
 };
 use std::time::Duration;
 use time_0_3::OffsetDateTime;
@@ -36,7 +36,7 @@ pub struct Gitminer {
     author: String,
     signing_keys: Option<Keys>,
     depth: usize,
-    event_difficulty: u8,
+    event_mining: EventMining,
 }
 
 impl std::fmt::Debug for Gitminer {
@@ -46,7 +46,7 @@ impl std::fmt::Debug for Gitminer {
             .field("repo_path", &self.repo.path())
             .field("author", &self.author)
             .field("depth", &self.depth)
-            .field("event_difficulty", &self.event_difficulty)
+            .field("event_mining", &self.event_mining)
             .field(
                 "signing_pubkey",
                 &self
@@ -69,7 +69,7 @@ impl Clone for Gitminer {
             author: self.author.clone(),
             signing_keys: self.signing_keys.clone(),
             depth: self.depth,
-            event_difficulty: self.event_difficulty,
+            event_mining: self.event_mining.clone(),
         }
     }
 }
@@ -95,7 +95,7 @@ impl Gitminer {
             author,
             signing_keys: None,
             depth: 0,
-            event_difficulty: 0,
+            event_mining: EventMining::Difficulty(0),
         })
     }
 
@@ -113,7 +113,13 @@ impl Gitminer {
 
     /// Mine generated Nostr event IDs independently of the Git hash prefix.
     pub fn with_event_difficulty(mut self, bits: u8) -> Self {
-        self.event_difficulty = bits;
+        self.event_mining = EventMining::Difficulty(bits);
+        self
+    }
+
+    /// Select one independent event-ID target without changing Git options.
+    pub fn with_event_mining(mut self, target: EventMining) -> Self {
+        self.event_mining = target;
         self
     }
 
@@ -321,7 +327,7 @@ impl Gitminer {
         keys: &Keys,
         parent: &PublicKey,
         nonce_tag: Tag,
-        difficulty: u8,
+        target: &EventMining,
     ) -> anyhow::Result<Event> {
         let mut tags = Vec::new();
         for payload in [b"".as_slice(), b"blob 0\0", b"tree 0\0"] {
@@ -345,14 +351,14 @@ impl Gitminer {
         }
         tags.extend([Tag::new_tag("t", "gnostr"), nonce_tag]);
         EventBuilder::new(EventKind::ContactList, String::new(), tags)
-            .to_pow_event(&keys.secret_key()?, difficulty)
+            .to_mined_event(&keys.secret_key()?, target)
     }
 
     fn commit_profile_relay_list_event(
         keys: &Keys,
         relays: &[RelayUrl],
         nonce_tag: Tag,
-        difficulty: u8,
+        target: &EventMining,
     ) -> anyhow::Result<Event> {
         anyhow::ensure!(!relays.is_empty(), "No accepted relays for commit profile");
         let relay_list = RelayList(
@@ -366,7 +372,7 @@ impl Gitminer {
         tags.sort_by(|a, b| a.0.cmp(&b.0));
         tags.extend([Tag::new_tag("t", "gnostr"), nonce_tag]);
         EventBuilder::new(EventKind::RelayList, String::new(), tags)
-            .to_pow_event(&keys.secret_key()?, difficulty)
+            .to_mined_event(&keys.secret_key()?, target)
     }
 
     fn mined_commit_nonce(blob: &str) -> Result<&str, &'static str> {
@@ -543,11 +549,8 @@ impl Gitminer {
         let head_hash = head.to_string();
         let repo_path = self.opts.repo.clone();
         let metadata = self.commit_profile_metadata(head);
-        let event_difficulty = self.event_difficulty;
-        info!(
-            "Nostr event-ID proof-of-work target: {} bits",
-            event_difficulty
-        );
+        let event_mining = self.event_mining.clone();
+        info!("Nostr event-ID mining target: {:?}", event_mining);
         let parent_hash = parent.to_string();
         let cache_dir = self.repo.path().join("gnostr/patch-events");
         let nonce_tag = commit_nonce_tag(nonce).map_err(|err| {
@@ -569,9 +572,7 @@ impl Gitminer {
                 install_rustls_crypto_provider();
                 let mut client = Client::new(
                     &keys,
-                    ClientOptions::new()
-                        .send_timeout(Some(Duration::from_secs(1)))
-                        .difficulty(event_difficulty),
+                    ClientOptions::new().send_timeout(Some(Duration::from_secs(1))),
                 );
                 client.add_relays(relay_urls.clone()).await.map_err(|err| {
                     error!("Failed to configure commit event relays: {}", err);
@@ -589,9 +590,10 @@ impl Gitminer {
                         keys.public_key()
                     );
                     let metadata_event = client
-                        .build_metadata_event(
+                        .build_metadata_event_with_mining(
                             &metadata,
                             vec![Tag::new_tag("t", "gnostr"), nonce_tag.clone()],
+                            &event_mining,
                         )
                         .map_err(|err| {
                             error!("Failed to build metadata for commit {}: {}", head_hash, err);
@@ -614,7 +616,7 @@ impl Gitminer {
                         head_hash,
                         keys.public_key()
                     );
-                    let follows = Self::commit_profile_follow_event(&keys, &parent.pubkey, nonce_tag.clone(), event_difficulty).map_err(
+                    let follows = Self::commit_profile_follow_event(&keys, &parent.pubkey, nonce_tag.clone(), &event_mining).map_err(
                         |err| {
                             error!(
                                 "Failed to build follow list for commit {}: {}",
@@ -638,7 +640,7 @@ impl Gitminer {
                         parent.pubkey
                     );
                     let relay_list =
-                        Self::commit_profile_relay_list_event(&keys, &accepted_relays, nonce_tag, event_difficulty)
+                        Self::commit_profile_relay_list_event(&keys, &accepted_relays, nonce_tag, &event_mining)
                             .map_err(|err| {
                                 error!(
                                     "Failed to build relay list for commit {}: {}",
@@ -686,7 +688,7 @@ impl Gitminer {
                     repo_name,
                     relay_urls.len()
                 );
-                let event_id = publish_patch_event_with_tags_and_pow(
+                let event_id = publish_patch_event_with_tags_and_mining(
                     &keys,
                     &relay_urls,
                     &repo_name,
@@ -694,7 +696,7 @@ impl Gitminer {
                     &patch_content,
                     None,
                     &commit_tags,
-                    event_difficulty,
+                    &event_mining,
                 )
                 .await
                 .map_err(|err| {
@@ -710,7 +712,7 @@ impl Gitminer {
                 );
                 Self::cache_patch_event(&cache_dir, &head_hash, event_id)?;
                 let announcement =
-                    build_patch_announcement_with_tags_and_pow(&keys, event_id, &commit_tags, event_difficulty).map_err(
+                    build_patch_announcement_with_tags_and_mining(&keys, event_id, &commit_tags, &event_mining).map_err(
                         |err| {
                             error!("Failed to build announcement for patch {}: {}", event_id, err);
                             "Failed to build patch announcement"
@@ -973,8 +975,13 @@ mod tests {
         .public_key();
         let nonce = commit_nonce_tag("01-00000122").unwrap();
         for keys in &identities {
-            let event =
-                Gitminer::commit_profile_follow_event(keys, &parent, nonce.clone(), 0).unwrap();
+            let event = Gitminer::commit_profile_follow_event(
+                keys,
+                &parent,
+                nonce.clone(),
+                &EventMining::Difficulty(0),
+            )
+            .unwrap();
             event.verify(None).unwrap();
             assert_eq!(event.kind, EventKind::ContactList);
             assert_eq!(event.pubkey, keys.public_key());
@@ -987,9 +994,13 @@ mod tests {
             ]);
             assert_eq!(event.tags, expected);
 
-            let event =
-                Gitminer::commit_profile_follow_event(keys, &keys.public_key(), nonce.clone(), 0)
-                    .unwrap();
+            let event = Gitminer::commit_profile_follow_event(
+                keys,
+                &keys.public_key(),
+                nonce.clone(),
+                &EventMining::Difficulty(0),
+            )
+            .unwrap();
             event.verify(None).unwrap();
             let mut expected = root_tags.clone();
             expected.extend([Tag::new_tag("t", "gnostr"), nonce.clone()]);
@@ -1010,7 +1021,7 @@ mod tests {
             &keys,
             &[first.clone(), second.clone(), first.clone()],
             nonce.clone(),
-            0,
+            &EventMining::Difficulty(0),
         )
         .unwrap();
         event.verify(None).unwrap();
@@ -1023,82 +1034,104 @@ mod tests {
         assert_eq!(parsed.0.get(&second), Some(&RelayListUsage::Outbox));
         assert!(event.tags.contains(&Tag::new_tag("t", "gnostr")));
         assert!(event.tags.contains(&nonce));
-        assert!(Gitminer::commit_profile_relay_list_event(&keys, &[], nonce, 0).is_err());
+        assert!(Gitminer::commit_profile_relay_list_event(
+            &keys,
+            &[],
+            nonce,
+            &EventMining::Difficulty(0)
+        )
+        .is_err());
     }
 
     #[test]
     fn profile_event_pow_applies_to_all_generated_kinds_independently_of_git_prefix() {
-        use gnostr_types::nostr::patch::build_patch_event_with_tags_and_pow;
+        use gnostr_types::nostr::patch::build_patch_event_with_tags_and_mining;
         use gnostr_types::nostr::{get_leading_zero_bits, nip13::NIP13Event};
 
         let (_directory, mut miner) = miner();
         miner.opts.target = "abc".to_string();
-        let miner = miner.with_event_difficulty(8).clone();
-        let difficulty = miner.event_difficulty;
-        assert_eq!(miner.opts.target, "abc");
-        let keys = Keys::parse(
-            "473a0f4c3be8a93681a267e3b1e9a7dcda1185436fe141f7749120a303721813".to_string(),
-        )
-        .unwrap();
-        let nonce = commit_nonce_tag("01-00000122").unwrap();
-        let metadata = Client::new(&keys, ClientOptions::new().difficulty(difficulty))
-            .build_metadata_event(
-                &miner
-                    .commit_profile_metadata("000dba5dac8fb736d0a7e811b289cca088064ea4")
-                    .unwrap(),
-                vec![Tag::new_tag("t", "gnostr"), nonce.clone()],
+        let miner = miner.with_event_difficulty(8);
+        for target in [
+            EventMining::Difficulty(8),
+            EventMining::prefix("fff").unwrap(),
+        ] {
+            let miner = miner.clone().with_event_mining(target.clone()).clone();
+            assert_eq!(miner.event_mining, target);
+            assert_eq!(miner.opts.target, "abc");
+            let keys = Keys::parse(
+                "473a0f4c3be8a93681a267e3b1e9a7dcda1185436fe141f7749120a303721813".to_string(),
             )
             .unwrap();
-        let follows = Gitminer::commit_profile_follow_event(
-            &keys,
-            &keys.public_key(),
-            nonce.clone(),
-            difficulty,
-        )
-        .unwrap();
-        let relay_list = Gitminer::commit_profile_relay_list_event(
-            &keys,
-            &[RelayUrl::try_from_str("wss://example.com/").unwrap()],
-            nonce.clone(),
-            difficulty,
-        )
-        .unwrap();
-        let patch = build_patch_event_with_tags_and_pow(
-            &keys,
-            "gnostr",
-            "000dba5dac8fb736d0a7e811b289cca088064ea4",
-            "patch content",
-            None,
-            &[nonce.clone()],
-            difficulty,
-        )
-        .unwrap();
-        let announcement = build_patch_announcement_with_tags_and_pow(
-            &keys,
-            patch.id,
-            &[nonce.clone()],
-            difficulty,
-        )
-        .unwrap();
-        assert_eq!(
-            announcement.content,
-            format!("nostr:{}", patch.id.as_bech32_string())
-        );
-        for (kind, event) in [
-            (EventKind::Metadata, metadata),
-            (EventKind::ContactList, follows),
-            (EventKind::RelayList, relay_list),
-            (EventKind::Patches, patch),
-            (EventKind::TextNote, announcement),
-        ] {
-            event.verify(None).unwrap();
-            assert_eq!(event.kind, kind);
-            assert_eq!(event.pubkey, keys.public_key());
-            assert!(get_leading_zero_bits(&event.id.0) >= 8);
-            assert_eq!(event.pow(), 8);
-            assert_eq!(event.nonce_data().unwrap().1, 8);
-            assert!(event.tags.contains(&nonce));
-            assert!(event.tags.contains(&Tag::new_tag("t", "gnostr")));
+            let nonce = commit_nonce_tag("01-00000122").unwrap();
+            let metadata = Client::new(&keys, ClientOptions::new())
+                .build_metadata_event_with_mining(
+                    &miner
+                        .commit_profile_metadata("000dba5dac8fb736d0a7e811b289cca088064ea4")
+                        .unwrap(),
+                    vec![Tag::new_tag("t", "gnostr"), nonce.clone()],
+                    &target,
+                )
+                .unwrap();
+            let follows = Gitminer::commit_profile_follow_event(
+                &keys,
+                &keys.public_key(),
+                nonce.clone(),
+                &target,
+            )
+            .unwrap();
+            let relay_list = Gitminer::commit_profile_relay_list_event(
+                &keys,
+                &[RelayUrl::try_from_str("wss://example.com/").unwrap()],
+                nonce.clone(),
+                &target,
+            )
+            .unwrap();
+            let patch = build_patch_event_with_tags_and_mining(
+                &keys,
+                "gnostr",
+                "000dba5dac8fb736d0a7e811b289cca088064ea4",
+                "patch content",
+                None,
+                &[nonce.clone()],
+                &target,
+            )
+            .unwrap();
+            let announcement = build_patch_announcement_with_tags_and_mining(
+                &keys,
+                patch.id,
+                &[nonce.clone()],
+                &target,
+            )
+            .unwrap();
+            assert_eq!(
+                announcement.content,
+                format!("nostr:{}", patch.id.as_bech32_string())
+            );
+            for (kind, event) in [
+                (EventKind::Metadata, metadata),
+                (EventKind::ContactList, follows),
+                (EventKind::RelayList, relay_list),
+                (EventKind::Patches, patch),
+                (EventKind::TextNote, announcement),
+            ] {
+                event.verify(None).unwrap();
+                assert_eq!(event.kind, kind);
+                assert_eq!(event.pubkey, keys.public_key());
+                let bits = match &target {
+                    EventMining::Difficulty(bits) => {
+                        assert!(get_leading_zero_bits(&event.id.0) >= *bits);
+                        *bits
+                    }
+                    EventMining::Prefix(prefix) => {
+                        assert!(event.id.as_hex_string().starts_with(prefix));
+                        0
+                    }
+                };
+                assert_eq!(event.pow(), bits);
+                assert_eq!(event.nonce_data().unwrap().1, bits);
+                assert!(event.tags.contains(&nonce));
+                assert!(event.tags.contains(&Tag::new_tag("t", "gnostr")));
+            }
         }
     }
 

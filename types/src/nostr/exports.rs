@@ -29,7 +29,7 @@ pub mod core {
         relay_usage::{RelayUsage, RelayUsageSet},
         satoshi::MilliSatoshi,
         signature::{Signature, SignatureHex},
-        signer::Signer,
+        signer::{EventMining, Signer},
         simple_relay_list::{SimpleRelayList, SimpleRelayUsage},
         subscription_id::SubscriptionId,
         tag::Tag,

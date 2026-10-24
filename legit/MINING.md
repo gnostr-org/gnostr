@@ -186,6 +186,24 @@ single-threaded implementation that signs each candidate.
 `EventBuilder::to_pow_event` delegates positive targets to this working
 multithreaded miner and signs normally for a zero target.
 
+`--event-prefix HEX` selects a literal hexadecimal event-ID prefix instead.
+It is mutually exclusive with `--event-difficulty`, independent of the Git
+prefix, and available on all the same entrypoints, including `compose`.
+The prefix must contain 1 through 64 hex characters; uppercase is normalized.
+For example, `--event-prefix fff` averages 4,096 candidates per event and
+produces event IDs beginning with `fff`. A full 64-character target is
+accepted but generally computationally infeasible.
+
+Both modes share `Signer::sign_event_with_mining`: the same unsigned-event
+SHA-256 search, disjoint `u64` worker ranges, cancellation, and final signing.
+Prefix mode compares the hexadecimal event ID to the requested prefix.
+Its nonce has `["nonce","<decimal counter>","0"]`: it does not falsely claim
+NIP-13 leading-zero proof. `commit-nonce` remains separate, and references
+and cached IDs still use the final prefix-mined event.
+`EventMining::prefix(HEX)?` validates library input; select it with
+`Gitminer::with_event_mining`, `EventBuilder::to_mined_event`, or the
+mining-aware composition and patch helpers.
+
 Enable `RUST_LOG=gnostr_legit=debug,gnostr_types::nostr::signer=debug` to log
 the full unsigned event JSON and its event ID immediately before signing.
 Mined events include the winning NIP-13 nonce, not every candidate. These

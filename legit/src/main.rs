@@ -45,8 +45,18 @@ struct Args {
     depth: usize,
 
     /// NIP-13 event-ID difficulty in leading zero bits, independent of --prefix
-    #[arg(long, global = true, default_value_t = 0, value_name = "BITS")]
+    #[arg(
+        long,
+        global = true,
+        default_value_t = 0,
+        value_name = "BITS",
+        conflicts_with = "event_prefix"
+    )]
     event_difficulty: u8,
+
+    /// Mine a hexadecimal event-ID prefix instead of NIP-13 leading zero bits
+    #[arg(long, global = true, value_name = "HEX", value_parser = gnostr_types::nostr::EventMining::prefix)]
+    event_prefix: Option<gnostr_types::nostr::EventMining>,
 
     /// NIP-34 signing key: 64-character hex (SHA-256) or nsec1... private key
     #[arg(long, global = true, value_name = "KEY")]
@@ -108,9 +118,14 @@ fn main() -> io::Result<()> {
     });
     env_logger::init();
     info!("Starting gnostr-legit");
+    let event_mining = args
+        .event_prefix
+        .unwrap_or(gnostr_types::nostr::EventMining::Difficulty(
+            args.event_difficulty,
+        ));
     if let Some(Command::Compose(command)) = args.command {
         return command
-            .run_with_pow(signing_keys, &args.repo, args.event_difficulty)
+            .run_with_mining(signing_keys, &args.repo, &event_mining)
             .map_err(|err| io::Error::new(io::ErrorKind::Other, format!("{:#}", err)));
     }
 
@@ -150,9 +165,7 @@ fn main() -> io::Result<()> {
 
     debug!("Initializing git miner");
     let mut miner = match Gitminer::new(opts) {
-        Ok(m) => m
-            .with_depth(args.depth)
-            .with_event_difficulty(args.event_difficulty),
+        Ok(m) => m.with_depth(args.depth).with_event_mining(event_mining),
         Err(e) => {
             eprintln!("Failed to start git miner: {}", e);
             std::process::exit(1);
@@ -200,6 +213,7 @@ mod tests {
         assert_eq!(args.message, ["default commit message"]);
         assert_eq!(args.depth, 0);
         assert_eq!(args.event_difficulty, 0);
+        assert!(args.event_prefix.is_none());
         assert!(parse_signing_keys(args.nsec).unwrap().is_none());
         assert!(args.command.is_none());
     }
@@ -265,6 +279,53 @@ mod tests {
         for invalid in ["-1", "256", "abc", "1.5"] {
             assert!(parse_args_from(["gnostr-legit", "--event-difficulty", invalid]).is_err());
         }
+    }
+
+    #[test]
+    fn cli_event_prefix_is_validated_global_and_exclusive_with_difficulty() {
+        use gnostr_types::nostr::EventMining;
+        let args =
+            parse_args_from(["gnostr-legit", "--prefix", "000", "--event-prefix", "FFF"]).unwrap();
+        assert_eq!(args.prefix, "000");
+        assert_eq!(
+            args.event_prefix,
+            Some(EventMining::Prefix("fff".to_string()))
+        );
+        for args in [
+            vec![
+                "gnostr-legit",
+                "--event-prefix",
+                "000",
+                "compose",
+                "grasp-list",
+            ],
+            vec![
+                "gnostr-legit",
+                "compose",
+                "grasp-list",
+                "--event-prefix",
+                "000",
+            ],
+        ] {
+            assert_eq!(
+                parse_args_from(args).unwrap().event_prefix,
+                Some(EventMining::Prefix("000".to_string()))
+            );
+        }
+        for bits in ["0", "8"] {
+            assert!(parse_args_from([
+                "gnostr-legit",
+                "--event-prefix",
+                "fff",
+                "--event-difficulty",
+                bits,
+            ])
+            .is_err());
+        }
+        for invalid in ["", "0xabc", "xyz", &"f".repeat(65)] {
+            assert!(parse_args_from(["gnostr-legit", "--event-prefix", invalid]).is_err());
+        }
+        assert!(parse_args_from(["gnostr-legit", "--event-prefix", &"f".repeat(64)]).is_ok());
     }
 
     #[test]

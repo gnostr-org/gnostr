@@ -4,8 +4,8 @@
 use anyhow::Result;
 
 use super::{
-    Event, EventKind, Id, ImageDimensions, KeySigner, Metadata, PreEvent, PrivateKey, PublicKey,
-    Signer, Tag, UncheckedUrl, Unixtime,
+    Event, EventKind, EventMining, Id, ImageDimensions, KeySigner, Metadata, PreEvent, PrivateKey,
+    PublicKey, Tag, UncheckedUrl, Unixtime,
 };
 
 /// Builder for creating Nostr events
@@ -36,6 +36,11 @@ impl EventBuilder {
 
     /// Build and sign the event with proof of work
     pub fn to_pow_event(self, keys: &PrivateKey, difficulty_target: u8) -> Result<Event> {
+        self.to_mined_event(keys, &EventMining::Difficulty(difficulty_target))
+    }
+
+    /// Build and sign with an independent bit difficulty or hexadecimal prefix.
+    pub fn to_mined_event(self, keys: &PrivateKey, target: &EventMining) -> Result<Event> {
         let preevent = PreEvent {
             pubkey: keys.public_key(),
             created_at: self.created_at.unwrap_or_else(Unixtime::now),
@@ -45,11 +50,7 @@ impl EventBuilder {
         };
 
         let signer = KeySigner::from_private_key(keys.clone(), "", 1)?;
-        if difficulty_target > 0 {
-            Ok(signer.sign_event_with_pow(preevent, difficulty_target, None)?)
-        } else {
-            Ok(signer.sign_event(preevent)?)
-        }
+        Ok(target.sign(&signer, preevent)?)
     }
 
     /// Build and sign the event without proof of work
@@ -62,6 +63,45 @@ impl EventBuilder {
 mod tests {
     use super::*;
     use crate::nostr::{Keys, get_leading_zero_bits, nip13::NIP13Event};
+
+    #[test]
+    fn event_prefix_mines_final_signed_id_without_claiming_nip13_zero_bits() {
+        let keys = Keys::parse(
+            "473a0f4c3be8a93681a267e3b1e9a7dcda1185436fe141f7749120a303721813".to_string(),
+        )
+        .unwrap();
+        let target = EventMining::prefix("FFF").unwrap();
+        assert_eq!(target, EventMining::Prefix("fff".to_string()));
+        let proof = Tag::new_tag("commit-nonce", "01-00000122");
+        let event = EventBuilder::new(
+            EventKind::TextNote,
+            "prefix".to_string(),
+            vec![proof.clone(), Event::create_nonce_tag(99, 12)],
+        )
+        .created_at(Unixtime(1_700_000_000))
+        .to_mined_event(&keys.secret_key().unwrap(), &target)
+        .unwrap();
+        event.verify(None).unwrap();
+        assert!(event.id.as_hex_string().starts_with("fff"));
+        assert_eq!(event.pow(), 0);
+        assert_eq!(event.nonce_data().unwrap().1, 0);
+        assert_eq!(
+            event.tags.iter().filter(|t| t.tagname() == "nonce").count(),
+            1
+        );
+        assert!(event.tags.contains(&proof));
+        for invalid in ["", "0xabc", "xyz", " fff", &"f".repeat(65)] {
+            assert!(EventMining::prefix(invalid).is_err());
+        }
+        assert!(
+            EventBuilder::new(EventKind::TextNote, String::new(), vec![])
+                .to_mined_event(
+                    &keys.secret_key().unwrap(),
+                    &EventMining::Prefix("no".to_string())
+                )
+                .is_err()
+        );
+    }
 
     #[test]
     fn event_pow_mines_requested_bits_before_signing_and_preserves_fields() {

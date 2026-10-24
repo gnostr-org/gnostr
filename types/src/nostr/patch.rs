@@ -150,6 +150,27 @@ pub fn build_patch_event_with_tags_and_pow(
     extra_tags: &[Tag],
     difficulty: u8,
 ) -> Result<Event, Error> {
+    build_patch_event_with_tags_and_mining(
+        keys,
+        d_tag_value,
+        commit_id,
+        patch_content,
+        build_manifest_event_id,
+        extra_tags,
+        &super::EventMining::Difficulty(difficulty),
+    )
+}
+
+/// Build a tagged patch with an independent event-ID mining target.
+pub fn build_patch_event_with_tags_and_mining(
+    keys: &Keys,
+    d_tag_value: &str,
+    commit_id: &str,
+    patch_content: &str,
+    build_manifest_event_id: Option<&Id>,
+    extra_tags: &[Tag],
+    target: &super::EventMining,
+) -> Result<Event, Error> {
     let mut tags = vec![
         Tag::new_identifier(d_tag_value.to_string()),
         Tag::new_tag("commit", commit_id),
@@ -162,7 +183,7 @@ pub fn build_patch_event_with_tags_and_pow(
     tags.extend_from_slice(extra_tags);
 
     EventBuilder::new(EventKind::Patches, patch_content.to_string(), tags)
-        .to_pow_event(&keys.secret_key()?, difficulty)
+        .to_mined_event(&keys.secret_key()?, target)
         .map_err(|err| Error::Custom(err.into()))
 }
 
@@ -193,6 +214,21 @@ pub fn build_patch_announcement_with_tags_and_pow(
     extra_tags: &[Tag],
     difficulty: u8,
 ) -> Result<Event, Error> {
+    build_patch_announcement_with_tags_and_mining(
+        keys,
+        patch_event_id,
+        extra_tags,
+        &super::EventMining::Difficulty(difficulty),
+    )
+}
+
+/// Build an announcement referencing the final mined patch ID.
+pub fn build_patch_announcement_with_tags_and_mining(
+    keys: &Keys,
+    patch_event_id: Id,
+    extra_tags: &[Tag],
+    target: &super::EventMining,
+) -> Result<Event, Error> {
     let mut tags = vec![
         Tag::new_event(patch_event_id, None, Some("mention".to_string())),
         Tag::new_tag("t", "gnostr"),
@@ -203,7 +239,7 @@ pub fn build_patch_announcement_with_tags_and_pow(
         format!("nostr:{}", patch_event_id.as_bech32_string()),
         tags,
     )
-    .to_pow_event(&keys.secret_key()?, difficulty)
+    .to_mined_event(&keys.secret_key()?, target)
     .map_err(|err| Error::Custom(err.into()))
 }
 
@@ -264,15 +300,40 @@ pub async fn publish_patch_event_with_tags_and_pow(
     extra_tags: &[Tag],
     difficulty: u8,
 ) -> Result<Id, Error> {
+    publish_patch_event_with_tags_and_mining(
+        keys,
+        relay_urls,
+        d_tag_value,
+        commit_id,
+        patch_content,
+        build_manifest_event_id,
+        extra_tags,
+        &super::EventMining::Difficulty(difficulty),
+    )
+    .await
+}
+
+/// Mine a tagged patch to a bit or prefix target before publication.
+#[allow(clippy::too_many_arguments)]
+pub async fn publish_patch_event_with_tags_and_mining(
+    keys: &Keys,
+    relay_urls: &[String],
+    d_tag_value: &str,
+    commit_id: &str,
+    patch_content: &str,
+    build_manifest_event_id: Option<&Id>,
+    extra_tags: &[Tag],
+    target: &super::EventMining,
+) -> Result<Id, Error> {
     install_rustls_crypto_provider();
-    let event = build_patch_event_with_tags_and_pow(
+    let event = build_patch_event_with_tags_and_mining(
         keys,
         d_tag_value,
         commit_id,
         patch_content,
         build_manifest_event_id,
         extra_tags,
-        difficulty,
+        target,
     )?;
     send_patch_event(keys, relay_urls, event, commit_id, d_tag_value).await
 }

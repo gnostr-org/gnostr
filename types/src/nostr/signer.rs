@@ -18,6 +18,35 @@ use super::{
     PublicKey, PublicKeyHex, Rumor, RumorV1, RumorV2, Signature, Tag, TagV1, TagV2, Unixtime,
 };
 
+/// Independent, mutually exclusive targets for Nostr event IDs.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum EventMining {
+    /// NIP-13 leading-zero-bit difficulty; zero preserves ordinary signing.
+    Difficulty(u8),
+    /// A hexadecimal vanity prefix, without a NIP-13 difficulty claim.
+    Prefix(String),
+}
+
+impl EventMining {
+    /// Validate and normalize a hexadecimal event-ID prefix.
+    pub fn prefix(value: &str) -> Result<Self, Error> {
+        if value.is_empty() || value.len() > 64 || !value.bytes().all(|b| b.is_ascii_hexdigit()) {
+            return Err(Error::Custom(
+                "Event prefix must contain 1 through 64 hexadecimal characters".into(),
+            ));
+        }
+        Ok(Self::Prefix(value.to_ascii_lowercase()))
+    }
+
+    /// Sign normally or mine the selected target before signing.
+    pub fn sign(&self, signer: &impl Signer, input: PreEvent) -> Result<Event, Error> {
+        match self {
+            Self::Difficulty(0) => signer.sign_event(input),
+            _ => signer.sign_event_with_mining(input, self, None),
+        }
+    }
+}
+
 /// Signer operations
 pub trait Signer: fmt::Debug {
     /// Is the signer locked?
@@ -177,11 +206,28 @@ pub trait Signer: fmt::Debug {
     /// Sign an event with Proof-of-Work
     fn sign_event_with_pow(
         &self,
-        mut input: PreEvent,
+        input: PreEvent,
         zero_bits: u8,
         work_sender: Option<Sender<u8>>,
     ) -> Result<Event, Error> {
-        let target = format!("{zero_bits}");
+        self.sign_event_with_mining(input, &EventMining::Difficulty(zero_bits), work_sender)
+    }
+
+    /// Mine either leading zero bits or a hexadecimal prefix, then sign once.
+    fn sign_event_with_mining(
+        &self,
+        mut input: PreEvent,
+        target: &EventMining,
+        work_sender: Option<Sender<u8>>,
+    ) -> Result<Event, Error> {
+        let target = match target {
+            EventMining::Prefix(prefix) => EventMining::prefix(prefix)?,
+            EventMining::Difficulty(bits) => EventMining::Difficulty(*bits),
+        };
+        let nonce_target = match &target {
+            EventMining::Difficulty(bits) => bits.to_string(),
+            EventMining::Prefix(_) => "0".to_string(),
+        };
 
         // Verify the pubkey matches
         if input.pubkey != self.public_key() {
@@ -192,8 +238,9 @@ pub trait Signer: fmt::Debug {
         input.tags.retain(|t| t.tagname() != "nonce");
 
         // Add nonce tag to the end
-        input.tags.push(Tag::new(&["nonce", "0", &target]));
+        input.tags.push(Tag::new(&["nonce", "0", &nonce_target]));
         let index = input.tags.len() - 1;
+        log::debug!("Mining Nostr event ID: target={:?}", target);
 
         let cores = num_cpus::get();
 
@@ -210,6 +257,7 @@ pub trait Signer: fmt::Debug {
             let nonce = nonce.clone();
             let best_work = best_work.clone();
             let work_sender = work_sender.clone();
+            let target = target.clone();
             let join_handle = thread::spawn(move || {
                 loop {
                     // Lower the thread priority so other threads aren't starved
@@ -226,7 +274,11 @@ pub trait Signer: fmt::Debug {
                     let Id(id) = input.hash().unwrap();
 
                     let leading_zeroes = super::get_leading_zero_bits(&id);
-                    if leading_zeroes >= zero_bits {
+                    let matches = match &target {
+                        EventMining::Difficulty(bits) => leading_zeroes >= *bits,
+                        EventMining::Prefix(prefix) => Id(id).as_hex_string().starts_with(prefix),
+                    };
+                    if matches {
                         nonce.store(attempt, Ordering::Relaxed);
                         quitting.store(true, Ordering::Relaxed);
                         if let Some(sender) = work_sender.clone() {

@@ -400,8 +400,14 @@ mine NIP-13 event IDs for generated metadata, follows, relay lists, patches, and
 announcements before signing. All entrypoints expose it; standalone `compose`
 accepts it globally too. Keep `commit-nonce` separate from the decimal NIP-13
 `nonce`. Use `Gitminer::with_event_difficulty` without changing public `Options`.
-`EventBuilder::to_pow_event` must use `Signer::sign_event_with_pow` for positive
-targets; zero preserves existing signing. See `legit/MINING.md`.
+`EventBuilder::to_pow_event` must use the shared types miner through `EventMining`
+for positive targets; zero preserves existing signing. See `legit/MINING.md`.
+
+`--event-prefix HEX` is mutually exclusive with `--event-difficulty` on every
+entrypoint and standalone compose. Validate 1 through 64 hexadecimal characters
+with `EventMining::prefix`, normalize uppercase, and use the shared types miner.
+Prefix mode's NIP-13 nonce target is `0`, not a claimed leading-zero difficulty.
+Keep Git prefixes independent and cache/reference only final mined event IDs.
 
 Add `--nsec "$NOSTR_PRIVATE_KEY"` after `--` to sign the event with a
 64-character hex/SHA-256 or `nsec1...` private key. Without it, the signing key
