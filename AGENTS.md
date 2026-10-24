@@ -366,6 +366,30 @@ Docker images are defined in `docker/` and composed via `docker-compose.yml`
   `./scripts/gnostr-asyncgit-tests.sh`, and `./scripts/gnostr-ngit-tests.sh`
   over raw `cargo test` so logs and rocksdb linking are handled consistently.
 
+## `gnostr-legit` usage
+
+Stage the intended changes before mining a commit. From the repository root:
+
+```bash
+git add legit && git add types && \
+  RUST_LOG=gnostr_legit=debug cargo run -p gnostr-legit -- \
+    -m "feat(nostr): feature summary" \
+    -m "commit body 1" \
+    -m "commit body 2" \
+    -m "etc..."
+```
+
+The first `-m` is the commit subject; subsequent `-m` values form the body.
+Mining defaults to repository `.`, prefix `000`, and the available logical CPU
+count unless `--repo`, `--prefix`, or `--threads` overrides them. Unstaged
+changes must be staged or stashed before mining. A successful mined commit is
+written locally and its NIP-34 patch event is published to the selected relays.
+
+Add `--nsec "$NOSTR_PRIVATE_KEY"` after `--` to sign the event with a
+64-character hex/SHA-256 or `nsec1...` private key. Without it, the signing key
+is derived from the public commit hash and is not a secure identity. Never put
+literal private keys in documentation, logs, or shell history.
+
 ## Verification summary
 
 - `cargo metadata --no-deps` parses successfully and lists 29 workspace
