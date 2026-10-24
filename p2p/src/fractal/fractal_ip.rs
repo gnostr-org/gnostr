@@ -1,7 +1,7 @@
 use std::{fs, path::Path, path::PathBuf, process::Command};
 
 use clap::Parser;
-use log::{debug, info};
+use log::{Level, debug, info, log_enabled, trace, warn};
 // pub use crate::perfect_ip_core::*;
 use crate::fractal::fractal_ip_core::{
     generate_manifest, packetize, reconstruct_directory, reconstruct_payload, run_directory_walk,
@@ -166,6 +166,18 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         ));
 
         info!("recursive walk root: {}", input.display());
+
+         // TODO debug logging
+         if log_enabled!(Level::Debug) && !log_enabled!(Level::Trace) {
+            // debug!("{line}");
+         }
+         // TODO else if log_enabled!(Level::Trace) {
+         // TODO     //TODO info!("{line}");
+         // TODO }
+         else if log_enabled!(Level::Info) {
+            // info!("{line}");
+         }
+
         info!("recursive depth: {}", depth);
         info!("logging flag is: {:?}", cli.logging);
         let walk = run_directory_walk(input, depth, cli.logging.is_some())?;
