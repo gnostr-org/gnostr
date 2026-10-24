@@ -164,6 +164,112 @@ class damusTests: XCTestCase {
         XCTAssertNil(unknown.supportedNips)
     }
 
+    private func relayInformation(nips: [Int]) throws -> RelayInformation {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        return try decoder.decode(RelayInformation.self, from: Data(
+            "{\"supported_nips\":[\(nips.map(String.init).joined(separator: ","))]}".utf8))
+    }
+
+    @MainActor
+    func testRelayAutoSubscribeDefaultsOnAndHonorsRemoveAndIgnore() async throws {
+        let metadata = try relayInformation(nips: [1, 11, 34])
+        var requests = 0
+        var connections: [String] = []
+        let pool = RelayPool(defaults: nil, information_fetcher: { _ in
+            requests += 1
+            return metadata
+        }, relay_connector: { connections.append($0.id) })
+        let url = URL(string: "wss://automatic.example")!
+        let descriptor = RelayDescriptor(url: url, info: .rw)
+        XCTAssertTrue(pool.auto_subscribe_nip34)
+        _ = try await pool.load_relay_information(url)
+        _ = try await pool.load_relay_information(URL(string: "wss://AUTOMATIC.example:443/")!)
+        XCTAssertEqual(requests, 1)
+        XCTAssertEqual(connections, [url.absoluteString])
+        XCTAssertNotNil(pool.get_relay(url.absoluteString))
+        XCTAssertFalse(pool.recommended_relays.contains { $0.url == url })
+
+        pool.remove_relay(url.absoluteString)
+        _ = try await pool.load_relay_information(url)
+        XCTAssertNil(pool.get_relay(url.absoluteString))
+        XCTAssertTrue(pool.recommended_relays.contains { $0.url == url })
+        XCTAssertEqual(connections.count, 1)
+
+        pool.allow_relay(url)
+        _ = try await pool.load_relay_information(url)
+        XCTAssertNotNil(pool.get_relay(url.absoluteString))
+        pool.set_relay_ignored(descriptor, ignored: true)
+        _ = try await pool.load_relay_information(url)
+        XCTAssertNil(pool.get_relay(url.absoluteString))
+        XCTAssertFalse(pool.recommended_relays.contains { $0.url == url })
+        XCTAssertEqual(connections.count, 2)
+
+        pool.set_relay_ignored(descriptor, ignored: false)
+        _ = try await pool.load_relay_information(url)
+        XCTAssertNotNil(pool.get_relay(url.absoluteString))
+        XCTAssertEqual(connections.count, 3)
+    }
+
+    @MainActor
+    func testRelayAutoSubscribeOnlyAddsAdvertisedNIP34WhenEnabled() async throws {
+        let supported = try relayInformation(nips: [34])
+        let unsupported = try relayInformation(nips: [1, 11])
+        let pool = RelayPool(defaults: nil, information_fetcher: { url in
+            return url.host == "git.example" ? supported : unsupported
+        }, relay_connector: { _ in })
+        pool.auto_subscribe_nip34 = false
+        let url = URL(string: "wss://git.example")!
+        _ = try await pool.load_relay_information(url)
+        XCTAssertTrue(pool.relays.isEmpty)
+        pool.auto_subscribe_nip34 = true
+        XCTAssertNotNil(pool.get_relay(url.absoluteString))
+        _ = try await pool.load_relay_information(URL(string: "wss://other.example")!)
+        XCTAssertEqual(pool.relays.count, 1)
+    }
+
+    @MainActor
+    func testRelayAutoSubscribeRemovalAndPreferencePersist() async throws {
+        let suite = "RelayAutoSubscribeTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let metadata = try relayInformation(nips: [34])
+        let pool = RelayPool(defaults: defaults, information_fetcher: { _ in metadata },
+                             relay_connector: { _ in })
+        let url = URL(string: "wss://removed.example")!
+        _ = try await pool.load_relay_information(url)
+        pool.remove_relay(url.absoluteString)
+        pool.auto_subscribe_nip34 = false
+
+        let restored = RelayPool(defaults: defaults, information_fetcher: { _ in metadata },
+                                 relay_connector: { _ in })
+        XCTAssertFalse(restored.auto_subscribe_nip34)
+        restored.auto_subscribe_nip34 = true
+        _ = try await restored.load_relay_information(url)
+        XCTAssertTrue(restored.relays.isEmpty)
+        XCTAssertTrue(restored.recommended_relays.contains { $0.url == url })
+        restored.allow_relay(url)
+        _ = try await restored.load_relay_information(url)
+        XCTAssertNotNil(restored.get_relay(url.absoluteString))
+    }
+
+    @MainActor
+    func testRelayAutoSubscribeDiscoversTagsWithoutSettings() async throws {
+        let supported = try relayInformation(nips: [34])
+        let unsupported = try relayInformation(nips: [1])
+        let connected = expectation(description: "Discovered NIP-34 relay connected")
+        let url = URL(string: "wss://discovered-git.example")!
+        let pool = RelayPool(defaults: nil, information_fetcher: { relay in
+            return relay == url ? supported : unsupported
+        }, relay_connector: { relay in
+            if relay.id == url.absoluteString { connected.fulfill() }
+        })
+        pool.connect(to: [])
+        pool.collect_relay_recommendations(relayListEvent(tags: [["r", url.absoluteString]]))
+        await fulfillment(of: [connected], timeout: 5)
+        XCTAssertNotNil(pool.get_relay(url.absoluteString))
+    }
+
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
     }

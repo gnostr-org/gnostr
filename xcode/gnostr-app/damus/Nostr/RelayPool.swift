@@ -76,11 +76,11 @@ class RelayPool: ObservableObject {
             guard let url = normalized_relay_url(value) else { return nil }
             return RelayDescriptor(url: url, info: .rw)
         }
-        let ignored = ignored_relays.sorted().compactMap { value -> RelayDescriptor? in
+        let saved = ignored_relays.union(removed_relays).sorted().compactMap { value -> RelayDescriptor? in
             guard let url = normalized_relay_url(value) else { return nil }
             return RelayDescriptor(url: url, info: .rw)
         }
-        return (suggested_relays + bootstrap + ignored).filter {
+        return (suggested_relays + bootstrap + saved).filter {
             (show_ignored || !is_relay_ignored($0.url)) && seen.insert($0.url).inserted
         }
     }
