@@ -581,7 +581,7 @@ impl Client {
                                 ));
                                 false
                             } else {
-                                info!(
+                                log::info!(
                                     "Sent event {event_id} to relay {ws_url} (WebSocket write completed; relay acceptance not confirmed)"
                                 );
                                 let _ = append_relay_to_crawler_recent(&ws_url);
@@ -626,7 +626,7 @@ impl Client {
 
         let sent_count = results.iter().filter(|&&sent| sent).count();
         if sent_count > 0 {
-            info!(
+            log::info!(
                 "Sent event {} to {}/{} relay(s) (WebSocket writes completed)",
                 event.id,
                 sent_count,
