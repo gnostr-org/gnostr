@@ -1,0 +1,31 @@
+[package]
+name = "gnostr-tui"
+edition = "2024"
+version.workspace = true
+description = "gnostr ratatui TUI widgets and demos"
+repository = "https://github.com/gnostr-org/gnostr.git"
+license = "MIT"
+readme = "../README.md"
+exclude.workspace = true
+
+[dependencies]
+anyhow = "1.0.100"
+crossbeam-channel = "0.5"
+crossterm = { workspace = true }
+dirs = "5.0"
+filetreelist = { workspace = true }
+gnostr-asyncgit = { workspace = true, optional = true }
+gnostr-types = { workspace = true }
+portable-pty = "0.9"
+ratatui = { workspace = true, default-features = false, features = ["macros"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tui-input = { workspace = true }
+tui-term = { version = "0.3.4", features = ["unstable"] }
+tui-textarea = { workspace = true }
+unicode-width = { workspace = true }
+vt100 = { workspace = true }
+
+[features]
+default = ["git"]
+git = ["dep:gnostr-asyncgit"]

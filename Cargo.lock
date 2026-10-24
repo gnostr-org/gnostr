@@ -7701,6 +7701,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "gnostr-tui"
+version = "972835.1842.830997"
+dependencies = [
+ "anyhow",
+ "crossbeam-channel 0.5.17",
+ "crossterm 0.29.0",
+ "dirs 5.0.1",
+ "gnostr-asyncgit",
+ "gnostr-filetreelist",
+ "gnostr-types",
+ "portable-pty 0.9.0",
+ "ratatui",
+ "serde",
+ "serde_json",
+ "tui-input",
+ "tui-term",
+ "tui-textarea",
+ "unicode-width 0.2.2",
+ "vt100",
+]
+
+[[package]]
 name = "gnostr-types"
 version = "972835.1842.830997"
 dependencies = [
@@ -7722,7 +7744,6 @@ dependencies = [
  "const_format",
  "constant_time_eq",
  "crossbeam-channel 0.5.17",
- "crossterm 0.29.0",
  "derive_more 0.99.20",
  "directories 6.0.0",
  "easy-cast",
@@ -7759,7 +7780,6 @@ dependencies = [
  "qrcode",
  "rand 0.8.8",
  "rand_core 0.6.4",
- "ratatui",
  "regex",
  "reqwest 0.12.28",
  "rkyv 0.8.18",
@@ -7805,20 +7825,15 @@ dependencies = [
  "tree-sitter 0.23.2",
  "tree-sitter-highlight 0.23.2",
  "tree-sitter-language",
- "tui-input",
- "tui-term",
- "tui-textarea",
  "unicode-normalization",
  "unicode-segmentation",
  "unicode-truncate 1.1.0",
- "unicode-width 0.2.2",
  "unix_mode",
  "ureq",
  "url",
  "urlencoding",
  "uuid",
  "v_htmlescape",
- "vt100",
  "walkdir",
  "warp",
  "webbrowser",
