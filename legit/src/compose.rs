@@ -272,6 +272,11 @@ struct GraspList {
 impl Compose {
     /// Build and sign one event. This performs no networking or Git mutation.
     pub fn build(&self, keys: &Keys) -> Result<Event> {
+        self.build_with_pow(keys, 0)
+    }
+
+    /// Build and sign one event with an independent NIP-13 bit target.
+    pub fn build_with_pow(&self, keys: &Keys, difficulty: u8) -> Result<Event> {
         let secret = keys.secret_key()?;
         let (kind, content, mut tags) = match &self.event {
             EventCommand::RepoAnnouncement(args) => {
@@ -514,11 +519,21 @@ impl Compose {
         if let Some(nonce) = &self.commit_nonce {
             tags.push(commit_nonce_tag(nonce)?);
         }
-        EventBuilder::new(kind, content, tags).to_event(&secret)
+        EventBuilder::new(kind, content, tags).to_pow_event(&secret, difficulty)
     }
 
     /// Print signed JSON; contact only explicitly selected relays with --publish.
     pub fn run(&self, signing_keys: Option<Keys>, repo: &str) -> Result<()> {
+        self.run_with_pow(signing_keys, repo, 0)
+    }
+
+    /// Compose an optionally mined event and publish only when requested.
+    pub fn run_with_pow(
+        &self,
+        signing_keys: Option<Keys>,
+        repo: &str,
+        difficulty: u8,
+    ) -> Result<()> {
         let keys = match signing_keys {
             Some(keys) => keys,
             None => {
@@ -529,7 +544,7 @@ impl Compose {
                     .context("Failed to derive signing keys from HEAD")?
             }
         };
-        let event = self.build(&keys)?;
+        let event = self.build_with_pow(&keys, difficulty)?;
         info!(
             "Composed NIP-34 event: id={}, kind={}, pubkey={}",
             event.id,
@@ -813,6 +828,14 @@ mod tests {
                 .tags
                 .contains(&Tag::new_tag("commit-nonce", "01-00000122")));
             assert!(event.nonce_data().is_none());
+            let mined = command.build_with_pow(&keys, 8).unwrap();
+            mined.verify(None).unwrap();
+            assert!(gnostr_types::nostr::get_leading_zero_bits(&mined.id.0) >= 8);
+            assert_eq!(mined.pow(), 8);
+            assert_eq!(mined.nonce_data().unwrap().1, 8);
+            assert_eq!(mined.kind, event.kind);
+            assert_eq!(mined.content, event.content);
+            assert!(event.tags.iter().all(|tag| mined.tags.contains(tag)));
             assert_eq!(
                 event
                     .tags

@@ -44,20 +44,66 @@ impl EventBuilder {
             content: self.content,
         };
 
-        // Apply proof of work if difficulty > 0
-        if difficulty_target > 0 {
-            // TODO: Implement actual POW calculation
-            // For now, just sign without POW
-        }
-
-        // Sign the event
         let signer = KeySigner::from_private_key(keys.clone(), "", 1)?;
-        Ok(signer.sign_event(preevent)?)
+        if difficulty_target > 0 {
+            Ok(signer.sign_event_with_pow(preevent, difficulty_target, None)?)
+        } else {
+            Ok(signer.sign_event(preevent)?)
+        }
     }
 
     /// Build and sign the event without proof of work
     pub fn to_event(self, keys: &PrivateKey) -> Result<Event> {
         self.to_pow_event(keys, 0)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::nostr::{Keys, get_leading_zero_bits, nip13::NIP13Event};
+
+    #[test]
+    fn event_pow_mines_requested_bits_before_signing_and_preserves_fields() {
+        let keys = Keys::parse(
+            "473a0f4c3be8a93681a267e3b1e9a7dcda1185436fe141f7749120a303721813".to_string(),
+        )
+        .unwrap();
+        let proof = Tag::new_tag("commit-nonce", "01-00000122");
+        let timestamp = Unixtime(1_700_000_000);
+        let event = EventBuilder::new(
+            EventKind::ContactList,
+            "profile follows".to_string(),
+            vec![proof.clone(), Event::create_nonce_tag(99, 1)],
+        )
+        .created_at(timestamp)
+        .to_pow_event(&keys.secret_key().unwrap(), 8)
+        .unwrap();
+        event.verify(None).unwrap();
+        assert!(get_leading_zero_bits(&event.id.0) >= 8);
+        assert_eq!(event.pow(), 8);
+        assert_eq!(event.nonce_data().unwrap().1, 8);
+        assert_eq!(
+            event
+                .tags
+                .iter()
+                .filter(|tag| tag.tagname() == "nonce")
+                .count(),
+            1
+        );
+        assert!(event.tags.contains(&proof));
+        assert_eq!(event.pubkey, keys.public_key());
+        assert_eq!(event.kind, EventKind::ContactList);
+        assert_eq!(event.content, "profile follows");
+        assert_eq!(event.created_at, timestamp);
+
+        let ordinary =
+            EventBuilder::new(EventKind::ContactList, String::new(), vec![proof.clone()])
+                .to_pow_event(&keys.secret_key().unwrap(), 0)
+                .unwrap();
+        ordinary.verify(None).unwrap();
+        assert_eq!(ordinary.tags, vec![proof]);
+        assert!(ordinary.nonce_data().is_none());
     }
 }
 

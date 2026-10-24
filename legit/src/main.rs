@@ -44,6 +44,10 @@ struct Args {
     #[arg(long, default_value_t = 0, value_name = "INT")]
     depth: usize,
 
+    /// NIP-13 event-ID difficulty in leading zero bits, independent of --prefix
+    #[arg(long, global = true, default_value_t = 0, value_name = "BITS")]
+    event_difficulty: u8,
+
     /// NIP-34 signing key: 64-character hex (SHA-256) or nsec1... private key
     #[arg(long, global = true, value_name = "KEY")]
     nsec: Option<String>,
@@ -54,7 +58,7 @@ struct Args {
 
 #[derive(Subcommand)]
 enum Command {
-    /// Compose signed NIP-34 JSON without mining; publish only with --publish
+    /// Compose signed NIP-34 JSON without Git mining; publish only with --publish
     Compose(compose::Compose),
 }
 
@@ -106,7 +110,7 @@ fn main() -> io::Result<()> {
     info!("Starting gnostr-legit");
     if let Some(Command::Compose(command)) = args.command {
         return command
-            .run(signing_keys, &args.repo)
+            .run_with_pow(signing_keys, &args.repo, args.event_difficulty)
             .map_err(|err| io::Error::new(io::ErrorKind::Other, format!("{:#}", err)));
     }
 
@@ -146,7 +150,9 @@ fn main() -> io::Result<()> {
 
     debug!("Initializing git miner");
     let mut miner = match Gitminer::new(opts) {
-        Ok(m) => m.with_depth(args.depth),
+        Ok(m) => m
+            .with_depth(args.depth)
+            .with_event_difficulty(args.event_difficulty),
         Err(e) => {
             eprintln!("Failed to start git miner: {}", e);
             std::process::exit(1);
@@ -193,6 +199,7 @@ mod tests {
         assert_eq!(args.threads, None);
         assert_eq!(args.message, ["default commit message"]);
         assert_eq!(args.depth, 0);
+        assert_eq!(args.event_difficulty, 0);
         assert!(parse_signing_keys(args.nsec).unwrap().is_none());
         assert!(args.command.is_none());
     }
@@ -229,6 +236,35 @@ mod tests {
         assert!(
             parse_args_from(["gnostr-legit", "--depth", "2", "compose", "grasp-list"]).is_err()
         );
+    }
+
+    #[test]
+    fn cli_event_pow_is_independent_of_git_prefix_and_available_to_compose() {
+        let args = parse_args_from(["gnostr-legit", "--prefix", "abc", "--event-difficulty", "8"])
+            .unwrap();
+        assert_eq!(args.prefix, "abc");
+        assert_eq!(args.event_difficulty, 8);
+        for args in [
+            vec![
+                "gnostr-legit",
+                "--event-difficulty",
+                "8",
+                "compose",
+                "grasp-list",
+            ],
+            vec![
+                "gnostr-legit",
+                "compose",
+                "grasp-list",
+                "--event-difficulty",
+                "8",
+            ],
+        ] {
+            assert_eq!(parse_args_from(args).unwrap().event_difficulty, 8);
+        }
+        for invalid in ["-1", "256", "abc", "1.5"] {
+            assert!(parse_args_from(["gnostr-legit", "--event-difficulty", invalid]).is_err());
+        }
     }
 
     #[test]

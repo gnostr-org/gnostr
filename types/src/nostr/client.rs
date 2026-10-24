@@ -409,11 +409,12 @@ impl Client {
         let content = serde_json::to_string(metadata).map_err(|e| Error::Custom(e.into()))?;
 
         EventBuilder::new(EventKind::Metadata, content, tags)
-            .to_event(
+            .to_pow_event(
                 &self
                     .keys
                     .secret_key()
                     .map_err(|e| Error::Custom(e.into()))?,
+                self.options.difficulty,
             )
             .map_err(|e| Error::Custom(e.into()))
     }

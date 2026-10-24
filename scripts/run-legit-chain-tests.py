@@ -72,6 +72,8 @@ def harness():
             "}}",
             source_module("metadata_v1", "types/src/nostr/versioned/metadata.rs"),
             "pub use metadata_v1::MetadataV1 as Metadata;",
+            source_module("event_builder", "types/src/nostr/event_builder.rs"),
+            "pub use event_builder::EventBuilder;",
             source_module("client", "types/src/nostr/client.rs"),
             "pub use client::Client;",
             source_module("patch", "types/src/nostr/patch.rs"),
@@ -156,7 +158,8 @@ def smoke_cli(binary, directory):
         relay = f"ws://127.0.0.1:{listener.getsockname()[1]}"
         # This is a publicly known test fixture, never a user signing key.
         args = [
-            str(binary), "--repo", str(absent_repo), "--nsec", "1" * 64,
+            str(binary), "--repo", str(absent_repo), "--nsec",
+            "473a0f4c3be8a93681a267e3b1e9a7dcda1185436fe141f7749120a303721813",
             "compose", "--relay", relay, "grasp-list", "--server", "wss://grasp.example.com",
         ]
         dry_run = run_cli(args, environment)
@@ -165,6 +168,19 @@ def smoke_cli(binary, directory):
         if event["kind"] != 10317 or ["t", "gnostr"] not in event["tags"] or len(event["id"]) != 64:
             raise RuntimeError(f"Invalid composed event: {dry_run.stdout}")
         print(f"Dry-run JSON event ID: {event['id']}", flush=True)
+        if any(tag[0] == "nonce" for tag in event["tags"]):
+            raise RuntimeError("Default composition unexpectedly added NIP-13 proof")
+        args[1:1] = ["--event-difficulty", "8"]
+        mined_run = run_cli(args, environment)
+        mined_run.check_returncode()
+        mined = json.loads(mined_run.stdout)
+        if (
+            256 - int(mined["id"], 16).bit_length() < 8
+            or len([tag for tag in mined["tags"] if tag[0] == "nonce"]) != 1
+            or next(tag for tag in mined["tags"] if tag[0] == "nonce")[2] != "8"
+        ):
+            raise RuntimeError("Composed event did not meet its NIP-13 target")
+        print(f"Mined dry-run JSON event ID: {mined['id']}", flush=True)
         if absent_repo.exists():
             raise RuntimeError("Composition unexpectedly created a Git repository")
         listener.settimeout(0.25)

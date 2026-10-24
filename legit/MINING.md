@@ -1,7 +1,8 @@
 # Mining process
 
 `gnostr-legit` mines a **Git commit hash**, then publishes signed Nostr events
-describing that commit. Mining a Nostr event ID is a separate operation.
+describing that commit. Mining a Nostr event ID is a separate, configurable
+operation controlled by `--event-difficulty BITS`, independently of `--prefix`.
 This document describes the current implementation, including its limitations.
 
 ## Preparing a commit
@@ -10,7 +11,7 @@ Stage the intended changes before starting:
 
 ```bash
 git add path/to/files
-gnostr-legit --repo . --prefix 00000 --threads 4 --depth 3 \
+gnostr-legit --repo . --prefix 00000 --event-difficulty 12 --threads 4 --depth 3 \
   -m "subject" -m "commit body"
 ```
 
@@ -156,6 +157,23 @@ derived parent public key but omit the parent event reference.
 The Git nonce and its `commit-nonce` tag prove the Git commit's prefix search.
 They do **not** claim NIP-13 proof of work on any Nostr event ID.
 
+`--event-difficulty BITS` supplies that separate proof. Its default of 0
+preserves ordinary signing without adding a NIP-13 nonce. Positive values mine
+every generated kind-0, kind-3, kind-10002, kind-1617, and kind-1 event ID before
+signing or publishing. An explicit signing key still mines patches and
+announcements while skipping automatic profile events. References and cached
+patch IDs use the final mined event IDs.
+
+Both the standalone binary (including `compose`) and the root `gnostr legit`
+and feature-gated bins entrypoints expose the option. Root `--pow` remains a
+Git-prefix alias, not the event bit target. Existing library APIs retain their
+zero-difficulty behavior; `Gitminer::with_event_difficulty(BITS)` and the
+difficulty-aware patch/composition helpers opt in.
+
+One extra bit doubles expected event-ID work. A 12-bit event target averages
+4,096 hash attempts per event; a five-zero Git prefix independently averages
+1,048,576 Git candidates. Nostr mining does not reuse the Git search.
+
 The working Nostr miner is
 [`Signer::sign_event_with_pow`](../types/src/nostr/signer.rs). It changes the
 decimal NIP-13 `["nonce","<counter>","<target bits>"]` tag, hashes the unsigned
@@ -165,9 +183,8 @@ It uses `u64` counters, multiple threads, and a shared cancellation flag.
 NIP-34 caller. [`generate_pow_event`](../types/src/nostr/nip13.rs) is another,
 single-threaded implementation that signs each candidate.
 
-**`EventBuilder::to_pow_event` is currently a TODO:** despite accepting a
-difficulty argument, it signs without mining. Neither the standalone Git
-mining path nor `compose` currently requests Nostr event-ID mining.
+`EventBuilder::to_pow_event` delegates positive targets to this working
+multithreaded miner and signs normally for a zero target.
 
 ## Source and focused checks
 
@@ -181,8 +198,13 @@ invoking Cargo:
 ```bash
 ./scripts/run-legit-chain-tests.py depth
 ./scripts/run-legit-chain-tests.py profile
+./scripts/run-legit-chain-tests.py event_pow
 ```
 
 Depth tests cover first-parent traversal, merge-parent rows, and nonce
 placement. Profile tests cover deterministic empty-hash signers, follow
 deduplication, relay acknowledgements, and signed NIP-65 relay lists.
+Event-PoW checks measure actual leading zero bits, NIP-13 nonce targets, valid
+signatures, unchanged zero-difficulty behavior, and all five generated event
+kinds. The composition matrix also checks mined events for every supported
+NIP-34 kind, and CLI smoke checks cover offline mined JSON and publication.

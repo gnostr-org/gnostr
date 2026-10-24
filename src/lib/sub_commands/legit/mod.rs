@@ -23,12 +23,15 @@ pub struct LegitSubCommand {
     ///// nsec or hex private key
     #[arg(long, global = true)]
     repo: Option<String>,
-    ///// password to decrypt nsec
+    /// Alias for --prefix, matching the Git commit hash
     #[arg(long, global = true)]
     pow: Option<String>,
     /// Desired commit prefix
     #[arg(long, default_value = "000")]
     prefix: Option<String>,
+    /// NIP-13 event-ID difficulty in leading zero bits, separate from --pow/--prefix
+    #[arg(long, default_value_t = 0, value_name = "BITS")]
+    event_difficulty: u8,
     /// Number of worker threads to use
     #[arg(short, long, default_value_t = 1)]
     threads: usize,
@@ -93,9 +96,12 @@ pub async fn legit(sub_command_args: &LegitSubCommand) -> Result<(), Box<dyn Std
                 timestamp: OffsetDateTime::now_local().unwrap(),
                 kind: sub_command_args.kind,
             };
-            command::run_legit_command(opts)
-                .await
-                .map_err(|e| Box::new(e) as Box<dyn StdError>)?;
+            command::run_legit_command_with_event_difficulty(
+                opts,
+                sub_command_args.event_difficulty,
+            )
+            .await
+            .map_err(|e| Box::new(e) as Box<dyn StdError>)?;
         }
     }
     Ok(())

@@ -394,6 +394,15 @@ branches are not traversed;
 `--depth 0` (the default) preserves the message. Requests beyond available
 history stop at the root. `--depth` is mining-only, not a `compose` option.
 
+`--event-difficulty BITS` is separate from Git `--prefix` / root `--pow`.
+It defaults to 0 and accepts 0 through 255 leading zero bits. Positive targets
+mine NIP-13 event IDs for generated metadata, follows, relay lists, patches, and
+announcements before signing. All entrypoints expose it; standalone `compose`
+accepts it globally too. Keep `commit-nonce` separate from the decimal NIP-13
+`nonce`. Use `Gitminer::with_event_difficulty` without changing public `Options`.
+`EventBuilder::to_pow_event` must use `Signer::sign_event_with_pow` for positive
+targets; zero preserves existing signing. See `legit/MINING.md`.
+
 Add `--nsec "$NOSTR_PRIVATE_KEY"` after `--` to sign the event with a
 64-character hex/SHA-256 or `nsec1...` private key. Without it, the signing key
 is derived from the public commit hash and is not a secure identity. Never put

@@ -27,6 +27,10 @@ struct Args {
     #[arg(long, default_value = "000")]
     prefix: String,
 
+    /// NIP-13 event-ID difficulty in leading zero bits, independent of --prefix
+    #[arg(long, default_value_t = 0, value_name = "BITS")]
+    event_difficulty: u8,
+
     /// Commit message
     #[arg(short, long)]
     message: Option<Vec<String>>,
@@ -70,5 +74,5 @@ async fn main() -> io::Result<()> {
         kind: None,
     };
 
-    command::run_legit_command(opts).await
+    command::run_legit_command_with_event_difficulty(opts, args.event_difficulty).await
 }

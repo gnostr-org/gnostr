@@ -129,6 +129,27 @@ pub fn build_patch_event_with_tags(
     build_manifest_event_id: Option<&Id>,
     extra_tags: &[Tag],
 ) -> Result<Event, Error> {
+    build_patch_event_with_tags_and_pow(
+        keys,
+        d_tag_value,
+        commit_id,
+        patch_content,
+        build_manifest_event_id,
+        extra_tags,
+        0,
+    )
+}
+
+/// Build a patch with additional signed tags and NIP-13 event-ID proof of work.
+pub fn build_patch_event_with_tags_and_pow(
+    keys: &Keys,
+    d_tag_value: &str,
+    commit_id: &str,
+    patch_content: &str,
+    build_manifest_event_id: Option<&Id>,
+    extra_tags: &[Tag],
+    difficulty: u8,
+) -> Result<Event, Error> {
     let mut tags = vec![
         Tag::new_identifier(d_tag_value.to_string()),
         Tag::new_tag("commit", commit_id),
@@ -141,7 +162,7 @@ pub fn build_patch_event_with_tags(
     tags.extend_from_slice(extra_tags);
 
     EventBuilder::new(EventKind::Patches, patch_content.to_string(), tags)
-        .to_event(&keys.secret_key()?)
+        .to_pow_event(&keys.secret_key()?, difficulty)
         .map_err(|err| Error::Custom(err.into()))
 }
 
@@ -162,6 +183,16 @@ pub fn build_patch_announcement_with_tags(
     patch_event_id: Id,
     extra_tags: &[Tag],
 ) -> Result<Event, Error> {
+    build_patch_announcement_with_tags_and_pow(keys, patch_event_id, extra_tags, 0)
+}
+
+/// Build a patch announcement with additional tags and NIP-13 event-ID proof.
+pub fn build_patch_announcement_with_tags_and_pow(
+    keys: &Keys,
+    patch_event_id: Id,
+    extra_tags: &[Tag],
+    difficulty: u8,
+) -> Result<Event, Error> {
     let mut tags = vec![
         Tag::new_event(patch_event_id, None, Some("mention".to_string())),
         Tag::new_tag("t", "gnostr"),
@@ -172,7 +203,7 @@ pub fn build_patch_announcement_with_tags(
         format!("nostr:{}", patch_event_id.as_bech32_string()),
         tags,
     )
-    .to_event(&keys.secret_key()?)
+    .to_pow_event(&keys.secret_key()?, difficulty)
     .map_err(|err| Error::Custom(err.into()))
 }
 
@@ -208,14 +239,40 @@ pub async fn publish_patch_event_with_tags(
     build_manifest_event_id: Option<&Id>,
     extra_tags: &[Tag],
 ) -> Result<Id, Error> {
+    publish_patch_event_with_tags_and_pow(
+        keys,
+        relay_urls,
+        d_tag_value,
+        commit_id,
+        patch_content,
+        build_manifest_event_id,
+        extra_tags,
+        0,
+    )
+    .await
+}
+
+/// Publish a tagged patch after mining its event ID to the requested bit target.
+#[allow(clippy::too_many_arguments)]
+pub async fn publish_patch_event_with_tags_and_pow(
+    keys: &Keys,
+    relay_urls: &[String],
+    d_tag_value: &str,
+    commit_id: &str,
+    patch_content: &str,
+    build_manifest_event_id: Option<&Id>,
+    extra_tags: &[Tag],
+    difficulty: u8,
+) -> Result<Id, Error> {
     install_rustls_crypto_provider();
-    let event = build_patch_event_with_tags(
+    let event = build_patch_event_with_tags_and_pow(
         keys,
         d_tag_value,
         commit_id,
         patch_content,
         build_manifest_event_id,
         extra_tags,
+        difficulty,
     )?;
     send_patch_event(keys, relay_urls, event, commit_id, d_tag_value).await
 }

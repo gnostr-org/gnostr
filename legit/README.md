@@ -40,6 +40,20 @@ parallelism, and `default commit message`. Thread counts must be positive.
 See [Mining process](MINING.md) for candidate iteration, nonce formatting,
 difficulty, worker shutdown behavior, persistence, and Nostr publication.
 
+Git and Nostr event-ID difficulty are independent:
+
+```bash
+gnostr-legit --prefix 00000 --event-difficulty 12 -m "subject"
+gnostr legit --prefix 00000 --event-difficulty 12 -m "subject"
+```
+
+`--prefix` (or the root command's `--pow` alias) matches the Git commit hash.
+`--event-difficulty BITS` mines NIP-13 proof for every generated profile,
+follow list, relay list, patch, and announcement before signing. It accepts
+0 through 255, defaults to 0 (no event mining), and does not change the Git
+prefix. The feature-gated bins wrapper exposes the same option. Library callers
+use `Gitminer::with_event_difficulty(BITS)` without changing `Options`.
+
 Use `--depth N` to append up to `N` existing first-parent commits to the
 commit body, starting with the current HEAD and continuing newest-first through
 its first parents. Merged branches are not traversed. Ordinary commits use one
@@ -146,10 +160,20 @@ the local cache.
 
 ## Compose NIP-34 events without mining
 
-`gnostr-legit compose` prints one signed event as JSON. It does not mine, change
+`gnostr-legit compose` prints one signed event as JSON. It does not change
 Git, publish metadata or announcements, or contact relays unless `--publish` is
 specified. Publication also requires an explicit `--relay`; repeat it for
 multiple destinations. Relay logs confirm WebSocket writes, not acceptance.
+
+Composition does not mine Git commits. To mine the composed event ID, use the
+global `--event-difficulty BITS` before or after the subcommand:
+
+```bash
+gnostr-legit --nsec "$NOSTR_PRIVATE_KEY" --event-difficulty 12 compose grasp-list
+```
+
+This still prints only signed JSON and performs no networking without
+`--publish`. The decimal NIP-13 `nonce` tag is distinct from `commit-nonce`.
 
 Use the global `--nsec "$NOSTR_PRIVATE_KEY"` to choose the signer. Without it,
 composition uses the key derived from the current Git HEAD, without creating a
