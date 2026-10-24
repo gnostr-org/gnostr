@@ -1,33 +1,28 @@
 use std::{fs, path::Path, path::PathBuf, process::Command};
 
-use crate::keypair_from_seed;
 use clap::Parser;
-use futures::StreamExt;
 use log::{debug, info};
 // pub use crate::perfect_ip_core::*;
 use crate::fractal::fractal_ip_core::{
-    build_fractal_swarm, generate_manifest, packetize, reconstruct_directory, reconstruct_payload,
-    run_directory_walk, sha256_hex, summarize_packets, FractalBehaviourEvent, IntegrityManager,
-    ProtocolSlice,
+    generate_manifest, packetize, reconstruct_directory, reconstruct_payload, run_directory_walk,
+    sha256_hex, summarize_packets, IntegrityManager,
 };
-use crate::message::{EventBuilder, EventKind, PrivateKey, Tag};
-use libp2p::{request_response, swarm::SwarmEvent};
 
 #[derive(Debug, Parser)]
 #[command(name = "fractal_swarm_perfect_ip", arg_required_else_help = true)]
 struct Cli {
-    /// Walk PATH as a directory tree and preserve relative paths.
-    /// Output is written to PATH.reconstructed.dir.
-    #[arg(long)]
-    recursive: Option<PathBuf>,
+    /// Walk the INPUT path as a directory tree and preserve relative paths.
+    /// Requires --clone <INPUT> <OUTPUT>.
+    #[arg(long, requires = "clone")]
+    recursive: bool,
 
     /// Walk INPUT recursively, reconstruct to OUTPUT, and git clone OUTPUT to
     /// OUTPUT_repo.
     ///
-    /// Requires exactly two paths: <INPUT> <OUTPUT>. If INPUT is a git
-    /// repository, the recursive directory algorithm is used. Otherwise the
+    /// Requires exactly two paths: <INPUT> <OUTPUT>. If --recursive is given,
+    /// the directory algorithm is used. Otherwise, if INPUT is a git
+    /// repository the recursive algorithm is used; if it is a regular file the
     /// single-file algorithm is used automatically.
-    /// If --recursive is also given, it overrides the INPUT path.
     #[arg(long, num_args = 2, value_name = "PATH")]
     clone: Option<Vec<PathBuf>>,
 
@@ -107,12 +102,6 @@ fn is_git_repo(path: &Path) -> bool {
         .unwrap_or(false)
 }
 
-fn reconstructed_output_path(input: &Path) -> PathBuf {
-    let mut s = input.as_os_str().to_os_string();
-    s.push(".reconstructed.dir");
-    PathBuf::from(s)
-}
-
 pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let cli = Cli::parse();
 
@@ -123,74 +112,49 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let depth = cli.depth.unwrap_or(3);
     let depth_set = cli.depth.is_some();
 
-    let mut recursive = cli.recursive;
-    let mut out: Option<PathBuf> = None;
-    let mut file: Option<PathBuf> = None;
-    let mut clone_dest: Option<PathBuf> = None;
-    let mut clone_file_fallback = false;
-
-    if let Some(ref clone) = cli.clone {
-        if clone.len() != 2 {
-            return Err("--clone requires exactly two paths: <INPUT> <OUTPUT>".into());
-        }
-        let input = &clone[0];
-        if is_git_repo(input) {
-            if recursive.is_none() {
-                recursive = Some(input.clone());
-            }
-            out = Some(clone[1].clone());
-            clone_dest = out.as_ref().map(|out_path| {
-                out_path.with_file_name(format!(
-                    "{}_repo",
-                    out_path.file_name().unwrap_or_default().to_string_lossy()
-                ))
-            });
-        } else {
-            // Not a git repository: automatically switch to the file algorithm.
-            file = Some(input.clone());
-            out = Some(clone[1].clone());
-            clone_file_fallback = true;
-        }
+    let Some(ref clone) = cli.clone else {
+        return Err("nothing to do: provide --clone <INPUT> <OUTPUT>".into());
+    };
+    if clone.len() != 2 {
+        return Err("--clone requires exactly two paths: <INPUT> <OUTPUT>".into());
     }
+    let input = &clone[0];
+    let out = &clone[1];
 
-    if depth_set && recursive.is_none() {
+    let use_recursive = cli.recursive || is_git_repo(input);
+
+    if depth_set && !use_recursive {
         return Err("--depth is only valid with --recursive".into());
     }
 
-    if let Some(ref root) = recursive {
-        if out.is_none() {
-            out = Some(reconstructed_output_path(root));
-        }
-        if !root.is_dir() {
-            return Err(format!("--recursive path is not a directory: {}", root.display()).into());
+    if use_recursive {
+        if !input.is_dir() {
+            return Err(
+                format!("--recursive input is not a directory: {}", input.display()).into(),
+            );
         }
 
-        let out_path = out.expect("recursive output path was set");
-        info!("recursive walk root: {}", root.display());
+        let clone_dest = out.with_file_name(format!(
+            "{}_repo",
+            out.file_name().unwrap_or_default().to_string_lossy()
+        ));
+
+        info!("recursive walk root: {}", input.display());
         info!("recursive depth: {}", depth);
         info!("logging flag is: {:?}", cli.logging);
-        let walk = run_directory_walk(root, depth, cli.logging.is_some())?;
-        reconstruct_directory(walk, &out_path)?;
-        println!(
-            "recursively reconstructed directory to {}",
-            out_path.display()
-        );
-        if let Some(ref clone_dest) = clone_dest {
-            clone_and_verify_reconstructed_repo(&out_path, clone_dest)?;
-        }
+        let walk = run_directory_walk(input, depth, cli.logging.is_some())?;
+        reconstruct_directory(walk, out)?;
+        println!("recursively reconstructed directory to {}", out.display());
+        clone_and_verify_reconstructed_repo(out, &clone_dest)?;
         return Ok(());
     }
 
-    let Some(example_path) = file else {
-        return Err("nothing to do: provide --recursive or --clone".into());
-    };
-
-    let original_bytes = if example_path.exists() && !example_path.is_dir() {
-        fs::read(&example_path)?
+    let original_bytes = if input.exists() && !input.is_dir() {
+        fs::read(input)?
     } else {
         return Err(format!(
             "file input does not exist or is a directory: {}",
-            example_path.display()
+            input.display()
         )
         .into());
     };
@@ -199,7 +163,7 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let batch = packetize("ROOT".to_string(), original_bytes.clone());
     let manifest = generate_manifest("ROOT".to_string(), original_bytes.len());
 
-    println!("sender wrote {}", example_path.display());
+    println!("sender wrote {}", input.display());
     println!("sender sha256: {original_sha256}");
     if cli.logging.is_some() {
         info!("perfect_ip packet batch: {} packets", batch.total_packets);
@@ -217,113 +181,12 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     let reconstructed = reconstruct_payload(&batch.packets);
     let reconstructed_sha256 = sha256_hex(&reconstructed);
-    let output_path = out.unwrap_or_else(|| reconstructed_output_path(&example_path));
-    fs::write(&output_path, &reconstructed)?;
+    fs::write(out, &reconstructed)?;
 
-    println!("peer reconstructed {}", output_path.display());
+    println!("peer reconstructed {}", out.display());
     println!("peer sha256: {reconstructed_sha256}");
     println!("sha256 match: {}", reconstructed_sha256 == original_sha256);
 
-    if clone_file_fallback {
-        println!("file reconstruction complete; exiting");
-        return Ok(());
-    }
-
-    let local_key = keypair_from_seed(None);
-    let mut swarm = build_fractal_swarm(local_key).await?;
-    let listen_address = "/ip4/127.0.0.1/udp/0/quic-v1".parse()?;
-    let listener_id = swarm.listen_on(listen_address)?;
-    println!("repair swarm listener: {listener_id:?}");
-    println!("press Ctrl-C to stop the demo");
-
-    // Construct and broadcast PIP events
-    let private_key = PrivateKey::generate();
-    let config_dir = crate::p2p::relay_paths::get_config_dir_path();
-
-    // 1. Broadcast Manifest Event (Kind 39078)
-    let manifest_content = serde_json::to_string(&manifest).expect("serialize manifest");
-    let manifest_tags = vec![
-        Tag::new_identifier("ROOT".to_string()),
-        Tag::new_tag("sha256", &original_sha256),
-    ];
-    let manifest_event =
-        EventBuilder::new(EventKind::Other(39078), manifest_content, manifest_tags)
-            .to_event(&private_key)
-            .expect("build manifest event");
-
-    info!(
-        "Broadcasting PIP Manifest event: {}",
-        manifest_event.id.as_hex_string()
-    );
-    if let Ok(count) = crate::p2p::crawler_broadcast::broadcast_event_to_crawler_relays(
-        &config_dir,
-        &manifest_event,
-    )
-    .await
-    {
-        info!(
-            "Broadcasted PIP Manifest event: {:?}. Published to {} relays.",
-            manifest_event.id, count
-        );
-    }
-
-    // 2. Broadcast Slice Events (Kind 39079)
-    for slice in batch.packets {
-        let slice_content = serde_json::to_string(&slice).expect("serialize slice");
-        let slice_tags = vec![
-            Tag::new_identifier("ROOT".to_string()),
-            Tag::new_event(manifest_event.id, None, Some("root".to_string())),
-            Tag::new_tag("seq", &slice.header.seq_num.to_string()),
-            Tag::new_tag("path", &slice.id),
-        ];
-        let slice_event = EventBuilder::new(EventKind::Other(39079), slice_content, slice_tags)
-            .to_event(&private_key)
-            .expect("build slice event");
-
-        debug!(
-            "Broadcasting PIP Slice event: {}",
-            serde_json::to_string_pretty(&slice_event).expect("serialize event")
-        );
-        if let Ok(count) = crate::p2p::crawler_broadcast::broadcast_event_to_crawler_relays(
-            &config_dir,
-            &slice_event,
-        )
-        .await
-        {
-            debug!(
-                "Broadcasted PIP Slice event: {:?}. Published to {} relays.",
-                slice_event.id, count
-            );
-        }
-    }
-
-    loop {
-        tokio::select! {
-            _ = tokio::signal::ctrl_c() => {
-                println!("stopping demo");
-                break;
-            }
-            event = swarm.select_next_some() => {
-                if let SwarmEvent::Behaviour(FractalBehaviourEvent::RepairRpc(event)) = event {
-                    if let request_response::Event::Message { message, .. } = event {
-                        if let request_response::Message::Request { request, channel, .. } = message {
-                            let response = integrity
-                                .received_slices
-                                .get(&request.id)
-                                .cloned()
-                                .unwrap_or_else(|| ProtocolSlice {
-                                    id: request.id.clone(),
-                                    header: request.header.clone(),
-                                    data: Vec::new(),
-                                    is_parity: false,
-                                });
-                            let _ = swarm.behaviour_mut().repair_rpc.send_response(channel, response);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
+    println!("file reconstruction complete; exiting");
     Ok(())
 }
