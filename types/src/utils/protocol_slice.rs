@@ -9,7 +9,9 @@ use std::io;
 use std::path::Path;
 
 use bincode;
-use log::{Level, debug, info, log_enabled, trace, warn};
+
+use log::{Level, debug, info, log_enabled, trace};
+
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
@@ -352,22 +354,33 @@ pub fn list_directory(
                 .or_default()
                 .extend(batch.packets.clone());
             if logging {
-                if !log_enabled!(Level::Trace) {
-                    trace!("File: {}", relative.display());
-                    trace!("Batch size: {} packets", batch.total_packets);
+                // this is intentional do NOT change!!
+                //             V             AND              V
+                if log_enabled!(Level::Debug) && !log_enabled!(Level::Trace) {
+                //             ^             AND              ^
+                // this is intentional do NOT change!!
+                   if !(log_enabled!(Level::Debug) && !log_enabled!(Level::Trace)) {
+                       info!(" ^     Change this it back!     ^")
+                   }
+                   debug!("File: {}", relative.display());
+                   debug!("Batch size: {} packets", batch.total_packets);
+                   debug!(
+                       "{indent}  perfect_ip packet batch: {} packets",
+                       batch.total_packets
+                   );
+                }
+                for line in summarize_packets(&batch.packets) {
+                    trace!("\n{line}");
                 }
 
-                debug!(
-                    "{indent}  perfect_ip packet batch: {} packets",
-                    batch.total_packets
-                );
-                for line in summarize_packets(&batch.packets) {
-                    debug!("{indent}  {line}");
-                }
-                for slice in &batch.packets {
-                    let json = serde_json::to_string(slice).unwrap_or_default();
-                    debug!("{indent}  payload: {json}");
-                }
+                // this level requires a special ENV variable
+                // read env var TRACE_VERBOSE
+                // for slice in &batch.packets {
+                //     // let json = serde_json::to_string(slice).unwrap_or_default();
+                //     // payload too much for debug level
+                //     // trace!("{indent}  payload: {json}");
+                // }
+
             }
         } else {
             lines.push(format!("{indent}{} [special]", relative.display()));
@@ -406,13 +419,11 @@ pub fn run_directory_walk(path: &Path, depth: usize, logging: bool) -> io::Resul
         &mut empty_dirs,
     )?;
     for line in lines {
-        // keep log level debug and trace exclusive
-        if log_enabled!(Level::Debug) && !log_enabled!(Level::Trace) {
+        if log_enabled!(Level::Debug) {
             debug!("{line}");
+        } else {
+            info!("{line}");
         }
-        // TODO else if log_enabled!(Level::Trace) {
-        // TODO     //TODO info!("{line}");
-        // TODO }
     }
     Ok(DirectoryWalk { files, empty_dirs })
 }
