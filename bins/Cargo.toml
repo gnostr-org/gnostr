@@ -39,6 +39,11 @@ path = "src/bin/gnostr-chat.rs"
 required-features = ["chat"]
 
 [[bin]]
+name = "gnostr-dashboard"
+path = "src/bin/gnostr-dashboard.rs"
+required-features = ["git"]
+
+[[bin]]
 name = "websockets_chat"
 path = "src/bin/websockets_chat.rs"
 required-features = ["web"]
@@ -333,7 +338,7 @@ default = ["blossom"]
 blossom = []
 web = ["dep:gnostr-web", "dep:gnostr-js"]
 relay = ["dep:gnostr-relay"]
-git = ["dep:gnostr_ngit", "dep:git-version"]
+git = ["dep:gnostr_ngit", "dep:gnostr-tui", "dep:git-version"]
 legit = ["dep:gnostr-legit"]
 chat = ["dep:gnostr-chat"]
 p2p = ["dep:gnostr-p2p", "vendored-openssl"]
@@ -372,6 +377,7 @@ gnostr-asyncgit = { package = "gnostr-asyncgit", path = "../asyncgit", features 
     "tui",
     "vendor-openssl",
 ], version = ">=972835.1842.830997" }
+gnostr-tui = { package = "gnostr-tui", path = "../tui", version = ">=972835.1842.830997", optional = true }
 gnostr-chat = { package = "gnostr-chat", path = "../chat", version = ">=972835.1842.830997", optional = true }
 gnostr-crawler = { package = "gnostr-crawler", path = "../crawler", version = ">=972835.1842.830997", optional = true }
 gnostr-extensions = { package = "gnostr-extensions", path = "../relay/extensions", version = ">=972835.1842.830997" }

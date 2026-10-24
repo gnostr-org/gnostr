@@ -7317,6 +7317,7 @@ dependencies = [
  "gnostr-ngit",
  "gnostr-p2p",
  "gnostr-relay",
+ "gnostr-tui",
  "gnostr-web",
  "gnostr_qr",
  "hex",
