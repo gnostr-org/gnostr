@@ -235,7 +235,16 @@ impl Gitminer {
     }
 
     fn commit_profile_metadata(&self) -> Option<Metadata> {
-        self.signing_keys.is_none().then(Metadata::default)
+        self.signing_keys.is_none().then(|| {
+            let mut metadata = Metadata {
+                name: Some("Gnostr profile".to_string()),
+                ..Metadata::default()
+            };
+            let _ = metadata
+                .other
+                .insert("display_name".to_string(), "Gnostr profile".into());
+            metadata
+        })
     }
 
     fn mined_commit_nonce(blob: &str) -> Result<&str, &'static str> {
@@ -703,17 +712,19 @@ mod tests {
     }
 
     #[test]
-    fn commit_derived_identity_gets_profile_images() {
+    fn commit_derived_identity_publishes_gnostr_profile_name_and_images() {
         let (_directory, miner) = miner();
         let metadata = miner.commit_profile_metadata().unwrap();
-        assert_eq!(metadata.picture.as_deref(), Some(DEFAULT_AVATAR));
-        assert_eq!(
-            metadata
-                .other
-                .get("banner")
-                .and_then(|value| value.as_str()),
-            Some(DEFAULT_BANNER)
-        );
+        let client = Client::new(&Keys::generate(), ClientOptions::new());
+        let event = client
+            .build_metadata_event(&metadata, vec![Tag::new_tag("t", "gnostr")])
+            .unwrap();
+        event.verify(None).unwrap();
+        let content: serde_json::Value = serde_json::from_str(&event.content).unwrap();
+        assert_eq!(content["name"], "Gnostr profile");
+        assert_eq!(content["display_name"], "Gnostr profile");
+        assert_eq!(content["picture"], DEFAULT_AVATAR);
+        assert_eq!(content["banner"], DEFAULT_BANNER);
     }
 
     #[test]

@@ -391,6 +391,7 @@ is derived from the public commit hash and is not a secure identity. Never put
 literal private keys in documentation, logs, or shell history.
 Without `--nsec`, a kind-0 profile event with the gnostr avatar/banner is sent
 before the NIP-34 patch, using the same commit-derived key and selected relays.
+Its `name` and `display_name` are both `Gnostr profile`.
 An explicit `--nsec` never triggers automatic profile metadata publication.
 `gnostr_types::nostr::Metadata::default()` and `Metadata::new()` include the
 default avatar and banner URLs; deserialization does not inject these defaults.

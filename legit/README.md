@@ -48,7 +48,8 @@ explicit private key for authenticated publishing. CLI arguments may be visible
 to other local processes; avoid literal private keys in shell history.
 
 When `--nsec` is omitted, the miner first publishes a kind-0 profile metadata
-event signed by the key derived from the zero-padded commit hash. The profile
+event signed by the key derived from the zero-padded commit hash. Its `name`
+and `display_name` are both `Gnostr profile`. The profile
 uses the gnostr avatar and banner from `gnostr-types`, then publishes the NIP-34
 patch with the same key to the same relays. Both event IDs are logged.
 Metadata publication errors are reported and stop publication of the patch.
