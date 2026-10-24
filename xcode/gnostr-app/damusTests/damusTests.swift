@@ -6,6 +6,7 @@
 //
 
 import XCTest
+import SwiftUI
 @testable import gnostr
 
 class damusTests: XCTestCase {
@@ -507,6 +508,37 @@ class damusTests: XCTestCase {
         XCTAssertTrue(narrow.is_foldable)
         XCTAssertEqual(narrow.visible_indices, [0, 1])
         XCTAssertEqual(narrow.height, 68)
+    }
+
+    @MainActor
+    func testTagRowsMeasureActualWrappedChipsBeforeFolding() async {
+        let tags = (0..<8).map { ["r", String(repeating: "a", count: 80) + String($0)] }
+        let measured = expectation(description: "Wrapped tag chip frames measured")
+        var frames: [Int: CGRect] = [:]
+        var fulfilled = false
+        let content = TagsView(tags: tags)
+            .onPreferenceChange(TagFramesPreferenceKey.self) { value in
+                frames = value
+                if value.count == tags.count && !fulfilled {
+                    fulfilled = true
+                    measured.fulfill()
+                }
+            }
+        let controller = UIHostingController(rootView: content)
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 900))
+        window.rootViewController = controller
+        window.isHidden = false
+        defer {
+            window.isHidden = true
+            window.rootViewController = nil
+        }
+        controller.view.layoutIfNeeded()
+        await fulfillment(of: [measured], timeout: 5)
+        let preview = TagRowPreview(frames: frames)
+        XCTAssertTrue(preview.is_foldable)
+        XCTAssertEqual(preview.visible_indices, [0, 1])
+        XCTAssertEqual(preview.height, frames[1]?.maxY)
+        XCTAssertLessThan(preview.height, frames[2]?.maxY ?? 0)
     }
 
     override func setUpWithError() throws {

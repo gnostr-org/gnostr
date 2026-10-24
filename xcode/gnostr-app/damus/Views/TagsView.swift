@@ -25,7 +25,7 @@ struct TagRowPreview {
     }
 }
 
-private struct TagFramesPreferenceKey: PreferenceKey {
+struct TagFramesPreferenceKey: PreferenceKey {
     static var defaultValue: [Int: CGRect] = [:]
 
     static func reduce(value: inout [Int: CGRect], nextValue: () -> [Int: CGRect]) {
