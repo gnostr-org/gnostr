@@ -88,7 +88,6 @@ fn main() -> io::Result<()> {
     let mut miner = match Gitminer::new(opts) {
         Ok(m) => m,
         Err(e) => {
-            error!("Failed to start git miner: {}", e);
             eprintln!("Failed to start git miner: {}", e);
             std::process::exit(1);
         }
@@ -97,7 +96,6 @@ fn main() -> io::Result<()> {
     let hash = match miner.mine() {
         Ok(s) => s,
         Err(e) => {
-            error!("Failed to generate commit: {}", e);
             eprintln!("Failed to generate commit: {}", e);
             std::process::exit(1);
         }
