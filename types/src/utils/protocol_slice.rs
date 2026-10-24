@@ -9,7 +9,7 @@ use std::io;
 use std::path::Path;
 
 use bincode;
-use log::{Level, debug, info, log_enabled};
+use log::{Level, debug, info, log_enabled, trace, warn};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
@@ -352,21 +352,21 @@ pub fn list_directory(
                 .or_default()
                 .extend(batch.packets.clone());
             if logging {
-                if !log_enabled!(Level::Debug) {
-                    info!("File: {}", relative.display());
-                    info!("Batch size: {} packets", batch.total_packets);
+                if !log_enabled!(Level::Trace) {
+                    trace!("File: {}", relative.display());
+                    trace!("Batch size: {} packets", batch.total_packets);
                 }
 
-                debug!(
+                trace!(
                     "{indent}  perfect_ip packet batch: {} packets",
                     batch.total_packets
                 );
                 for line in summarize_packets(&batch.packets) {
-                    debug!("{indent}  {line}");
+                    trace!("{indent}  {line}");
                 }
                 for slice in &batch.packets {
                     let json = serde_json::to_string(slice).unwrap_or_default();
-                    debug!("{indent}  payload: {json}");
+                    trace!("{indent}  payload: {json}");
                 }
             }
         } else {
@@ -406,10 +406,10 @@ pub fn run_directory_walk(path: &Path, depth: usize, logging: bool) -> io::Resul
         &mut empty_dirs,
     )?;
     for line in lines {
-        if log_enabled!(Level::Debug) {
-            debug!("{line}");
-        } else {
-            info!("{line}");
+        if log_enabled!(Level::Debug) && !log_enabled!(Level::Trace) {
+            debug!("debug:\n{line}");
+        } else if log_enabled!(Level::Trace) {
+            //info!("{line}");
         }
     }
     Ok(DirectoryWalk { files, empty_dirs })
