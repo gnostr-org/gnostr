@@ -3,6 +3,7 @@ use std::path::Path;
 use std::time::Duration;
 
 use anyhow::{Context, Result};
+use gnostr_p2p::time::{run_time_sync_daemon_with_state, P2PClock};
 use libp2p::gossipsub;
 use tokio::sync::{broadcast, mpsc, watch};
 
@@ -43,6 +44,8 @@ pub struct ChatSession {
     updates: broadcast::Sender<ChatNotification>,
     ready_rx: watch::Receiver<bool>,
     _relay_service: LocalP2pRelayService,
+    p2p_clock: P2PClock,
+    time_sync_daemon: tokio::task::JoinHandle<()>,
     #[cfg(feature = "fractal")]
     fractal_service: LocalFractalRepairService,
     event_loop: tokio::task::JoinHandle<()>,
@@ -54,6 +57,13 @@ impl ChatSession {
         let topic = topic.into();
         let relay_for_loop = relay.clone();
         let relay_service = spawn_local_p2p_relay_service_async().await?;
+        let p2p_clock = P2PClock::new(1, &session_clock_path(&topic));
+        let time_sync_daemon = {
+            let state = p2p_clock.inner.clone();
+            tokio::spawn(async move {
+                let _ = run_time_sync_daemon_with_state(state).await;
+            })
+        };
         #[cfg(feature = "fractal")]
         let fractal_service = LocalFractalRepairService::new(&topic).await?;
         let (command_tx, command_rx) = mpsc::channel::<ChatEvent>(100);
@@ -77,6 +87,8 @@ impl ChatSession {
             updates,
             ready_rx,
             _relay_service: relay_service,
+            p2p_clock,
+            time_sync_daemon,
             #[cfg(feature = "fractal")]
             fractal_service,
             event_loop,
@@ -94,6 +106,10 @@ impl ChatSession {
 
     pub fn subscribe(&self) -> broadcast::Receiver<ChatNotification> {
         self.updates.subscribe()
+    }
+
+    pub fn p2p_clock(&self) -> P2PClock {
+        self.p2p_clock.clone()
     }
 
     pub async fn wait_for_connected(&mut self, timeout: Duration) -> Result<()> {
@@ -189,6 +205,7 @@ impl Drop for ChatSession {
     fn drop(&mut self) {
         self.event_loop.abort();
         self.bridge.abort();
+        self.time_sync_daemon.abort();
     }
 }
 
@@ -198,6 +215,24 @@ fn infer_message_kind(text: &str) -> MsgKind {
     } else {
         MsgKind::Chat
     }
+}
+
+fn session_clock_path(topic: &str) -> String {
+    let mut path = std::env::temp_dir();
+    path.push(format!(
+        "gnostr-chat-clock-{}.json",
+        topic
+            .chars()
+            .map(|c| {
+                if c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '_') {
+                    c
+                } else {
+                    '_'
+                }
+            })
+            .collect::<String>()
+    ));
+    path.to_string_lossy().into_owned()
 }
 
 async fn forward_updates(

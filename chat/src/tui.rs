@@ -47,7 +47,7 @@ pub fn run_chat_tui(topic: String, username: String, session: &ChatSession) -> R
     let input_tx = session.command_sender();
     let mut output_rx = session.subscribe();
     let mut terminal = TerminalGuard::enter()?;
-    let mut app = ChatApp::new(topic, username);
+    let mut app = ChatApp::new(topic, username, session.p2p_clock());
 
     let mut last_tick = Instant::now();
     loop {
@@ -131,8 +131,7 @@ struct ChatApp {
 }
 
 impl ChatApp {
-    fn new(topic: String, username: String) -> Self {
-        let p2p_clock = P2PClock::new(1, &clock_checkpoint_path(&topic, &username));
+    fn new(topic: String, username: String, p2p_clock: P2PClock) -> Self {
         Self {
             topic,
             username,
@@ -667,46 +666,4 @@ fn centered_rect(percent_x: u16, percent_y: u16, area: Rect) -> Rect {
             Constraint::Percentage((100 - percent_x) / 2),
         ])
         .split(popup_layout[1])[1]
-}
-
-fn clock_checkpoint_path(topic: &str, username: &str) -> String {
-    let mut path = std::env::temp_dir();
-    path.push(format!(
-        "gnostr-chat-p2p-{}-{}.json",
-        sanitize_for_filename(topic),
-        sanitize_for_filename(username)
-    ));
-    path.to_string_lossy().into_owned()
-}
-
-fn sanitize_for_filename(value: &str) -> String {
-    value
-        .chars()
-        .map(|c| {
-            if c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '_') {
-                c
-            } else {
-                '_'
-            }
-        })
-        .collect()
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn sanitize_for_filename_replaces_path_separators() {
-        assert_eq!(
-            sanitize_for_filename("topic/name with spaces"),
-            "topic_name_with_spaces"
-        );
-    }
-
-    #[test]
-    fn clock_checkpoint_path_uses_temp_dir() {
-        let path = clock_checkpoint_path("topic/name", "user name");
-        assert!(path.contains("gnostr-chat-p2p-topic_name-user_name.json"));
-    }
 }
