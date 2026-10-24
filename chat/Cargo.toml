@@ -37,6 +37,7 @@ gnostr-p2p = { path = "../p2p", package = "gnostr-p2p", version = ">=972835.1842
     "tor",
 ] }
 gnostr-types = { path = "../types", package = "gnostr-types", version = ">=972835.1842.830997" }
+gnostr-tui = { path = "../tui", package = "gnostr-tui", version = ">=972835.1842.830997" }
 hostname = "0.3.1"
 libp2p = { version = "0.54.1", features = [
     "full",
