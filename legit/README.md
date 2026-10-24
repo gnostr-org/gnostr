@@ -54,10 +54,12 @@ To include signed NIP-34 event JSON (full event ID, public key, tags, content,
 timestamp, and signature) before relay connections, enable the publishing helper:
 
 ```bash
-RUST_LOG=gnostr_legit=debug,gnostr_types::nostr::patch=debug gnostr-legit --repo . -m "subject"
+RUST_LOG=gnostr_legit=debug,gnostr_types::nostr::patch=debug,gnostr_types::nostr::client=info gnostr-legit --repo . -m "subject"
 ```
 
 Successful publication logs the full event ID alongside the commit hash.
+Client info logs list each successful relay URL and event ID, followed by a
+sent/total summary. These confirm WebSocket writes, not relay `OK` acceptance.
 Publication errors propagate instead of reporting success. Event JSON contains
 the patch content, but never the signing private key.
 
