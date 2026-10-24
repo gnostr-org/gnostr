@@ -102,6 +102,16 @@ fn git_output(repo: &Path, args: &[&str]) -> String {
     String::from_utf8_lossy(&output.stdout).trim().to_string()
 }
 
+fn is_git_repo(path: &Path) -> bool {
+    Command::new("git")
+        .arg("-C")
+        .arg(path)
+        .args(["rev-parse", "--git-dir"])
+        .output()
+        .map(|output| output.status.success())
+        .unwrap_or(false)
+}
+
 pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let cli = Cli::parse();
 
@@ -131,6 +141,11 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     }
 
     if let Some(ref root) = recursive {
+        if cli.clone.is_some() && !is_git_repo(root) {
+            return Err(
+                format!("--clone input is not a git repository: {}", root.display()).into(),
+            );
+        }
         if !root.is_dir() {
             return Err(format!("--recursive path is not a directory: {}", root.display()).into());
         }
