@@ -5,8 +5,8 @@ use std::time::Duration;
 use url::Url;
 
 use crate::nostr::{
+    client::{local_relay_urls, Options},
     Client, Error, EventBuilder, EventKind, Id, Keys, Tag,
-    client::{Options, local_relay_urls},
 };
 
 const ONLINE_RELAYS_GPS_CSV: &[u8] = include_bytes!("online_relays_gps.csv");
