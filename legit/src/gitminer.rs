@@ -216,6 +216,15 @@ impl Gitminer {
             relay_urls.len(),
             head
         );
+        for (index, relay_url) in relay_urls.iter().enumerate() {
+            debug!(
+                "Selected NIP-34 relay {}/{} for commit {}: {}",
+                index + 1,
+                relay_urls.len(),
+                head,
+                relay_url
+            );
+        }
         let patch_content = self.patch_content_for_commit(head)?;
         info!(
             "Fetched patch content for {} ({} bytes)",
