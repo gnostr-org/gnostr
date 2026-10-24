@@ -45,6 +45,7 @@ RUST_LOG=gnostr_legit=debug gnostr-legit --repo . --prefix 000 -m "subject"
 ```
 
 Debug output goes to stderr; the successful commit summary stays on stdout.
+Each selected NIP-34 relay is logged with its full URL, position, and commit hash.
 Use `RUST_LOG=gnostr_legit=trace` for per-candidate sizes and full hashes; trace
 logging is extremely verbose and slows mining. Library callers configure their
 own logger.
