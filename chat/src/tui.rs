@@ -395,6 +395,7 @@ impl ChatApp {
         let peers = self.connected_peers.clone();
         let header_clock_status = clock_status.clone();
         let header_clock_offset = clock_offset.clone();
+        let header_clock_slew = clock_slew.clone();
         let selected_msg = self.selected_message().cloned();
 
         #[cfg(feature = "fractal")]
@@ -404,7 +405,7 @@ impl ChatApp {
 
         MultiPanel::new()
             .header_title("gnostr-chat")
-            .header_height(4)
+            .header_height(5)
             .header_content(move |_state, area, buf| {
                 let clock_width = 32.min(area.width);
                 let chunks = Layout::default()
@@ -436,15 +437,22 @@ impl ChatApp {
                         Span::raw(&clock_now),
                     ]),
                     Line::from(vec![
-                        Span::styled("p2p: ", Style::default().fg(Color::Magenta)),
-                        Span::styled(&header_clock_status, clock_status_style),
-                        Span::raw(" "),
+                        Span::styled("offset: ", Style::default().fg(Color::Magenta)),
                         Span::raw(&header_clock_offset),
+                    ]),
+                    Line::from(vec![
+                        Span::styled("slew: ", Style::default().fg(Color::Magenta)),
+                        Span::raw(&header_clock_slew),
                     ]),
                 ];
                 Paragraph::new(right_lines)
                     .wrap(Wrap { trim: true })
-                    .block(Block::default().title("p2p time").borders(Borders::ALL))
+                    .block(
+                        Block::default()
+                            .title(header_clock_status.clone())
+                            .borders(Borders::ALL)
+                            .border_style(clock_status_style),
+                    )
                     .render(chunks[1], buf);
             })
             .left_title("status")
