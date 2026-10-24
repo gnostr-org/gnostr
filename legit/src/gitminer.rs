@@ -291,15 +291,16 @@ impl Gitminer {
         Ok(())
     }
 
-    fn commit_profile_metadata(&self) -> Option<Metadata> {
+    fn commit_profile_metadata(&self, commit: &str) -> Option<Metadata> {
         self.signing_keys.is_none().then(|| {
+            let name = format!("gnostr@{commit:.7}");
             let mut metadata = Metadata {
-                name: Some("Gnostr profile".to_string()),
+                name: Some(name.clone()),
                 ..Metadata::default()
             };
             let _ = metadata
                 .other
-                .insert("display_name".to_string(), "Gnostr profile".into());
+                .insert("display_name".to_string(), name.into());
             metadata
         })
     }
@@ -477,7 +478,7 @@ impl Gitminer {
             .to_string();
         let head_hash = head.to_string();
         let repo_path = self.opts.repo.clone();
-        let metadata = self.commit_profile_metadata();
+        let metadata = self.commit_profile_metadata(head);
         let parent_hash = parent.to_string();
         let cache_dir = self.repo.path().join("gnostr/patch-events");
         let nonce_tag = commit_nonce_tag(nonce).map_err(|err| {
@@ -771,25 +772,31 @@ mod tests {
     #[test]
     fn commit_derived_identity_publishes_gnostr_profile_name_and_images() {
         let (_directory, miner) = miner();
-        let metadata = miner.commit_profile_metadata().unwrap();
         let client = Client::new(&Keys::generate(), ClientOptions::new());
-        let event = client
-            .build_metadata_event(&metadata, vec![Tag::new_tag("t", "gnostr")])
-            .unwrap();
-        event.verify(None).unwrap();
-        let content: serde_json::Value = serde_json::from_str(&event.content).unwrap();
-        assert_eq!(content["name"], "Gnostr profile");
-        assert_eq!(content["display_name"], "Gnostr profile");
-        assert_eq!(content["picture"], DEFAULT_AVATAR);
-        assert_eq!(content["banner"], DEFAULT_BANNER);
+        for (commit, name) in [
+            ("0000ed4f76930afd9e13bb471a7734d29ece6e4c", "gnostr@0000ed4"),
+            ("000dba5dac8fb736d0a7e811b289cca088064ea4", "gnostr@000dba5"),
+        ] {
+            let metadata = miner.commit_profile_metadata(commit).unwrap();
+            let event = client
+                .build_metadata_event(&metadata, vec![Tag::new_tag("t", "gnostr")])
+                .unwrap();
+            event.verify(None).unwrap();
+            let content: serde_json::Value = serde_json::from_str(&event.content).unwrap();
+            assert_eq!(content["name"], name);
+            assert_eq!(content["display_name"], name);
+            assert_eq!(content["picture"], DEFAULT_AVATAR);
+            assert_eq!(content["banner"], DEFAULT_BANNER);
+        }
     }
 
     #[test]
     fn explicit_signer_and_its_clone_do_not_get_profile_metadata() {
         let (_directory, miner) = miner();
         let miner = miner.with_signing_keys(Keys::generate());
-        assert!(miner.commit_profile_metadata().is_none());
-        assert!(miner.clone().commit_profile_metadata().is_none());
+        let commit = "000dba5dac8fb736d0a7e811b289cca088064ea4";
+        assert!(miner.commit_profile_metadata(commit).is_none());
+        assert!(miner.clone().commit_profile_metadata(commit).is_none());
     }
 
     #[test]
