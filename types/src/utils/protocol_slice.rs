@@ -406,7 +406,11 @@ pub fn run_directory_walk(path: &Path, depth: usize, logging: bool) -> io::Resul
         &mut empty_dirs,
     )?;
     for line in lines {
-        info!("{line}");
+        if log_enabled!(Level::Debug) {
+            debug!("{line}");
+        } else {
+            info!("{line}");
+        }
     }
     Ok(DirectoryWalk { files, empty_dirs })
 }
