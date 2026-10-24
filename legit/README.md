@@ -49,6 +49,17 @@ Use `RUST_LOG=gnostr_legit=trace` for per-candidate sizes and full hashes; trace
 logging is extremely verbose and slows mining. Library callers configure their
 own logger.
 
+To include signed NIP-34 event JSON (full event ID, public key, tags, content,
+timestamp, and signature) before relay connections, enable the publishing helper:
+
+```bash
+RUST_LOG=gnostr_legit=debug,gnostr_types::nostr::patch=debug gnostr-legit --repo . -m "subject"
+```
+
+Successful publication logs the full event ID alongside the commit hash.
+Publication errors propagate instead of reporting success. Event JSON contains
+the patch content, but never the signing private key.
+
 To create a commit with a subject and a multi-line body, use the `-m` flag multiple times. The first instance of `-m` will be the commit subject, and each subsequent instance will be a new line in the commit body.
 
 ### Command Syntax

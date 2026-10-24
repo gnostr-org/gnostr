@@ -233,7 +233,7 @@ impl Gitminer {
         // Spawn a dedicated OS thread with its own Tokio runtime so that
         // this blocking call is safe whether or not the caller already runs
         // inside a Tokio runtime (e.g. during #[tokio::test]).
-        std::thread::spawn(move || {
+        let event_id = std::thread::spawn(move || {
             debug!(
                 "Creating dedicated NIP-34 publishing runtime for {}",
                 head_hash
@@ -245,7 +245,7 @@ impl Gitminer {
                     repo_name,
                     relay_urls.len()
                 );
-                publish_patch_event(
+                let event_id = publish_patch_event(
                     &keys,
                     &relay_urls,
                     &repo_name,
@@ -254,16 +254,28 @@ impl Gitminer {
                     None,
                 )
                 .await
-                .map_err(|err| error!("Failed to publish NIP-34 patch event: {}", err))
-                .ok();
-                info!("Finished publishing NIP-34 patch event for {}", head_hash);
+                .map_err(|err| {
+                    error!(
+                        "Failed to publish NIP-34 patch event for commit {}: {}",
+                        head_hash, err
+                    );
+                    "Failed to publish NIP-34 patch event"
+                })?;
+                info!(
+                    "Published NIP-34 patch event: id={}, commit={}, repository={}",
+                    event_id, head_hash, repo_name
+                );
+                Ok::<_, &'static str>(event_id)
             });
         })
         .join()
         .map_err(|_| "NIP-34 patch event thread panicked")?;
 
         debug!("NIP-34 publishing thread joined for {}", head);
-        info!("Submitted NIP-34 patch event for {}", repo_path);
+        info!(
+            "Submitted NIP-34 patch event {:?} for {} (commit {})",
+            event_id, repo_path, head
+        );
         Ok(())
     }
 
