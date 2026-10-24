@@ -16,11 +16,8 @@ use libp2p::{request_response, swarm::SwarmEvent};
 #[derive(Debug, Parser)]
 #[command(name = "fractal_swarm_perfect_ip", arg_required_else_help = true)]
 struct Cli {
-    /// Write reconstructed bytes to PATH.
-    #[arg(long)]
-    out: Option<PathBuf>,
-
     /// Walk PATH as a directory tree and preserve relative paths.
+    /// Output is written to PATH.reconstructed.dir.
     #[arg(long)]
     recursive: Option<PathBuf>,
 
@@ -30,7 +27,7 @@ struct Cli {
     /// Requires exactly two paths: <INPUT> <OUTPUT>. If INPUT is a git
     /// repository, the recursive directory algorithm is used. Otherwise the
     /// single-file algorithm is used automatically.
-    /// If --recursive/--out are also given, they override these values.
+    /// If --recursive is also given, it overrides the INPUT path.
     #[arg(long, num_args = 2, value_name = "PATH")]
     clone: Option<Vec<PathBuf>>,
 
@@ -110,6 +107,12 @@ fn is_git_repo(path: &Path) -> bool {
         .unwrap_or(false)
 }
 
+fn reconstructed_output_path(input: &Path) -> PathBuf {
+    let mut s = input.as_os_str().to_os_string();
+    s.push(".reconstructed.dir");
+    PathBuf::from(s)
+}
+
 pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let cli = Cli::parse();
 
@@ -121,7 +124,7 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let depth_set = cli.depth.is_some();
 
     let mut recursive = cli.recursive;
-    let mut out = cli.out;
+    let mut out: Option<PathBuf> = None;
     let mut file: Option<PathBuf> = None;
     let mut clone_dest: Option<PathBuf> = None;
     let mut clone_file_fallback = false;
@@ -135,9 +138,7 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             if recursive.is_none() {
                 recursive = Some(input.clone());
             }
-            if out.is_none() {
-                out = Some(clone[1].clone());
-            }
+            out = Some(clone[1].clone());
             clone_dest = out.as_ref().map(|out_path| {
                 out_path.with_file_name(format!(
                     "{}_repo",
@@ -147,9 +148,7 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         } else {
             // Not a git repository: automatically switch to the file algorithm.
             file = Some(input.clone());
-            if out.is_none() {
-                out = Some(clone[1].clone());
-            }
+            out = Some(clone[1].clone());
             clone_file_fallback = true;
         }
     }
@@ -159,24 +158,25 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     }
 
     if let Some(ref root) = recursive {
+        if out.is_none() {
+            out = Some(reconstructed_output_path(root));
+        }
         if !root.is_dir() {
             return Err(format!("--recursive path is not a directory: {}", root.display()).into());
         }
 
+        let out_path = out.expect("recursive output path was set");
         info!("recursive walk root: {}", root.display());
         info!("recursive depth: {}", depth);
         info!("logging flag is: {:?}", cli.logging);
         let walk = run_directory_walk(root, depth, cli.logging.is_some())?;
-        if let Some(ref out_path) = out {
-            reconstruct_directory(walk, out_path)?;
-            println!(
-                "recursively reconstructed directory to {}",
-                out_path.display()
-            );
-            if let Some(ref clone_dest) = clone_dest {
-                clone_and_verify_reconstructed_repo(out_path, clone_dest)?;
-            }
-            return Ok(());
+        reconstruct_directory(walk, &out_path)?;
+        println!(
+            "recursively reconstructed directory to {}",
+            out_path.display()
+        );
+        if let Some(ref clone_dest) = clone_dest {
+            clone_and_verify_reconstructed_repo(&out_path, clone_dest)?;
         }
         return Ok(());
     }
@@ -217,7 +217,7 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     let reconstructed = reconstruct_payload(&batch.packets);
     let reconstructed_sha256 = sha256_hex(&reconstructed);
-    let output_path = out.unwrap_or_else(|| PathBuf::from("example.reconstructed.bin"));
+    let output_path = out.unwrap_or_else(|| reconstructed_output_path(&example_path));
     fs::write(&output_path, &reconstructed)?;
 
     println!("peer reconstructed {}", output_path.display());
