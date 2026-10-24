@@ -1,4 +1,4 @@
-use std::{fs, path::PathBuf};
+use std::{fs, path::Path, path::PathBuf, process::Command};
 
 use crate::keypair_from_seed;
 use futures::StreamExt;
@@ -17,6 +17,7 @@ struct DemoArgs {
     file: Option<PathBuf>,
     out: Option<PathBuf>,
     recursive: Option<PathBuf>,
+    clone: Option<PathBuf>,
     depth: usize,
     depth_set: bool,
     logging: Option<String>,
@@ -25,12 +26,13 @@ struct DemoArgs {
 
 fn usage() {
     println!(
-        "Usage: fractal_swarm_perfect_ip [--file PATH] [--out PATH] [--recursive PATH] [--depth N] [--logging] [--help]\n\
+        "Usage: fractal_swarm_perfect_ip [--file PATH] [--out PATH] [--recursive PATH] [--clone PATH] [--depth N] [--logging] [--help]\n\
          \n\
          Options:\n\
            --file PATH       Read a single file from PATH\n\
           --out PATH        Write reconstructed bytes to PATH [default: example.reconstructed.bin]\n\
           --recursive PATH   Walk PATH as a directory tree and preserve relative paths\n\
+          --clone PATH      After recursive reconstruction, git clone the reconstructed directory to PATH\n\
           --depth N         Limit recursive directory walking to N levels [default: 3]\n\
           --logging         Enable verbose logging\n\
            --help            Show this help message\n"
@@ -42,6 +44,7 @@ fn parse_args() -> DemoArgs {
     let mut file = None;
     let mut out = None;
     let mut recursive = None;
+    let mut clone = None;
     let mut depth = 3usize;
     let mut depth_set = false;
     let mut logging: Option<String> = None;
@@ -71,6 +74,16 @@ fn parse_args() -> DemoArgs {
             out = Some(PathBuf::from(path));
         } else if arg == "--out" {
             out = match args.peek() {
+                Some(next) if !next.starts_with('-') => args.next().map(PathBuf::from),
+                _ => {
+                    help = true;
+                    None
+                }
+            };
+        } else if let Some(path) = arg.strip_prefix("--clone=") {
+            clone = Some(PathBuf::from(path));
+        } else if arg == "--clone" {
+            clone = match args.peek() {
                 Some(next) if !next.starts_with('-') => args.next().map(PathBuf::from),
                 _ => {
                     help = true;
@@ -112,11 +125,15 @@ fn parse_args() -> DemoArgs {
     if recursive.is_some() && file.is_some() {
         help = true;
     }
+    if clone.is_some() && recursive.is_none() {
+        help = true;
+    }
 
     DemoArgs {
         file,
         out,
         recursive,
+        clone,
         depth,
         depth_set,
         logging,
@@ -124,11 +141,69 @@ fn parse_args() -> DemoArgs {
     }
 }
 
+fn clone_and_verify_reconstructed_repo(
+    reconstructed: &Path,
+    clone_path: &Path,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let status = Command::new("git")
+        .arg("clone")
+        .arg(reconstructed)
+        .arg(clone_path)
+        .status()?;
+    if !status.success() {
+        return Err(format!(
+            "git clone from {} to {} failed",
+            reconstructed.display(),
+            clone_path.display()
+        )
+        .into());
+    }
+
+    let reconstructed_head = git_output(reconstructed, &["rev-parse", "HEAD"]);
+    let clone_head = git_output(clone_path, &["rev-parse", "HEAD"]);
+    if reconstructed_head != clone_head {
+        return Err(format!(
+            "clone HEAD mismatch: reconstructed={reconstructed_head}, clone={clone_head}"
+        )
+        .into());
+    }
+
+    let status_output = git_output(clone_path, &["status", "--porcelain"]);
+    if !status_output.is_empty() {
+        return Err(format!("cloned working tree is not clean:\n{status_output}").into());
+    }
+
+    println!(
+        "verified git clone: {} -> {} (HEAD {})",
+        reconstructed.display(),
+        clone_path.display(),
+        clone_head
+    );
+    Ok(())
+}
+
+fn git_output(repo: &Path, args: &[&str]) -> String {
+    let output = Command::new("git")
+        .arg("-C")
+        .arg(repo)
+        .args(args)
+        .output()
+        .expect("spawn git");
+    assert!(
+        output.status.success(),
+        "git -C {} {} failed",
+        repo.display(),
+        args.join(" ")
+    );
+    String::from_utf8_lossy(&output.stdout).trim().to_string()
+}
+
 pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let DemoArgs {
         file,
         out,
         recursive,
+        clone,
         depth,
         depth_set,
         logging,
@@ -164,6 +239,9 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 "recursively reconstructed directory to {}",
                 out_path.display()
             );
+            if let Some(ref clone_path) = clone {
+                clone_and_verify_reconstructed_repo(out_path, clone_path)?;
+            }
             return Ok(());
         }
         return Ok(());
