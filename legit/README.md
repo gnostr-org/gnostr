@@ -47,6 +47,13 @@ That hash is public, so the derived key is **not a secure identity**; use an
 explicit private key for authenticated publishing. CLI arguments may be visible
 to other local processes; avoid literal private keys in shell history.
 
+When `--nsec` is omitted, the miner first publishes a kind-0 profile metadata
+event signed by the key derived from the zero-padded commit hash. The profile
+uses the gnostr avatar and banner from `gnostr-types`, then publishes the NIP-34
+patch with the same key to the same relays. Both event IDs are logged.
+Metadata publication errors are reported and stop publication of the patch.
+With an explicit `--nsec`, no profile metadata is published or overwritten.
+
 Enable debug diagnostics for repository discovery, CPU/thread selection, mining,
 storage, and NIP-34 publication with:
 

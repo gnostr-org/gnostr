@@ -8,6 +8,11 @@ use std::thread;
 use super::worker::Worker;
 use gnostr_asyncgit::types::Keys;
 use gnostr_types::nostr::patch::{get_relay_urls, publish_patch_event};
+use gnostr_types::nostr::{
+    client::Options as ClientOptions, patch::install_rustls_crypto_provider, Client, Metadata,
+    DEFAULT_AVATAR, DEFAULT_BANNER,
+};
+use std::time::Duration;
 use time_0_3::OffsetDateTime;
 //TODO use gnostr_asyncgit::types for event creation and injection during the mining loop
 #[derive(Clone, Debug)]
@@ -225,6 +230,20 @@ impl Gitminer {
         Ok(())
     }
 
+    fn commit_profile_metadata(&self) -> Option<Metadata> {
+        if self.signing_keys.is_some() {
+            return None;
+        }
+        let mut metadata = Metadata {
+            picture: Some(DEFAULT_AVATAR.to_string()),
+            ..Metadata::default()
+        };
+        let _ = metadata
+            .other
+            .insert("banner".to_string(), DEFAULT_BANNER.into());
+        Some(metadata)
+    }
+
     fn send_nip34_patch_event(&self, head: &str) -> Result<(), &'static str> {
         info!("Preparing NIP-34 patch event for mined commit {}", head);
         let keys = match &self.signing_keys {
@@ -269,6 +288,7 @@ impl Gitminer {
             .to_string();
         let head_hash = head.to_string();
         let repo_path = self.opts.repo.clone();
+        let metadata = self.commit_profile_metadata();
 
         // Spawn a dedicated OS thread with its own Tokio runtime so that
         // this blocking call is safe whether or not the caller already runs
@@ -280,6 +300,37 @@ impl Gitminer {
             );
             let runtime = tokio::runtime::Runtime::new().expect("Failed to create async runtime");
             runtime.block_on(async move {
+                if let Some(metadata) = metadata {
+                    install_rustls_crypto_provider();
+                    debug!("Commit profile metadata: {:?}", metadata);
+                    info!(
+                        "Publishing kind-0 metadata for commit {} with public key {}",
+                        head_hash,
+                        keys.public_key()
+                    );
+                    let mut client = Client::new(
+                        &keys,
+                        ClientOptions::new().send_timeout(Some(Duration::from_secs(1))),
+                    );
+                    client.add_relays(relay_urls.clone()).await.map_err(|err| {
+                        error!("Failed to configure commit metadata relays: {}", err);
+                        "Failed to configure commit metadata relays"
+                    })?;
+                    client.connect().await;
+                    let metadata_id = client.set_metadata(&metadata).await.map_err(|err| {
+                        error!(
+                            "Failed to publish metadata for commit {}: {}",
+                            head_hash, err
+                        );
+                        "Failed to publish commit profile metadata"
+                    })?;
+                    info!(
+                        "Published commit profile metadata: id={}, commit={}, pubkey={}",
+                        metadata_id,
+                        head_hash,
+                        keys.public_key()
+                    );
+                }
                 info!(
                     "Publishing NIP-34 patch event for {} to {} relay(s)",
                     repo_name,
@@ -459,5 +510,50 @@ impl Gitminer {
 
         debug!("No unstaged changes found.");
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn miner() -> (tempfile::TempDir, Gitminer) {
+        let directory = tempfile::tempdir().unwrap();
+        let repo = gnostr_asyncgit::git2::Repository::init(directory.path()).unwrap();
+        let mut config = repo.config().unwrap();
+        config.set_str("user.name", "Test").unwrap();
+        config.set_str("user.email", "test@example.com").unwrap();
+        let miner = Gitminer::new(Options {
+            threads: 1,
+            target: "000".to_string(),
+            message: vec!["test".to_string()],
+            repo: directory.path().to_str().unwrap().to_string(),
+            timestamp: OffsetDateTime::now_utc(),
+            kind: None,
+        })
+        .unwrap();
+        (directory, miner)
+    }
+
+    #[test]
+    fn commit_derived_identity_gets_profile_images() {
+        let (_directory, miner) = miner();
+        let metadata = miner.commit_profile_metadata().unwrap();
+        assert_eq!(metadata.picture.as_deref(), Some(DEFAULT_AVATAR));
+        assert_eq!(
+            metadata
+                .other
+                .get("banner")
+                .and_then(|value| value.as_str()),
+            Some(DEFAULT_BANNER)
+        );
+    }
+
+    #[test]
+    fn explicit_signer_and_its_clone_do_not_get_profile_metadata() {
+        let (_directory, miner) = miner();
+        let miner = miner.with_signing_keys(Keys::generate());
+        assert!(miner.commit_profile_metadata().is_none());
+        assert!(miner.clone().commit_profile_metadata().is_none());
     }
 }

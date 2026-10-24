@@ -38,3 +38,6 @@ tokio = { version = "1", features = ["rt-multi-thread"] }
 
 [build-dependencies]
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
+
+[dev-dependencies]
+tempfile = { workspace = true }

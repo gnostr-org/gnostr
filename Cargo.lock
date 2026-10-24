@@ -7576,6 +7576,7 @@ dependencies = [
  "gnostr-types",
  "log",
  "rust-crypto",
+ "tempfile",
  "time 0.3.55",
  "tokio",
 ]

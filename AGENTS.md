@@ -389,6 +389,9 @@ Add `--nsec "$NOSTR_PRIVATE_KEY"` after `--` to sign the event with a
 64-character hex/SHA-256 or `nsec1...` private key. Without it, the signing key
 is derived from the public commit hash and is not a secure identity. Never put
 literal private keys in documentation, logs, or shell history.
+Without `--nsec`, a kind-0 profile event with the gnostr avatar/banner is sent
+before the NIP-34 patch, using the same commit-derived key and selected relays.
+An explicit `--nsec` never triggers automatic profile metadata publication.
 
 ## Verification summary
 
