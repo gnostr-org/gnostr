@@ -14,18 +14,14 @@ use crate::message::{EventBuilder, EventKind, PrivateKey, Tag};
 use libp2p::{request_response, swarm::SwarmEvent};
 
 #[derive(Debug, Parser)]
-#[command(name = "fractal_swarm_perfect_ip")]
+#[command(name = "fractal_swarm_perfect_ip", arg_required_else_help = true)]
 struct Cli {
-    /// Read a single file from PATH.
-    #[arg(long)]
-    file: Option<PathBuf>,
-
     /// Write reconstructed bytes to PATH.
     #[arg(long)]
     out: Option<PathBuf>,
 
     /// Walk PATH as a directory tree and preserve relative paths.
-    #[arg(long, conflicts_with = "file")]
+    #[arg(long)]
     recursive: Option<PathBuf>,
 
     /// Walk INPUT recursively, reconstruct to OUTPUT, and git clone OUTPUT to
@@ -126,7 +122,7 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     let mut recursive = cli.recursive;
     let mut out = cli.out;
-    let mut file = cli.file;
+    let mut file: Option<PathBuf> = None;
     let mut clone_dest: Option<PathBuf> = None;
     let mut clone_file_fallback = false;
 
@@ -185,20 +181,18 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         return Ok(());
     }
 
-    let example_path = file.unwrap_or_else(|| PathBuf::from("example.bin"));
+    let Some(example_path) = file else {
+        return Err("nothing to do: provide --recursive or --clone".into());
+    };
 
-    let original_bytes = if example_path.exists() {
-        if example_path.is_dir() {
-            // If it's a directory, we need to decide how to packetize it.
-            // For now, treat it as empty or handle appropriately.
-            vec![]
-        } else {
-            fs::read(&example_path)?
-        }
+    let original_bytes = if example_path.exists() && !example_path.is_dir() {
+        fs::read(&example_path)?
     } else {
-        let bytes = b"perfect_ip demo payload\n".repeat(128);
-        fs::write(&example_path, &bytes)?;
-        bytes
+        return Err(format!(
+            "file input does not exist or is a directory: {}",
+            example_path.display()
+        )
+        .into());
     };
 
     let original_sha256 = sha256_hex(&original_bytes);
