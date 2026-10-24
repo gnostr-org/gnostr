@@ -248,6 +248,7 @@ pub struct TimeSyncBehaviour {
 }
 
 /// P2P clock implementation using libp2p.
+#[derive(Clone)]
 pub struct P2PClock {
     /// Shared synchronization state.
     pub inner: Arc<RwLock<SyncState>>,
@@ -282,17 +283,16 @@ impl Clock for P2PClock {
     }
 }
 
-/// Run the P2P time synchronization daemon.
-pub async fn run_time_sync_daemon() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+/// Run the P2P time synchronization daemon with a shared [`SyncState`].
+///
+/// The caller owns the clock state, so estimates collected by this daemon update
+/// the same logical clock used by other components (e.g. the chat TUI).
+pub async fn run_time_sync_daemon_with_state(
+    shared_state: Arc<RwLock<SyncState>>,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let keypair = libp2p::identity::Keypair::generate_ed25519();
-    let (p2p_clock, shared_state) = {
-        let state = Arc::new(RwLock::new(SyncState::new(1, "clock_final.json")));
-        (
-            P2PClock {
-                inner: state.clone(),
-            },
-            state,
-        )
+    let p2p_clock = P2PClock {
+        inner: shared_state.clone(),
     };
 
     let mut swarm = libp2p::SwarmBuilder::with_existing_identity(keypair)
@@ -380,11 +380,16 @@ pub async fn run_time_sync_daemon() -> Result<(), Box<dyn std::error::Error + Se
                     }
                 }
                 _ => {}
-            }
+            },
         }
     }
 }
 
+/// Run the P2P time synchronization daemon with its own clock state.
+pub async fn run_time_sync_daemon() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let state = Arc::new(RwLock::new(SyncState::new(1, "clock_final.json")));
+    run_time_sync_daemon_with_state(state).await
+}
 #[cfg(test)]
 mod tests {
     use super::*;
