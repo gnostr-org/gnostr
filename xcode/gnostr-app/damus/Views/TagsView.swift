@@ -70,7 +70,11 @@ struct TagsView: View {
             .clipped()
         }
         .onPreferenceChange(TagFramesPreferenceKey.self) { frames in
-            tag_frames = frames
+            DispatchQueue.main.async {
+                if tag_frames != frames {
+                    tag_frames = frames
+                }
+            }
         }
         .onChange(of: tags) { _ in
             expanded = false
@@ -188,7 +192,9 @@ struct TagsView: View {
         return GeometryReader { geometry -> Color in
             let rect = geometry.frame(in: .local)
             DispatchQueue.main.async {
-                binding.wrappedValue = rect.size.height
+                if binding.wrappedValue != rect.size.height {
+                    binding.wrappedValue = rect.size.height
+                }
             }
             return .clear
         }
