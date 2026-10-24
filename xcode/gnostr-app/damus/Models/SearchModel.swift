@@ -19,6 +19,7 @@ class SearchModel: ObservableObject {
     let limit: UInt32 = 500
     private let requested_kinds: [Int]?
     private var pending_events: [NostrEvent] = []
+    private var pending_offset = 0
     private var seen_ids: Set<String> = []
     private var batch_task: Task<Void, Never>?
     private var generation = 0
@@ -34,8 +35,9 @@ class SearchModel: ObservableObject {
     func subscribe(nip34_only: Bool = false, selected_kinds: Set<Int>? = nil) {
         if subscribed {
             unsubscribe()
+        } else {
+            cancel_pending_events()
         }
-        cancel_pending_events()
         sub_id = UUID().description
         search.limit = self.limit
         search.kinds = NostrKind.search_kinds(nip34_only: nip34_only, selected: selected_kinds,
@@ -74,6 +76,7 @@ class SearchModel: ObservableObject {
         batch_task?.cancel()
         batch_task = nil
         pending_events.removeAll()
+        pending_offset = 0
         seen_ids.removeAll()
         received_eose = false
     }
@@ -91,8 +94,13 @@ class SearchModel: ObservableObject {
                 return
             }
             guard let self = self, self.generation == generation else { return }
-            let batch = Array(self.pending_events.prefix(64))
-            self.pending_events.removeFirst(batch.count)
+            let end = min(self.pending_offset + 64, self.pending_events.count)
+            let batch = Array(self.pending_events[self.pending_offset..<end])
+            self.pending_offset = end
+            if end == self.pending_events.count {
+                self.pending_events.removeAll(keepingCapacity: true)
+                self.pending_offset = 0
+            }
             let current = self.events
             let order = current.enumerated().map {
                 SearchEventOrder(index: $0.offset, created_at: $0.element.created_at)
