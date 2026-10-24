@@ -54,6 +54,10 @@ damus implements the following [Nostr Implementation Possibilities][nips]
     Read/write markers are preserved when adding a suggestion. Duplicate and
     already configured relays are hidden; discovering a relay does not connect
     to it automatically. Discovered suggestions last for the current session.
+  - Configured and recommended relays fetch NIP-11 metadata over HTTPS/HTTP
+    with `Accept: application/nostr+json`. The NIP-34 label reports whether
+    `supported_nips` advertises `34`; this is not a guarantee that every Git
+    event kind is accepted. Failed metadata requests show support as unknown.
   - Find more relays to add: https://nostr.info/relays/
 - Public Key (pubkey): Your public, personal address and how people can find and tag you
 - Secret Key: Your _private_ key unique to you. Never share your private key publically and share with other clients at your own risk!

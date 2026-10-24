@@ -91,6 +91,29 @@ class damusTests: XCTestCase {
         XCTAssertEqual(pool.suggested_relays.count, 1)
     }
 
+    func testRelayInformationRequestUsesHTTPAndNIP11AcceptHeader() throws {
+        let secure = try relay_information_request(URL(string: "wss://relay.example:8443/info?key=value")!)
+        XCTAssertEqual(secure.url?.absoluteString, "https://relay.example:8443/info?key=value")
+        XCTAssertEqual(secure.value(forHTTPHeaderField: "Accept"), "application/nostr+json")
+        let insecure = try relay_information_request(URL(string: "ws://localhost:8080/")!)
+        XCTAssertEqual(insecure.url?.absoluteString, "http://localhost:8080")
+        XCTAssertThrowsError(try relay_information_request(URL(string: "https://relay.example")!))
+    }
+
+    func testRelayInformationDetectsAdvertisedNIP34() throws {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let supported = try decoder.decode(RelayInformation.self, from: Data("""
+        {"supported_nips":[1,11,34,65],"fees":{"publication":[{"amount":1,"unit":"sats"}]}}
+        """.utf8))
+        XCTAssertTrue(supported.supportsNIP34)
+        let unsupported = try decoder.decode(RelayInformation.self,
+                                             from: Data(#"{"supported_nips":[1,11]}"#.utf8))
+        XCTAssertFalse(unsupported.supportsNIP34)
+        let unknown = try decoder.decode(RelayInformation.self, from: Data("{}".utf8))
+        XCTAssertNil(unknown.supportedNips)
+    }
+
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
     }

@@ -15,25 +15,7 @@ struct RelayView: View {
     @State var conn_color: Color = .gray
     @State private var isSelected: Bool = false
     @State private var relayInfo: RelayInformation?
-
-    func fetchRelayInfo() {
-        let url = relay.descriptor.url
-        var request = URLRequest(url: url)
-        request.setValue("application/nostr+json", forHTTPHeaderField: "Accept")
-
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            guard let data = data, error == nil else { return }
-
-            let decoder = JSONDecoder()
-            decoder.keyDecodingStrategy = .convertFromSnakeCase
-            
-            if let decodedInfo = try? decoder.decode(RelayInformation.self, from: data) {
-                DispatchQueue.main.async {
-                    self.relayInfo = decodedInfo
-                }
-            }
-        }.resume()
-    }
+    @State private var relayInfoError: String?
     
     func update_connection_color() {
         let c = relay.connection
@@ -64,6 +46,15 @@ struct RelayView: View {
             Text(relay.descriptor.url.absoluteString)
                 .font(.caption)
                 .foregroundColor(.gray)
+            if let info = relayInfo {
+                Text(info.supportsNIP34 ? "NIP-34 advertised" : "NIP-34 not advertised")
+                    .font(.caption)
+                    .foregroundColor(info.supportsNIP34 ? .green : .secondary)
+            } else if let error = relayInfoError {
+                Text("NIP-34 unknown: \(error)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
             
             if isSelected {
                 if let info = relayInfo {
@@ -93,7 +84,7 @@ struct RelayView: View {
                             .font(.footnote)
                             .foregroundColor(.gray)
                     }
-                } else {
+                } else if relayInfoError == nil {
                     ProgressView() // Show a loading indicator while fetching
                 }
             } else {
@@ -116,7 +107,16 @@ struct RelayView: View {
         }
         .onAppear() {
             update_connection_color()
-            fetchRelayInfo()
+        }
+        .task(id: relay.descriptor.url) {
+            do {
+                relayInfo = try await fetch_relay_information(relay.descriptor.url)
+                relayInfoError = nil
+            } catch {
+                guard !Task.isCancelled else { return }
+                relayInfoError = error.localizedDescription
+                print("NIP-11 fetch failed for \(relay.descriptor.url): \(error)")
+            }
         }
         .swipeActions {
             if let privkey = state.keypair.privkey {
