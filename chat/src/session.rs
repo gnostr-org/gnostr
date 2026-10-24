@@ -138,6 +138,13 @@ impl ChatSession {
         self.send_event(ChatEvent::ChatMessage(msg)).await
     }
 
+    pub async fn send_oneshot(&self, text: impl Into<String>) -> Result<()> {
+        let text = text.into();
+        let kind = infer_oneshot_kind(&text);
+        let msg = Msg::default().set_kind(kind).set_content(text, 0);
+        self.send_event(ChatEvent::ChatMessage(msg)).await
+    }
+
     #[cfg(feature = "ipfs")]
     pub async fn send_text_with_attachment(
         &self,
@@ -146,6 +153,22 @@ impl ChatSession {
     ) -> Result<()> {
         let text = text.into();
         let kind = infer_message_kind(&text);
+        let attachment = crate::ipfs::attach_file(path)?;
+        let msg = Msg::default()
+            .set_kind(kind)
+            .set_content(text, 0)
+            .add_attachment(attachment);
+        self.send_event(ChatEvent::ChatMessage(msg)).await
+    }
+
+    #[cfg(feature = "ipfs")]
+    pub async fn send_oneshot_with_attachment(
+        &self,
+        text: impl Into<String>,
+        path: &Path,
+    ) -> Result<()> {
+        let text = text.into();
+        let kind = infer_oneshot_kind(&text);
         let attachment = crate::ipfs::attach_file(path)?;
         let msg = Msg::default()
             .set_kind(kind)
@@ -210,11 +233,23 @@ impl Drop for ChatSession {
 }
 
 fn infer_message_kind(text: &str) -> MsgKind {
-    if text.contains("diff --git") || (text.contains("--- a/") && text.contains("+++ b/")) {
+    if is_git_diff(text) {
         MsgKind::GitDiff
     } else {
         MsgKind::Chat
     }
+}
+
+fn infer_oneshot_kind(text: &str) -> MsgKind {
+    if is_git_diff(text) {
+        MsgKind::GitDiff
+    } else {
+        MsgKind::OneShot
+    }
+}
+
+fn is_git_diff(text: &str) -> bool {
+    text.contains("diff --git") || (text.contains("--- a/") && text.contains("+++ b/"))
 }
 
 fn session_clock_path(topic: &str) -> String {

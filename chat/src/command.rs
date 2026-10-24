@@ -3,7 +3,7 @@ use std::time::Duration;
 use anyhow::{bail, Result};
 use clap::Parser;
 use gnostr_asyncgit::types::PrivateKey;
-use gnostr_p2p::time::Clock;
+use gnostr_p2p::time::{Clock, P2PClock};
 use proctitle::set_title;
 use tracing::Level;
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry};
@@ -262,7 +262,7 @@ async fn run_oneshot(
     println!("Initializing network and discovering peers...");
     tracing::debug!("chat oneshot: waiting for a connected peer");
     session.wait_for_connected(Duration::from_secs(30)).await?;
-    let p2p_timestamp = session.p2p_clock().now_utc().to_rfc3339();
+    let p2p_timestamp = oneshot_p2p_timestamp(session.topic());
     println!("p2p time timestamp: {p2p_timestamp}");
 
     // Subscribe to publication confirmations before sending so we cannot miss the event.
@@ -270,13 +270,13 @@ async fn run_oneshot(
     #[cfg(feature = "ipfs")]
     if let Some(path) = _attach {
         session
-            .send_text_with_attachment(message_input, std::path::Path::new(&path))
+            .send_oneshot_with_attachment(message_input, std::path::Path::new(&path))
             .await?;
     } else {
-        session.send_text(message_input).await?;
+        session.send_oneshot(message_input).await?;
     }
     #[cfg(not(feature = "ipfs"))]
-    session.send_text(message_input).await?;
+    session.send_oneshot(message_input).await?;
     println!("Oneshot message queued at {p2p_timestamp}. Waiting for publication...");
 
     match wait_for_message_published(&mut publish_rx, Duration::from_secs(30)).await {
@@ -343,6 +343,33 @@ async fn wait_for_message_published(
     })
     .await
     .map_err(|_| anyhow::anyhow!("timed out waiting for publication confirmation"))?
+}
+
+fn oneshot_p2p_timestamp(topic: &str) -> String {
+    let clock = P2PClock::new(1, &oneshot_clock_path(topic));
+    clock.now_utc().to_rfc3339()
+}
+
+fn oneshot_clock_path(topic: &str) -> String {
+    let mut path = std::env::temp_dir();
+    path.push(format!(
+        "gnostr-chat-oneshot-{}.json",
+        sanitize_for_filename(topic)
+    ));
+    path.to_string_lossy().into_owned()
+}
+
+fn sanitize_for_filename(value: &str) -> String {
+    value
+        .chars()
+        .map(|c| {
+            if c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '_') {
+                c
+            } else {
+                '_'
+            }
+        })
+        .collect()
 }
 
 fn spawn_notification_printer(
