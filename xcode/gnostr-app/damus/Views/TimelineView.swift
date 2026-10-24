@@ -51,6 +51,11 @@ struct TimelineView: View {
     let damus: DamusState
     let show_friend_icon: Bool
     let filter: (NostrEvent) -> Bool
+    var show_results_while_loading = false
+
+    private var show_placeholders: Bool {
+        loading && (!show_results_while_loading || events.isEmpty)
+    }
     
     var body: some View {
         MainContent
@@ -59,10 +64,10 @@ struct TimelineView: View {
     var MainContent: some View {
         ScrollViewReader { scroller in
             ScrollView {
-                InnerTimelineView(events: loading ? .constant(Constants.EXAMPLE_EVENTS) : $events, damus: damus, show_friend_icon: show_friend_icon, filter: loading ? { _ in true } : filter)
-                    .redacted(reason: loading ? .placeholder : [])
-                    .shimmer(loading)
-                    .disabled(loading)
+                InnerTimelineView(events: show_placeholders ? .constant(Constants.EXAMPLE_EVENTS) : $events, damus: damus, show_friend_icon: show_friend_icon, filter: show_placeholders ? { _ in true } : filter)
+                    .redacted(reason: show_placeholders ? .placeholder : [])
+                    .shimmer(show_placeholders)
+                    .disabled(show_placeholders)
             }
             .onReceive(NotificationCenter.default.publisher(for: .scroll_to_top)) { _ in
                 guard let event = events.filter(self.filter).first else {

@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct NostrFilter: Codable {
+struct NostrFilter: Codable, Sendable {
     var ids: [String]?
     var kinds: [Int]?
     var referenced_ids: [String]?

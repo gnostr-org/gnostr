@@ -51,7 +51,7 @@ struct SearchView: View {
     var body: some View {
         TimelineView(events: $search.events, loading: $search.loading, damus: appstate, show_friend_icon: true, filter: {
             !user_settings.nip34_only || user_settings.search_nip34_kinds.contains($0.kind)
-        })
+        }, show_results_while_loading: true)
             .safeAreaInset(edge: .top) {
                 NIP34SearchControls().padding()
             }

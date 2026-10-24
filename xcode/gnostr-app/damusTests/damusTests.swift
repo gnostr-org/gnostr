@@ -7,9 +7,18 @@
 
 import XCTest
 import SwiftUI
+import Combine
 @testable import gnostr
 
 class damusTests: XCTestCase {
+
+    @MainActor
+    private func waitForSearchResults(_ model: SearchModel, count: Int) async {
+        let ready = expectation(description: "Search publishes \(count) results")
+        let observation = model.$events.first { $0.count == count }.sink { _ in ready.fulfill() }
+        await fulfillment(of: [ready], timeout: 5)
+        observation.cancel()
+    }
 
     private func relayListEvent(tags: [[String]], kind: Int = 10002) -> NostrEvent {
         let privkey = String(repeating: "0", count: 63) + "1"
@@ -335,7 +344,8 @@ class damusTests: XCTestCase {
         model.unsubscribe()
     }
 
-    func testSearchNIP34ToggleKeepsExplicitScopeAndFiltersOtherSubscriptions() {
+    @MainActor
+    func testSearchNIP34ToggleKeepsExplicitScopeAndFiltersOtherSubscriptions() async {
         let pool = RelayPool(defaults: nil)
         let model = SearchModel(pool: pool, search: .filter_hashtag(["gnostr"]))
         model.subscribe(nip34_only: true)
@@ -348,11 +358,13 @@ class damusTests: XCTestCase {
         }
         model.handle_event(relay_id: "wss://source.example",
                            ev: .nostr_event(.event("another-subscription", untagged)))
+        await waitForSearchResults(model, count: 1)
         XCTAssertEqual(model.events.map { $0.id }, [issue.id])
         model.unsubscribe()
         model.subscribe(nip34_only: false)
         XCTAssertTrue(model.events.isEmpty)
         model.add_event(post)
+        await waitForSearchResults(model, count: 1)
         XCTAssertEqual(model.events.map { $0.id }, [post.id])
         model.unsubscribe()
 
@@ -389,7 +401,8 @@ class damusTests: XCTestCase {
         XCTAssertFalse(model.damus_state.pool.handlers.contains { $0.sub_id == model.base_subid })
     }
 
-    func testSearchNIP34KindSelectionsKeepScopeAndStopWhenEmpty() {
+    @MainActor
+    func testSearchNIP34KindSelectionsKeepScopeAndStopWhenEmpty() async {
         let pool = RelayPool(defaults: nil)
         let model = SearchModel(pool: pool, search: .filter_hashtag(["gnostr"]))
         let patch = relayListEvent(tags: [["t", "gnostr"]], kind: 1617)
@@ -397,10 +410,12 @@ class damusTests: XCTestCase {
         model.subscribe(nip34_only: true, selected_kinds: [1617, 1621])
         model.add_event(patch)
         model.add_event(issue)
+        await waitForSearchResults(model, count: 2)
         XCTAssertEqual(model.events.count, 2)
         model.subscribe(nip34_only: true, selected_kinds: [1617])
         model.add_event(patch)
         model.add_event(issue)
+        await waitForSearchResults(model, count: 1)
         XCTAssertEqual(model.events.map { $0.id }, [patch.id])
         model.subscribe(nip34_only: true, selected_kinds: [])
         XCTAssertTrue(model.events.isEmpty)
@@ -414,6 +429,83 @@ class damusTests: XCTestCase {
         scoped.subscribe(nip34_only: false, selected_kinds: [])
         XCTAssertEqual(scoped.search.kinds, [30617])
         scoped.unsubscribe()
+    }
+
+    @MainActor
+    func testHashtagSearchPublishesBoundedSortedBatchesBeforeEOSE() async {
+        let model = SearchModel(pool: RelayPool(defaults: nil), search: .filter_hashtag(["gnostr"]))
+        model.subscribe()
+        defer { model.unsubscribe() }
+        var counts: [Int] = []
+        let observation = model.$events.dropFirst().sink { events in
+            XCTAssertTrue(Thread.isMainThread)
+            XCTAssertTrue(model.loading)
+            counts.append(events.count)
+        }
+        defer { observation.cancel() }
+
+        var input: [NostrEvent] = []
+        for index in 0..<150 {
+            let event = NostrEvent(content: "Result \(index)", pubkey: "author",
+                                   tags: [["t", "gnostr"]], createdAt: Int64(index))
+            event.id = String(format: "%064x", index + 1)
+            input.append(event)
+            for relay in ["wss://one.example", "wss://two.example"] {
+                model.handle_event(relay_id: relay,
+                                   ev: .nostr_event(.event(model.sub_id, event)))
+            }
+        }
+        model.add_event(NostrEvent(id: "untagged", content: "gnostr", pubkey: "author"))
+        model.add_event(NostrEvent(id: "oversized", content: String(repeating: "x", count: 32001),
+                                  pubkey: "author", tags: [["t", "gnostr"]]))
+        XCTAssertTrue(model.events.isEmpty)
+
+        let responsive = expectation(description: "Main queue remains responsive during search")
+        DispatchQueue.main.async {
+            XCTAssertTrue(model.events.isEmpty)
+            responsive.fulfill()
+        }
+        await fulfillment(of: [responsive], timeout: 1)
+        await waitForSearchResults(model, count: 150)
+        XCTAssertEqual(model.events.map { $0.id }, input.reversed().map { $0.id })
+        XCTAssertEqual(counts, [64, 128, 150])
+        XCTAssertTrue(model.loading)
+        model.handle_event(relay_id: "wss://one.example", ev: .nostr_event(.eose("unrelated")))
+        XCTAssertTrue(model.loading)
+        model.handle_event(relay_id: "wss://one.example", ev: .nostr_event(.eose(model.sub_id)))
+        XCTAssertFalse(model.loading)
+    }
+
+    @MainActor
+    func testHashtagSearchCancelsOldBatchesAndDrainsCurrentEOSE() async {
+        let model = SearchModel(pool: RelayPool(defaults: nil), search: .filter_hashtag(["gnostr"]))
+        model.subscribe(nip34_only: true, selected_kinds: [1617])
+        let old_subid = model.sub_id
+        let old = NostrEvent(id: "old", content: "Old patch", pubkey: "author", kind: 1617,
+                             tags: [["t", "gnostr"]])
+        model.add_event(old)
+        model.subscribe(nip34_only: true, selected_kinds: [1617])
+        defer { model.unsubscribe() }
+        XCTAssertNotEqual(model.sub_id, old_subid)
+        model.handle_event(relay_id: "wss://one.example", ev: .nostr_event(.event(old_subid, old)))
+        model.handle_event(relay_id: "wss://one.example", ev: .nostr_event(.eose(old_subid)))
+        XCTAssertTrue(model.loading)
+        let current = NostrEvent(id: "current", content: "Current patch", pubkey: "author", kind: 1617,
+                                 tags: [["t", "gnostr"]])
+        model.add_event(current)
+        let finished = expectation(description: "EOSE waits for pending results")
+        let observation = model.$loading.first { !$0 }.sink { _ in finished.fulfill() }
+        model.handle_event(relay_id: "wss://one.example", ev: .nostr_event(.eose(model.sub_id)))
+        XCTAssertTrue(model.loading)
+        await fulfillment(of: [finished], timeout: 5)
+        observation.cancel()
+        XCTAssertEqual(model.events.map { $0.id }, ["current"])
+
+        model.add_event(old)
+        model.unsubscribe()
+        model.subscribe(nip34_only: true, selected_kinds: [])
+        XCTAssertTrue(model.events.isEmpty)
+        XCTAssertFalse(model.loading)
     }
 
     func testSearchNIP34KindSelectionsPersistIncludingAllOff() throws {

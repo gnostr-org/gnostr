@@ -85,6 +85,11 @@ damus implements the following [Nostr Implementation Possibilities][nips]
     select each event kind by number and name. Selections are shared across
     search screens and saved across launches. Turning every kind off stops
     the search subscription rather than sending an unrestricted filter.
+    Hashtag search uses the relay's indexed `#t` filter, not a full-text scan.
+    Incoming search results are deduplicated and processed in batches of up to
+    64, with filtering and sorting on a background task and timeline updates
+    spaced at least 30 ms apart. Results appear before the relay finishes its
+    history; changing filters or leaving search cancels pending updates.
   - Find more relays to add: https://nostr.info/relays/
 - Public Key (pubkey): Your public, personal address and how people can find and tag you
 - Secret Key: Your _private_ key unique to you. Never share your private key publically and share with other clients at your own risk!
