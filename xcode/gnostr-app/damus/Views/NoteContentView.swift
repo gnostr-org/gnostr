@@ -71,6 +71,50 @@ func is_image_url(_ url: URL) -> Bool {
     return str.hasSuffix("png") || str.hasSuffix("jpg") || str.hasSuffix("jpeg") || str.hasSuffix("gif")
 }
 
+struct PatchPreview {
+    let header: String
+    let body: String
+
+    init?(content: String) {
+        let lines = content.split(omittingEmptySubsequences: false, whereSeparator: { $0.isNewline })
+        let remaining = lines.dropFirst(4)
+        guard remaining.contains(where: { !$0.trimmingCharacters(in: .whitespaces).isEmpty }) else {
+            return nil
+        }
+        header = lines.prefix(4).joined(separator: "\n")
+        body = remaining.joined(separator: "\n")
+    }
+}
+
+struct PatchContentView: View {
+    let content: String
+    let size: EventViewKind
+    @State private var expanded = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if let preview = PatchPreview(content: content) {
+                Text(verbatim: preview.header)
+                    .textSelection(.enabled)
+                DisclosureGroup(isExpanded: $expanded) {
+                    ScrollView(.horizontal) {
+                        Text(verbatim: preview.body)
+                            .textSelection(.enabled)
+                            .fixedSize(horizontal: true, vertical: true)
+                    }
+                } label: {
+                    Text(expanded ? "Hide patch" : "Show patch")
+                }
+                .buttonStyle(.borderless)
+            } else {
+                Text(verbatim: content)
+                    .textSelection(.enabled)
+            }
+        }
+        .font(eventviewsize_to_font(size).monospaced())
+    }
+}
+
 struct NoteContentView: View {
     let privkey: String?
     let event: NostrEvent
@@ -85,30 +129,34 @@ struct NoteContentView: View {
     
     func MainContent() -> some View {
         return VStack(alignment: .leading) {
-            Text(Markdown.parseToAttributedString(content: artifacts.content))
-                .font(eventviewsize_to_font(size))
-
-            if show_images && artifacts.images.count > 0 {
-                ImageCarousel(urls: artifacts.images)
-            } else if !show_images && artifacts.images.count > 0 {
-                ImageCarousel(urls: artifacts.images)
-                    .blur(radius: 10)
-                    .overlay {
-                        Rectangle()
-                            .opacity(0.50)
-                    }
-                    .cornerRadius(10)
-            }
-            if artifacts.invoices.count > 0 {
-                InvoicesView(invoices: artifacts.invoices)
-            }
-            
-            if show_images, self.metaData != nil {
-                LinkViewRepresentable(metadata: self.metaData)
+            if event.known_kind == .repository_patch {
+                PatchContentView(content: event.get_content(privkey), size: size)
             } else {
-                ForEach(artifacts.links, id:\.self) { link in
-                    LinkViewRepresentable(url: link)
-                        .frame(height: 50)
+                Text(Markdown.parseToAttributedString(content: artifacts.content))
+                    .font(eventviewsize_to_font(size))
+
+                if show_images && artifacts.images.count > 0 {
+                    ImageCarousel(urls: artifacts.images)
+                } else if !show_images && artifacts.images.count > 0 {
+                    ImageCarousel(urls: artifacts.images)
+                        .blur(radius: 10)
+                        .overlay {
+                            Rectangle()
+                                .opacity(0.50)
+                        }
+                        .cornerRadius(10)
+                }
+                if artifacts.invoices.count > 0 {
+                    InvoicesView(invoices: artifacts.invoices)
+                }
+
+                if show_images, self.metaData != nil {
+                    LinkViewRepresentable(metadata: self.metaData)
+                } else {
+                    ForEach(artifacts.links, id:\.self) { link in
+                        LinkViewRepresentable(url: link)
+                            .frame(height: 50)
+                    }
                 }
             }
         }
@@ -118,9 +166,11 @@ struct NoteContentView: View {
         MainContent()
             .animation(.easeInOut, value: metaData)
             .onAppear() {
+                guard event.known_kind != .repository_patch else { return }
                 self.artifacts = render_note_content(ev: event, profiles: profiles, privkey: privkey)
             }
             .onReceive(handle_notify(.profile_updated)) { notif in
+                guard event.known_kind != .repository_patch else { return }
                 let profile = notif.object as! ProfileUpdate
                 let blocks = event.blocks(privkey)
                 for block in blocks {
@@ -153,7 +203,7 @@ struct NoteContentView: View {
                 }
             }
             .task {
-                if show_images, artifacts.links.count == 1 {
+                if event.known_kind != .repository_patch, show_images, artifacts.links.count == 1 {
                     
                     self.metaData = await getMetaData(for: artifacts.links.first!)
                 }

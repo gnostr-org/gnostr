@@ -94,6 +94,10 @@ damus implements the following [Nostr Implementation Possibilities][nips]
 
 #### Notes (under 🏠 Personal Feed)
 
+- Long NIP-34 patches (kind 1617) show the first four commit-header lines,
+  with the remaining content collapsed under Show patch. Expand/collapse
+  preserves the full plain-text diff, whitespace, and complete commit hashes.
+  Short patches remain fully visible.
 - Sending a Note is easy and it goes to both your 🏠 Personal and 🔍 Global Feeds
 - To tag a user you must grab their pubkey:
   1. Search their username in the search bar at the top of the 🔍 Global Feed and click their profile

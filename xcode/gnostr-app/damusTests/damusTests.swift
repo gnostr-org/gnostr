@@ -364,6 +364,46 @@ class damusTests: XCTestCase {
         scoped.unsubscribe()
     }
 
+    func testPatchPreviewFoldsBelowFourCommitHeaderLines() throws {
+        let hash = String(repeating: "1234567890", count: 4)
+        let header = """
+        From \(hash) Mon Sep 17 00:00:00 2001
+        From: Example <example@example.com>
+        Date: Sat, 24 Oct 2026 12:00:00 +0000
+        Subject: [PATCH] Keep the complete commit header
+        """
+        let body = """
+
+        Commit message.
+        ---
+        diff --git a/file b/file
+        --- a/file
+        +++ b/file
+        @@ -1 +1 @@
+        -old
+        +new
+        """
+        let preview = try XCTUnwrap(PatchPreview(content: header + "\n" + body))
+        XCTAssertEqual(preview.header, header)
+        XCTAssertEqual(preview.body, body)
+        XCTAssertTrue(preview.header.contains(hash))
+        XCTAssertFalse(preview.header.contains("diff --git"))
+    }
+
+    func testPatchPreviewDoesNotFoldShortPatchesOrTrailingBlankLines() {
+        XCTAssertNil(PatchPreview(content: ""))
+        XCTAssertNil(PatchPreview(content: "one\ntwo\nthree\nfour"))
+        XCTAssertNil(PatchPreview(content: "one\ntwo\nthree\nfour\n\n \t\n"))
+        XCTAssertNotNil(PatchPreview(content: "one\ntwo\nthree\nfour\nfive"))
+    }
+
+    func testPatchPreviewHandlesCRLFAndPreservesDiffWhitespaceAndURLs() throws {
+        let content = "From commit\r\nFrom: author\r\nDate: date\r\nSubject: change\r\n\r\n+\t  indented\r\n+https://example.com/image.png\r\n+#not-markdown\r\n"
+        let preview = try XCTUnwrap(PatchPreview(content: content))
+        XCTAssertEqual(preview.header, "From commit\nFrom: author\nDate: date\nSubject: change")
+        XCTAssertEqual(preview.body, "\n+\t  indented\n+https://example.com/image.png\n+#not-markdown\n")
+    }
+
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
     }
