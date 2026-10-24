@@ -32,6 +32,14 @@ fn main() -> io::Result<()> {
     let start = Instant::now();
 	println!("start={:?}", start);
 
+let elapsed = start.elapsed();
+    println!("Elapsed: {:?}", elapsed);
+    
+    // Or get it in specific units:
+    println!("Elapsed seconds: {}", elapsed.as_secs());
+    println!("Elapsed milliseconds: {}", elapsed.as_millis());
+
+
     let _now = chrono::Local::now();
 
     // This will now correctly output formatted calendar time
