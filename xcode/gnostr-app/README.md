@@ -52,8 +52,8 @@ damus implements the following [Nostr Implementation Possibilities][nips]
   - Recommended Relays includes WebSocket relay URLs discovered in received
     `r` tags, including NIP-65 kind-10002 relay lists from you and your follows.
     Read/write markers are preserved when adding a suggestion. Duplicate and
-    already configured relays are hidden; discovering a relay does not connect
-    to it automatically. Discovered suggestions last for the current session.
+    already configured relays are hidden. Discovered suggestions last for the
+    current session.
     Adding a relay hides its suggestion; removing a configured relay returns
     it to recommendations. Toggle Ignore to hide a suggestion across launches,
     and enable Show ignored to turn Ignore off again. Ignored relays remain
@@ -62,6 +62,14 @@ damus implements the following [Nostr Implementation Possibilities][nips]
     with `Accept: application/nostr+json`. The NIP-34 label reports whether
     `supported_nips` advertises `34`; this is not a guarantee that every Git
     event kind is accepted. Failed metadata requests show support as unknown.
+  - Auto-subscribe to NIP-34 relays is enabled by default. At connection time
+    and as relay tags arrive, relays advertising NIP-34 are added to the local
+    pool, connected, and receive the app's normal subscriptions without opening
+    Settings. This does not publish changes to your relay list. Remove leaves
+    a relay suggested but prevents automatic re-addition across launches;
+    Ignore also hides it and disconnects it. Add or turning Ignore off explicitly
+    allows the relay again. Disabling auto-subscribe stops new automatic additions,
+    without disconnecting existing relays.
   - Find more relays to add: https://nostr.info/relays/
 - Public Key (pubkey): Your public, personal address and how people can find and tag you
 - Secret Key: Your _private_ key unique to you. Never share your private key publically and share with other clients at your own risk!

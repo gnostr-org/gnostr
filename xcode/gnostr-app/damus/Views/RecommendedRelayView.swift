@@ -46,7 +46,7 @@ struct RecommendedRelayView: View {
             .task(id: relay) {
                 do {
                     guard let url = URL(string: relay) else { throw URLError(.badURL) }
-                    relayInfo = try await fetch_relay_information(url)
+                    relayInfo = try await damus.pool.load_relay_information(url)
                     relayInfoError = nil
                 } catch {
                     guard !Task.isCancelled else { return }
@@ -55,17 +55,28 @@ struct RecommendedRelayView: View {
                 }
             }
             Spacer()
-            if let ev = damus.contacts.event, add_button {
-                if let privkey = damus.keypair.privkey {
-                    Button("Add") {
-                        guard let ev = add_relay(ev: ev, privkey: privkey, current_relays: damus.pool.descriptors, relay: relay, info: info) else {
-                            return
-                        }
-                        process_contact_event(pool: damus.pool, contacts: damus.contacts, pubkey: damus.pubkey, ev: ev)
-                        damus.pool.send(.event(ev))
+            if add_button {
+                Button("Add") {
+                    guard let url = URL(string: relay) else { return }
+                    damus.pool.allow_relay(url)
+                    do {
+                        try damus.pool.add_relay(url, info: info)
+                    } catch {
+                        print("Failed to add relay \(relay): \(error)")
+                        return
                     }
-                    .buttonStyle(.borderless)
+                    damus.pool.connect(to: [relay])
+                    if let ev = damus.contacts.event, let privkey = damus.keypair.privkey,
+                       let updated = add_relay(ev: ev, privkey: privkey,
+                                               current_relays: damus.pool.descriptors,
+                                               relay: relay, info: info) {
+                        process_contact_event(pool: damus.pool, contacts: damus.contacts,
+                                              pubkey: damus.pubkey, ev: updated)
+                        damus.pool.send(.event(updated))
+                    }
+                    notify(.relays_changed, ())
                 }
+                .buttonStyle(.borderless)
             }
         }
     }

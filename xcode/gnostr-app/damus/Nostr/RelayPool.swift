@@ -33,13 +33,36 @@ class RelayPool: ObservableObject {
     @Published var relays: [Relay] = []
     @Published private(set) var suggested_relays: [RelayDescriptor] = []
     @Published private(set) var ignored_relays: Set<String>
+    @Published var auto_subscribe_nip34: Bool {
+        didSet {
+            defaults?.set(auto_subscribe_nip34, forKey: "auto_subscribe_nip34")
+            if auto_subscribe_nip34 {
+                for (url, information) in information_cache {
+                    subscribe_to_nip34_relay(url, information: information)
+                }
+            }
+        }
+    }
     private let defaults: UserDefaults?
+    private var removed_relays: Set<String>
+    private var discovery_started = false
+    private var information_cache: [URL: RelayInformation] = [:]
+    private var information_tasks: [URL: Task<RelayInformation, Error>] = [:]
+    private let information_fetcher: (URL) async throws -> RelayInformation
+    private let relay_connector: (Relay) -> Void
     var handlers: [RelayHandler] = []
 
-    init(defaults: UserDefaults? = .standard) {
+    init(defaults: UserDefaults? = .standard,
+         information_fetcher: @escaping (URL) async throws -> RelayInformation = fetch_relay_information,
+         relay_connector: @escaping (Relay) -> Void = { $0.connection.connect() }) {
         self.defaults = defaults
+        self.information_fetcher = information_fetcher
+        self.relay_connector = relay_connector
         self.ignored_relays = Set((defaults?.stringArray(forKey: "ignored_relays") ?? [])
             .compactMap { normalized_relay_url($0)?.absoluteString })
+        self.removed_relays = Set((defaults?.stringArray(forKey: "removed_relays") ?? [])
+            .compactMap { normalized_relay_url($0)?.absoluteString })
+        self.auto_subscribe_nip34 = defaults?.object(forKey: "auto_subscribe_nip34") as? Bool ?? true
     }
 
     var recommended_relays: [RelayDescriptor] {
@@ -72,10 +95,86 @@ class RelayPool: ObservableObject {
         remember_relay(relay)
         if ignored {
             ignored_relays.insert(url.absoluteString)
+            if let configured = relays.first(where: {
+                normalized_relay_url($0.descriptor.url.absoluteString) == url
+            }) {
+                remove_relay(configured.id)
+            }
         } else {
             ignored_relays.remove(url.absoluteString)
+            allow_relay(url)
+            discover_relay(relay)
         }
         defaults?.set(ignored_relays.sorted(), forKey: "ignored_relays")
+    }
+
+    func is_relay_removed(_ url: URL) -> Bool {
+        guard let normalized = normalized_relay_url(url.absoluteString) else { return false }
+        return removed_relays.contains(normalized.absoluteString)
+    }
+
+    func allow_relay(_ url: URL) {
+        guard let normalized = normalized_relay_url(url.absoluteString) else { return }
+        removed_relays.remove(normalized.absoluteString)
+        ignored_relays.remove(normalized.absoluteString)
+        defaults?.set(removed_relays.sorted(), forKey: "removed_relays")
+        defaults?.set(ignored_relays.sorted(), forKey: "ignored_relays")
+    }
+
+    @MainActor
+    func load_relay_information(_ relayURL: URL) async throws -> RelayInformation {
+        guard let url = normalized_relay_url(relayURL.absoluteString) else {
+            throw URLError(.badURL)
+        }
+        if let information = information_cache[url] {
+            subscribe_to_nip34_relay(url, information: information)
+            return information
+        }
+        if let task = information_tasks[url] {
+            return try await task.value
+        }
+        let fetcher = information_fetcher
+        let task = Task { try await fetcher(url) }
+        information_tasks[url] = task
+        do {
+            let information = try await task.value
+            information_tasks[url] = nil
+            information_cache[url] = information
+            subscribe_to_nip34_relay(url, information: information)
+            return information
+        } catch {
+            information_tasks[url] = nil
+            throw error
+        }
+    }
+
+    private func discover_relay(_ relay: RelayDescriptor) {
+        guard discovery_started, !is_relay_ignored(relay.url) else { return }
+        Task { @MainActor [weak self] in
+            do {
+                _ = try await self?.load_relay_information(relay.url)
+            } catch {
+                print("NIP-11 fetch failed for \(relay.url): \(error)")
+            }
+        }
+    }
+
+    private func subscribe_to_nip34_relay(_ url: URL, information: RelayInformation) {
+        guard auto_subscribe_nip34, information.supportsNIP34,
+              !is_relay_ignored(url), !is_relay_removed(url),
+              !relays.contains(where: { normalized_relay_url($0.descriptor.url.absoluteString) == url }) else {
+            return
+        }
+        let info = suggested_relays.first(where: { $0.url == url })?.info ?? .rw
+        do {
+            try add_relay(url, info: info)
+            if let relay = get_relay(url.absoluteString) {
+                relay_connector(relay)
+            }
+            notify(.relays_changed, ())
+        } catch {
+            print("Failed to auto-subscribe to NIP-34 relay \(url): \(error)")
+        }
     }
 
     private func remember_relay(_ relay: RelayDescriptor) {
@@ -102,6 +201,7 @@ class RelayPool: ObservableObject {
         }
         for recommendation in recommendations {
             remember_relay(recommendation)
+            discover_relay(recommendation)
         }
     }
 
@@ -137,7 +237,12 @@ class RelayPool: ObservableObject {
         for relay in relays {
             if relay.id == relay_id {
                 remember_relay(relay.descriptor)
+                if let url = normalized_relay_url(relay_id) {
+                    removed_relays.insert(url.absoluteString)
+                    defaults?.set(removed_relays.sorted(), forKey: "removed_relays")
+                }
                 relays.remove(at: i)
+                notify(.relays_changed, ())
                 break
             }
             
@@ -156,11 +261,15 @@ class RelayPool: ObservableObject {
         let descriptor = RelayDescriptor(url: url, info: info)
         let relay = Relay(descriptor: descriptor, connection: conn)
         self.relays.append(relay)
+        discover_relay(descriptor)
     }
     
     /// This is used to retry dead connections
     func connect_to_disconnected() {
         for relay in relays {
+            if is_relay_ignored(relay.descriptor.url) || is_relay_removed(relay.descriptor.url) {
+                continue
+            }
             let c = relay.connection
             
             let is_connecting = c.isReconnecting || c.isConnecting
@@ -180,6 +289,9 @@ class RelayPool: ObservableObject {
     func reconnect(to: [String]? = nil) {
         let relays = to.map{ get_relays($0) } ?? self.relays
         for relay in relays {
+            if is_relay_ignored(relay.descriptor.url) || is_relay_removed(relay.descriptor.url) {
+                continue
+            }
             // don't try to reconnect to broken relays
             relay.connection.reconnect()
         }
@@ -192,9 +304,17 @@ class RelayPool: ObservableObject {
     }
 
     func connect(to: [String]? = nil) {
+        if !discovery_started {
+            discovery_started = true
+            for descriptor in descriptors + recommended_relays {
+                discover_relay(descriptor)
+            }
+        }
         let relays = to.map{ get_relays($0) } ?? self.relays
         for relay in relays {
-            relay.connection.connect()
+            if !is_relay_ignored(relay.descriptor.url) && !is_relay_removed(relay.descriptor.url) {
+                relay_connector(relay)
+            }
         }
     }
 
@@ -282,5 +402,6 @@ class RelayPool: ObservableObject {
 
 func add_rw_relay(_ pool: RelayPool, _ url: String) {
     let url_ = URL(string: url)!
+    guard !pool.is_relay_ignored(url_), !pool.is_relay_removed(url_) else { return }
     try? pool.add_relay(url_, info: RelayInfo.rw)
 }

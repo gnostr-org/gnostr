@@ -110,7 +110,7 @@ struct RelayView: View {
         }
         .task(id: relay.descriptor.url) {
             do {
-                relayInfo = try await fetch_relay_information(relay.descriptor.url)
+                relayInfo = try await state.pool.load_relay_information(relay.descriptor.url)
                 relayInfoError = nil
             } catch {
                 guard !Task.isCancelled else { return }
@@ -119,16 +119,12 @@ struct RelayView: View {
             }
         }
         .swipeActions {
-            if let privkey = state.keypair.privkey {
-                RemoveAction(privkey: privkey)
-            }
+            RemoveAction()
         }
         .contextMenu {
             CopyAction(relay: relay.descriptor.url.absoluteString)
             
-            if let privkey = state.keypair.privkey {
-                RemoveAction(privkey: privkey)
-            }
+            RemoveAction()
         }
     }
     
@@ -140,21 +136,18 @@ struct RelayView: View {
         }
     }
     
-    func RemoveAction(privkey: String) -> some View {
+    func RemoveAction() -> some View {
         Button {
-            guard let ev = state.contacts.event else {
-                return
-            }
-            
             let descriptors = state.pool.descriptors
-            guard let new_ev = remove_relay(ev: ev, current_relays: descriptors, privkey: privkey, relay: relay.descriptor.url.absoluteString) else {
-                return
+            state.pool.remove_relay(relay.id)
+            if let ev = state.contacts.event, let privkey = state.keypair.privkey,
+               let new_ev = remove_relay(ev: ev, current_relays: descriptors, privkey: privkey,
+                                        relay: relay.descriptor.url.absoluteString) {
+                process_contact_event(pool: state.pool, contacts: state.contacts, pubkey: state.pubkey, ev: new_ev)
+                state.pool.send(.event(new_ev))
             }
-            
-            process_contact_event(pool: state.pool, contacts: state.contacts, pubkey: state.pubkey, ev: new_ev)
-            state.pool.send(.event(new_ev))
         } label: {
-            Label("Delete", systemImage: "trash")
+            Label("Remove", systemImage: "minus.circle")
         }
         .tint(.red)
     }

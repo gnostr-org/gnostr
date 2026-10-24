@@ -664,6 +664,7 @@ func load_our_relays(contacts: Contacts, our_pubkey: String, pool: RelayPool, m_
         changed = true
         if new.contains(d) {
             if let url = URL(string: d) {
+                guard !pool.is_relay_ignored(url), !pool.is_relay_removed(url) else { continue }
                 try? pool.add_relay(url, info: decoded[d] ?? .rw)
             }
         } else {
@@ -675,4 +676,3 @@ func load_our_relays(contacts: Contacts, our_pubkey: String, pool: RelayPool, m_
         notify(.relays_changed, ())
     }
 }
-

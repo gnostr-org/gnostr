@@ -52,8 +52,15 @@ struct ConfigView: View {
         ZStack(alignment: .leading) {
             Form {
                 Section("Relays") {
+                    Toggle("Auto-subscribe to NIP-34 relays", isOn: $pool.auto_subscribe_nip34)
                     List(state.pool.relays) { relay in
-                        RelayView(state: state, relay: relay)
+                        VStack(alignment: .leading) {
+                            RelayView(state: state, relay: relay)
+                            Toggle("Ignore", isOn: Binding(
+                                get: { pool.is_relay_ignored(relay.descriptor.url) },
+                                set: { pool.set_relay_ignored(relay.descriptor, ignored: $0) }
+                            ))
+                        }
                     }
                 }
                 
@@ -165,6 +172,7 @@ struct ConfigView: View {
                 }
                 
                 let info = RelayInfo.rw
+                state.pool.allow_relay(url)
                 
                 guard (try? state.pool.add_relay(url, info: info)) != nil else {
                     return
