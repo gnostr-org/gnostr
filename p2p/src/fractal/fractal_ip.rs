@@ -31,7 +31,9 @@ struct Cli {
     /// Walk INPUT recursively, reconstruct to OUTPUT, and git clone OUTPUT to
     /// OUTPUT_repo.
     ///
-    /// Requires exactly two paths: <INPUT> <OUTPUT>.
+    /// Requires exactly two paths: <INPUT> <OUTPUT>. If INPUT is a git
+    /// repository, the recursive directory algorithm is used. Otherwise the
+    /// single-file algorithm is used automatically.
     /// If --recursive/--out are also given, they override these values.
     #[arg(long, num_args = 2, value_name = "PATH")]
     clone: Option<Vec<PathBuf>>,
@@ -124,15 +126,35 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     let mut recursive = cli.recursive;
     let mut out = cli.out;
+    let mut file = cli.file;
+    let mut clone_dest: Option<PathBuf> = None;
+    let mut clone_file_fallback = false;
+
     if let Some(ref clone) = cli.clone {
         if clone.len() != 2 {
             return Err("--clone requires exactly two paths: <INPUT> <OUTPUT>".into());
         }
-        if recursive.is_none() {
-            recursive = Some(clone[0].clone());
-        }
-        if out.is_none() {
-            out = Some(clone[1].clone());
+        let input = &clone[0];
+        if is_git_repo(input) {
+            if recursive.is_none() {
+                recursive = Some(input.clone());
+            }
+            if out.is_none() {
+                out = Some(clone[1].clone());
+            }
+            clone_dest = out.as_ref().map(|out_path| {
+                out_path.with_file_name(format!(
+                    "{}_repo",
+                    out_path.file_name().unwrap_or_default().to_string_lossy()
+                ))
+            });
+        } else {
+            // Not a git repository: automatically switch to the file algorithm.
+            file = Some(input.clone());
+            if out.is_none() {
+                out = Some(clone[1].clone());
+            }
+            clone_file_fallback = true;
         }
     }
 
@@ -141,11 +163,6 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     }
 
     if let Some(ref root) = recursive {
-        if cli.clone.is_some() && !is_git_repo(root) {
-            return Err(
-                format!("--clone input is not a git repository: {}", root.display()).into(),
-            );
-        }
         if !root.is_dir() {
             return Err(format!("--recursive path is not a directory: {}", root.display()).into());
         }
@@ -160,19 +177,15 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 "recursively reconstructed directory to {}",
                 out_path.display()
             );
-            if cli.clone.is_some() {
-                let clone_dest = out_path.with_file_name(format!(
-                    "{}_repo",
-                    out_path.file_name().unwrap_or_default().to_string_lossy()
-                ));
-                clone_and_verify_reconstructed_repo(out_path, &clone_dest)?;
+            if let Some(ref clone_dest) = clone_dest {
+                clone_and_verify_reconstructed_repo(out_path, clone_dest)?;
             }
             return Ok(());
         }
         return Ok(());
     }
 
-    let example_path = cli.file.unwrap_or_else(|| PathBuf::from("example.bin"));
+    let example_path = file.unwrap_or_else(|| PathBuf::from("example.bin"));
 
     let original_bytes = if example_path.exists() {
         if example_path.is_dir() {
@@ -216,6 +229,11 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     println!("peer reconstructed {}", output_path.display());
     println!("peer sha256: {reconstructed_sha256}");
     println!("sha256 match: {}", reconstructed_sha256 == original_sha256);
+
+    if clone_file_fallback {
+        println!("file reconstruction complete; exiting");
+        return Ok(());
+    }
 
     let local_key = keypair_from_seed(None);
     let mut swarm = build_fractal_swarm(local_key).await?;
