@@ -24,6 +24,7 @@ pub struct Gitminer {
     opts: Options,
     repo: gnostr_asyncgit::git2::Repository,
     author: String,
+    signing_keys: Option<Keys>,
 }
 
 impl std::fmt::Debug for Gitminer {
@@ -32,6 +33,13 @@ impl std::fmt::Debug for Gitminer {
             .field("opts", &self.opts)
             .field("repo_path", &self.repo.path())
             .field("author", &self.author)
+            .field(
+                "signing_pubkey",
+                &self
+                    .signing_keys
+                    .as_ref()
+                    .map(|keys| keys.public_key().as_hex_string()),
+            )
             .finish()
     }
 }
@@ -45,6 +53,7 @@ impl Clone for Gitminer {
             opts: self.opts.clone(),
             repo,
             author: self.author.clone(),
+            signing_keys: self.signing_keys.clone(),
         }
     }
 }
@@ -64,7 +73,18 @@ impl Gitminer {
         let author = Gitminer::load_author(&repo)?;
         debug!("Gitminer initialized with author: {}", author);
 
-        Ok(Gitminer { opts, repo, author })
+        Ok(Gitminer {
+            opts,
+            repo,
+            author,
+            signing_keys: None,
+        })
+    }
+
+    /// Use explicit keys instead of the commit-derived key for NIP-34 publication.
+    pub fn with_signing_keys(mut self, keys: Keys) -> Self {
+        self.signing_keys = Some(keys);
+        self
     }
 
     pub fn mine(&mut self) -> Result<String, &'static str> {
@@ -207,9 +227,20 @@ impl Gitminer {
 
     fn send_nip34_patch_event(&self, head: &str) -> Result<(), &'static str> {
         info!("Preparing NIP-34 patch event for mined commit {}", head);
-        let padded_head = format!("{:0>64}", head);
-        let keys = Keys::parse(padded_head.clone())
-            .ok_or("Failed to derive Nostr keys from mined commit")?;
+        let keys = match &self.signing_keys {
+            Some(keys) => keys.clone(),
+            None => Keys::parse(format!("{:0>64}", head))
+                .ok_or("Failed to derive Nostr keys from mined commit")?,
+        };
+        info!(
+            "NIP-34 signing public key: {} (source={})",
+            keys.public_key(),
+            if self.signing_keys.is_some() {
+                "--nsec"
+            } else {
+                "mined commit"
+            }
+        );
         let relay_urls = get_relay_urls();
         debug!(
             "Selected {} relay(s) for NIP-34 publication of commit {}",
@@ -275,14 +306,14 @@ impl Gitminer {
                     event_id, head_hash, repo_name
                 );
                 Ok::<_, &'static str>(event_id)
-            });
+            })
         })
         .join()
-        .map_err(|_| "NIP-34 patch event thread panicked")?;
+        .map_err(|_| "NIP-34 patch event thread panicked")??;
 
         debug!("NIP-34 publishing thread joined for {}", head);
         info!(
-            "Submitted NIP-34 patch event {:?} for {} (commit {})",
+            "Submitted NIP-34 patch event {} for {} (commit {})",
             event_id, repo_path, head
         );
         Ok(())

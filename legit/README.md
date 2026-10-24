@@ -37,6 +37,16 @@ gnostr-legit --version
 Without flags, it uses the current repository, prefix `000`, available CPU
 parallelism, and `default commit message`. Thread counts must be positive.
 
+Use `--nsec "$NOSTR_PRIVATE_KEY"` to sign the published NIP-34 patch event with
+your own key. It accepts a 64-character hex private key (such as a SHA-256 digest)
+or a bech32 `nsec1...` private key. Invalid keys are rejected before mining.
+Only the public key is logged, never the private key.
+
+Without `--nsec`, the legacy signing key is derived from the mined commit hash.
+That hash is public, so the derived key is **not a secure identity**; use an
+explicit private key for authenticated publishing. CLI arguments may be visible
+to other local processes; avoid literal private keys in shell history.
+
 Enable debug diagnostics for repository discovery, CPU/thread selection, mining,
 storage, and NIP-34 publication with:
 

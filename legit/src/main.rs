@@ -7,17 +7,18 @@ use std::convert::TryInto;
 use std::fmt::Debug;
 use std::time::Instant;
 //use std::mem::size_of;
-use clap::Parser;
+use clap::{CommandFactory, Parser};
 use crypto::sha2::Sha256;
 use gitminer::Gitminer;
 use gnostr_asyncgit::git2::*;
+use gnostr_asyncgit::types::Keys;
 use std::{io, thread};
 
 mod gitminer;
 mod repo;
 mod worker;
 
-#[derive(Debug, Parser)]
+#[derive(Parser)]
 #[command(version, about = "Generate git commit sha with a custom prefix")]
 struct Args {
     /// Path to your git repository
@@ -35,6 +36,18 @@ struct Args {
     /// Commit message; repeat for additional lines
     #[arg(short, long, default_value = "default commit message")]
     message: Vec<String>,
+
+    /// NIP-34 signing key: 64-character hex (SHA-256) or nsec1... private key
+    #[arg(long, value_name = "KEY")]
+    nsec: Option<String>,
+}
+
+fn parse_signing_keys(nsec: Option<String>) -> Result<Option<Keys>, &'static str> {
+    nsec.map(|value| {
+        Keys::parse(value)
+            .ok_or("--nsec must be a valid 64-character hex (SHA-256) or nsec1... private key")
+    })
+    .transpose()
 }
 
 //fn convert_to_u32(v: usize) -> Option<i8> {
@@ -47,6 +60,11 @@ struct Args {
 
 fn main() -> io::Result<()> {
     let args = Args::parse();
+    let signing_keys = parse_signing_keys(args.nsec).unwrap_or_else(|message| {
+        Args::command()
+            .error(clap::error::ErrorKind::ValueValidation, message)
+            .exit()
+    });
     env_logger::init();
     info!("Starting gnostr-legit");
 
@@ -92,6 +110,9 @@ fn main() -> io::Result<()> {
             std::process::exit(1);
         }
     };
+    if let Some(keys) = signing_keys {
+        miner = miner.with_signing_keys(keys);
+    }
 
     let hash = match miner.mine() {
         Ok(s) => s,
@@ -118,8 +139,9 @@ fn main() -> io::Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::Args;
+    use super::{parse_signing_keys, Args};
     use clap::{error::ErrorKind, Parser};
+    use gnostr_asyncgit::types::Keys;
 
     #[test]
     fn cli_defaults() {
@@ -128,6 +150,7 @@ mod tests {
         assert_eq!(args.prefix, "000");
         assert_eq!(args.threads, None);
         assert_eq!(args.message, ["default commit message"]);
+        assert!(parse_signing_keys(args.nsec).unwrap().is_none());
     }
 
     #[test]
@@ -167,10 +190,38 @@ mod tests {
         ] {
             assert_eq!(
                 Args::try_parse_from(["gnostr-legit", flag])
-                    .unwrap_err()
+                    .err()
+                    .unwrap()
                     .kind(),
                 kind
             );
+        }
+    }
+
+    #[test]
+    fn cli_accepts_hex_and_nsec_signing_keys() {
+        let expected = Keys::generate();
+        let mut secret = expected.secret_key().unwrap();
+        for value in [secret.as_hex_string(), secret.as_bech32_string()] {
+            let args = Args::try_parse_from(["gnostr-legit", "--nsec", &value]).unwrap();
+            let actual = parse_signing_keys(args.nsec).unwrap().unwrap();
+            assert_eq!(actual.public_key(), expected.public_key());
+        }
+    }
+
+    #[test]
+    fn cli_rejects_invalid_signing_keys_without_echoing_them() {
+        for value in [
+            "invalid-private-key-value".to_string(),
+            "0".repeat(64),
+            "f".repeat(64),
+            "1".repeat(63),
+            "nsec1invalid".to_string(),
+        ] {
+            let args = Args::try_parse_from(["gnostr-legit", "--nsec", &value]).unwrap();
+            let message = parse_signing_keys(args.nsec).unwrap_err();
+            assert!(message.contains("--nsec"));
+            assert!(!message.contains(&value));
         }
     }
 }
