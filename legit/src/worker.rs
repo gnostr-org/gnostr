@@ -86,7 +86,10 @@ impl Worker {
 
             value += 1;
         }
-        debug!("[Worker {}] Stopped after finding a matching commit", self.id);
+        debug!(
+            "[Worker {}] Stopped after finding a matching commit",
+            self.id
+        );
     }
 
     fn generate_blob(&mut self, value: u32, tstamp: &str) -> (String, String) {

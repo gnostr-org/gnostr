@@ -234,7 +234,10 @@ impl Gitminer {
         // this blocking call is safe whether or not the caller already runs
         // inside a Tokio runtime (e.g. during #[tokio::test]).
         std::thread::spawn(move || {
-            debug!("Creating dedicated NIP-34 publishing runtime for {}", head_hash);
+            debug!(
+                "Creating dedicated NIP-34 publishing runtime for {}",
+                head_hash
+            );
             let runtime = tokio::runtime::Runtime::new().expect("Failed to create async runtime");
             runtime.block_on(async move {
                 info!(
