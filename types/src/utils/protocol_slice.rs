@@ -9,7 +9,7 @@ use std::io;
 use std::path::Path;
 
 use bincode;
-use log::{debug, info};
+use log::{Level, debug, info, log_enabled};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
@@ -352,8 +352,10 @@ pub fn list_directory(
                 .or_default()
                 .extend(batch.packets.clone());
             if logging {
-                info!("File: {}", relative.display());
-                info!("Batch size: {} packets", batch.total_packets);
+                if !log_enabled!(Level::Debug) {
+                    info!("File: {}", relative.display());
+                    info!("Batch size: {} packets", batch.total_packets);
+                }
 
                 debug!(
                     "{indent}  perfect_ip packet batch: {} packets",
