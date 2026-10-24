@@ -96,9 +96,18 @@ merge; following it does not require discovering a parent patch event.
 Duplicate follows are omitted. The list is signed with the same commit-derived
 key and sent to the same relays. This follow list includes
 `#gnostr` and the commit nonce. All event IDs are logged.
-Metadata or follow-list publication errors are reported and stop publication
-of the patch. With an explicit `--nsec`, neither profile metadata nor a follow
-list is published or overwritten.
+Generated profiles also publish a NIP-65 kind-10002 relay list. It advertises
+only relays that explicitly replied `["OK", "<metadata event ID>", true, ...]`
+to that commit's kind-0 metadata event. Each relay uses an `r` tag marked
+`write`: publication was confirmed, not read access. Rejections, acknowledgements
+for other IDs, closed connections, and timeouts are excluded. A WebSocket write
+alone never qualifies. The relay list is signed by the commit-derived key,
+includes `#gnostr` and the commit nonce, and is sent only to those accepted
+relays. At least one must explicitly accept the relay-list event too; its ID
+and confirmed-copy count are logged.
+Metadata, follow-list, or relay-list publication errors are reported and stop
+publication of the patch. With an explicit `--nsec`, no profile metadata,
+follow list, or relay list is published or overwritten.
 `gnostr_types::nostr::Metadata::default()` and `Metadata::new()` supply these
 avatar/banner URLs. Deserializing existing profiles preserves missing or null
 artwork fields rather than inserting the defaults.
@@ -108,6 +117,9 @@ Mined profiles, patches, and kind-1 announcements also carry
 `["commit-nonce","<worker>-<counter>"]`, copied exactly from the commit's final
 nonce line (for example `01-00000122`). This is Git mining proof, not the
 decimal `nonce` tag used for Nostr NIP-13 event proof-of-work.
+The shared client's `send_event_confirmed` returns only explicitly accepting
+relay URLs and fails if there are none. Existing `send_event` callers retain
+their WebSocket-write-only semantics.
 After a patch is sent, a kind-1 announcement is sent to the same relays with the
 same signing key. Its content is `nostr:note1...` referencing the patch event,
 and its tags include `["e","<patch event ID>","","mention"]` and `["t","gnostr"]`.

@@ -14,7 +14,8 @@ use gnostr_types::nostr::patch::{
 };
 use gnostr_types::nostr::{
     client::Options as ClientOptions, patch::install_rustls_crypto_provider, Client, Event,
-    EventBuilder, EventKind, Filter, Id, Metadata, PublicKey, Tag,
+    EventBuilder, EventKind, Filter, Id, Metadata, PublicKey, RelayList, RelayListUsage, RelayUrl,
+    Tag,
 };
 use std::time::Duration;
 use time_0_3::OffsetDateTime;
@@ -335,6 +336,25 @@ impl Gitminer {
         EventBuilder::new(EventKind::ContactList, String::new(), tags).to_event(&keys.secret_key()?)
     }
 
+    fn commit_profile_relay_list_event(
+        keys: &Keys,
+        relays: &[RelayUrl],
+        nonce_tag: Tag,
+    ) -> anyhow::Result<Event> {
+        anyhow::ensure!(!relays.is_empty(), "No accepted relays for commit profile");
+        let relay_list = RelayList(
+            relays
+                .iter()
+                .cloned()
+                .map(|relay| (relay, RelayListUsage::Outbox))
+                .collect(),
+        );
+        let mut tags = relay_list.to_event_tags();
+        tags.sort_by(|a, b| a.0.cmp(&b.0));
+        tags.extend([Tag::new_tag("t", "gnostr"), nonce_tag]);
+        EventBuilder::new(EventKind::RelayList, String::new(), tags).to_event(&keys.secret_key()?)
+    }
+
     fn mined_commit_nonce(blob: &str) -> Result<&str, &'static str> {
         let nonce = blob.rsplit_once("\n\n").map(|(_, nonce)| nonce);
         match nonce {
@@ -547,11 +567,18 @@ impl Gitminer {
                         head_hash,
                         keys.public_key()
                     );
-                    let metadata_id = client
-                        .set_metadata_with_tags(
+                    let metadata_event = client
+                        .build_metadata_event(
                             &metadata,
                             vec![Tag::new_tag("t", "gnostr"), nonce_tag.clone()],
                         )
+                        .map_err(|err| {
+                            error!("Failed to build metadata for commit {}: {}", head_hash, err);
+                            "Failed to build commit profile metadata"
+                        })?;
+                    let metadata_id = metadata_event.id;
+                    let accepted_relays = client
+                        .send_event_confirmed(metadata_event)
                         .await
                         .map_err(|err| {
                             error!(
@@ -566,7 +593,7 @@ impl Gitminer {
                         head_hash,
                         keys.public_key()
                     );
-                    let follows = Self::commit_profile_follow_event(&keys, &parent.pubkey, nonce_tag).map_err(
+                    let follows = Self::commit_profile_follow_event(&keys, &parent.pubkey, nonce_tag.clone()).map_err(
                         |err| {
                             error!(
                                 "Failed to build follow list for commit {}: {}",
@@ -588,6 +615,49 @@ impl Gitminer {
                         head_hash,
                         keys.public_key(),
                         parent.pubkey
+                    );
+                    let relay_list =
+                        Self::commit_profile_relay_list_event(&keys, &accepted_relays, nonce_tag)
+                            .map_err(|err| {
+                                error!(
+                                    "Failed to build relay list for commit {}: {}",
+                                    head_hash, err
+                                );
+                                "Failed to build commit profile relay list"
+                            })?;
+                    let relay_list_id = relay_list.id;
+                    let mut profile_client = Client::new(
+                        &keys,
+                        ClientOptions::new().send_timeout(Some(Duration::from_secs(1))),
+                    );
+                    profile_client
+                        .add_relays(
+                            accepted_relays
+                                .iter()
+                                .map(|relay| relay.as_str().to_string())
+                                .collect(),
+                        )
+                        .await
+                        .map_err(|err| {
+                            error!("Failed to configure profile relay list relays: {}", err);
+                            "Failed to configure profile relay list relays"
+                        })?;
+                    let confirmed = profile_client
+                        .send_event_confirmed(relay_list)
+                        .await
+                        .map_err(|err| {
+                            error!(
+                                "Failed to publish relay list for commit {}: {}",
+                                head_hash, err
+                            );
+                            "Failed to publish commit profile relay list"
+                        })?;
+                    info!(
+                        "Published commit profile relay list: id={}, commit={}, pubkey={}, confirmed_copies={}",
+                        relay_list_id,
+                        head_hash,
+                        keys.public_key(),
+                        confirmed.len()
                     );
                 }
                 info!(
@@ -903,6 +973,34 @@ mod tests {
             expected.extend([Tag::new_tag("t", "gnostr"), nonce.clone()]);
             assert_eq!(event.tags, expected);
         }
+    }
+
+    #[test]
+    fn commit_profile_relay_list_contains_only_confirmed_outbox_relays() {
+        let keys = Keys::parse(
+            "473a0f4c3be8a93681a267e3b1e9a7dcda1185436fe141f7749120a303721813".to_string(),
+        )
+        .unwrap();
+        let first = RelayUrl::try_from_str("wss://first.example.com/").unwrap();
+        let second = RelayUrl::try_from_str("ws://127.0.0.1:8080/").unwrap();
+        let nonce = commit_nonce_tag("01-00000122").unwrap();
+        let event = Gitminer::commit_profile_relay_list_event(
+            &keys,
+            &[first.clone(), second.clone(), first.clone()],
+            nonce.clone(),
+        )
+        .unwrap();
+        event.verify(None).unwrap();
+        assert_eq!(event.kind, EventKind::RelayList);
+        assert_eq!(event.pubkey, keys.public_key());
+        assert!(event.content.is_empty());
+        let parsed = RelayList::from_event(&event);
+        assert_eq!(parsed.0.len(), 2);
+        assert_eq!(parsed.0.get(&first), Some(&RelayListUsage::Outbox));
+        assert_eq!(parsed.0.get(&second), Some(&RelayListUsage::Outbox));
+        assert!(event.tags.contains(&Tag::new_tag("t", "gnostr")));
+        assert!(event.tags.contains(&nonce));
+        assert!(Gitminer::commit_profile_relay_list_event(&keys, &[], nonce).is_err());
     }
 
     #[test]

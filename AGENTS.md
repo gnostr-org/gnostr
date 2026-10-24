@@ -411,8 +411,14 @@ The six publicly known identities also serve as regression-test signers,
 never as secure accounts. Parent follows do not require a known parent
 patch event ID, and duplicate follows are omitted. It uses the same signer and relays,
 includes `#gnostr` and the commit nonce, and logs its event ID. Follow-list errors
-propagate. An explicit `--nsec` never triggers automatic profile metadata or
-follow-list publication.
+propagate. Generated profiles publish a NIP-65 kind-10002 relay list containing
+only relays that acknowledge that commit's metadata event with matching
+`OK true`. Use `r` tags marked `write`; do not infer read support. Send the list
+only to those relays and require at least one matching acceptance of the list.
+Include `#gnostr` and the commit nonce, log the list ID, and propagate failures.
+`Client::send_event_confirmed` returns accepted relay URLs; legacy `send_event`
+still means completed WebSocket writes, not acceptance. An explicit `--nsec`
+never triggers automatic metadata, follow-list, or relay-list publication.
 `gnostr_types::nostr::Metadata::default()` and `Metadata::new()` include the
 default avatar and banner URLs; deserialization does not inject these defaults.
 All legit-generated events carry the hashtag tag `["t","gnostr"]` (`#gnostr`).
