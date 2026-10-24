@@ -53,11 +53,6 @@ struct TagsView: View {
     var body: some View {
         let preview = TagRowPreview(frames: tag_frames)
         VStack(alignment: .leading, spacing: 8) {
-            GeometryReader { geometry in
-                self.generateContent(in: geometry)
-            }
-            .frame(height: expanded || !preview.is_foldable ? totalHeight : preview.height)
-            .clipped()
             if preview.is_foldable {
                 Button {
                     expanded.toggle()
@@ -68,6 +63,11 @@ struct TagsView: View {
                 }
                 .buttonStyle(.borderless)
             }
+            GeometryReader { geometry in
+                self.generateContent(in: geometry)
+            }
+            .frame(height: expanded || !preview.is_foldable ? totalHeight : preview.height)
+            .clipped()
         }
         .onPreferenceChange(TagFramesPreferenceKey.self) { frames in
             tag_frames = frames

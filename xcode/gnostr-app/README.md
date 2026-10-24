@@ -106,7 +106,8 @@ damus implements the following [Nostr Implementation Possibilities][nips]
   expand the branch/tag references and select a complete commit hash.
 - Event tag chips fold only when they wrap beyond two rows. The first two
   rows stay visible; Show all tags / Show fewer tags expands or folds the rest
-  without shortening tag values or commit hashes.
+  without shortening tag values or commit hashes. The control stays above the
+  chips so it does not move down when the list expands.
 - Sending a Note is easy and it goes to both your 🏠 Personal and 🔍 Global Feeds
 - To tag a user you must grab their pubkey:
   1. Search their username in the search bar at the top of the 🔍 Global Feed and click their profile
