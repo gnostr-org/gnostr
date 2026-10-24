@@ -37,6 +37,9 @@ gnostr-legit --version
 Without flags, it uses the current repository, prefix `000`, available CPU
 parallelism, and `default commit message`. Thread counts must be positive.
 
+See [Mining process](MINING.md) for candidate iteration, nonce formatting,
+difficulty, worker shutdown behavior, persistence, and Nostr publication.
+
 Use `--depth N` to append up to `N` existing first-parent commits to the
 commit body, starting with the current HEAD and continuing newest-first through
 its first parents. Merged branches are not traversed. Ordinary commits use one
