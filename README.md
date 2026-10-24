@@ -77,6 +77,20 @@ make script-cross ARGS='--target macos-x64 --install-targets'
 make script-cross ARGS='--target macos-x64 --toolchain stable --install-targets'
 ```
 
+Enable Bash tab completion for Make targets, including newly added `script-*`
+targets:
+
+```bash
+source /Users/Shared/github/gnostr/scripts/gnostr-completion.sh
+# Type: make script-cargo-h<Tab>
+```
+
+Add that `source` line to `~/.bashrc` (or `~/.bash_profile` for macOS login
+shells), **after** any bash-completion setup. Adjust the path for other clones.
+This replaces Make completion for `make` and `gmake`, supports `-C` and `-f`,
+and reads literal targets and script filenames without executing Makefile
+expressions or scripts. It works with macOS Bash 3.2 and newer Bash versions.
+
 The GitHub workflow, Git ref/hook, build/install, Docker stack, cache, yank,
 fractal-clone, and version-update scripts support `--interactive` (`-i`).
 Menus accept numbers separated by spaces or commas, `all`, or `q` to quit.
