@@ -15,18 +15,11 @@ struct RecommendedRelayView: View {
     @State private var relayInfo: RelayInformation?
     @State private var relayInfoError: String?
     
-    init(damus: DamusState, relay: String, info: RelayInfo = .rw) {
-        self.damus = damus
-        self.relay = relay
-        self.add_button = true
-        self.info = info
-    }
-    
-    init(damus: DamusState, relay: String, add_button: Bool) {
+    init(damus: DamusState, relay: String, info: RelayInfo = .rw, add_button: Bool = true) {
         self.damus = damus
         self.relay = relay
         self.add_button = add_button
-        self.info = .rw
+        self.info = info
     }
     
     var body: some View {
@@ -71,6 +64,7 @@ struct RecommendedRelayView: View {
                         process_contact_event(pool: damus.pool, contacts: damus.contacts, pubkey: damus.pubkey, ev: ev)
                         damus.pool.send(.event(ev))
                     }
+                    .buttonStyle(.borderless)
                 }
             }
         }

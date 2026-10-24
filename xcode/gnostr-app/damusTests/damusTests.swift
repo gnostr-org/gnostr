@@ -48,7 +48,7 @@ class damusTests: XCTestCase {
     }
 
     func testRelayRecommendationsCollectedAcrossSubscriptions() throws {
-        let pool = RelayPool()
+        let pool = RelayPool(defaults: nil)
         let event = relayListEvent(tags: [
             ["r", "wss://DISCOVERED.example:443/", "read"],
             ["r", "wss://discovered.example", "write"],
@@ -76,7 +76,7 @@ class damusTests: XCTestCase {
     }
 
     func testRelayRecommendationsFromOtherKindsAndInvalidEvents() {
-        let pool = RelayPool()
+        let pool = RelayPool(defaults: nil)
         let event = relayListEvent(tags: [
             ["r", "wss://git-relay.example"],
             ["r", "https://repository.example/project"],
@@ -89,6 +89,56 @@ class damusTests: XCTestCase {
         invalid.sig = String(repeating: "0", count: 128)
         pool.collect_relay_recommendations(invalid)
         XCTAssertEqual(pool.suggested_relays.count, 1)
+    }
+
+    func testRelayRecommendationsReturnAfterManualRelayRemoval() throws {
+        let pool = RelayPool(defaults: nil)
+        let url = URL(string: "wss://manual.example/")!
+        try pool.add_relay(url, info: RelayInfo(read: true, write: false))
+        XCTAssertFalse(pool.recommended_relays.contains { $0.url.host == "manual.example" })
+        pool.remove_relay(url.absoluteString)
+        let restored = try XCTUnwrap(pool.recommended_relays.first { $0.url.host == "manual.example" })
+        XCTAssertTrue(restored.info.read)
+        XCTAssertFalse(restored.info.write)
+        XCTAssertEqual(pool.recommended_relays.filter { $0.url.host == "manual.example" }.count, 1)
+    }
+
+    func testRelayRecommendationsIgnoreSurvivesRediscoveryAndRemoval() throws {
+        let pool = RelayPool(defaults: nil)
+        let descriptor = RelayDescriptor(url: URL(string: "wss://IGNORED.example:443/")!, info: .rw)
+        pool.set_relay_ignored(descriptor, ignored: true)
+        pool.collect_relay_recommendations(relayListEvent(tags: [["r", "wss://ignored.example"]]))
+        XCTAssertFalse(pool.recommended_relays.contains { $0.url.host == "ignored.example" })
+        XCTAssertEqual(pool.available_recommendations(show_ignored: true).filter {
+            $0.url.host == "ignored.example"
+        }.count, 1)
+
+        try pool.add_relay(descriptor.url, info: descriptor.info)
+        XCTAssertFalse(pool.available_recommendations(show_ignored: true).contains {
+            $0.url.host == "ignored.example"
+        })
+        pool.remove_relay(descriptor.url.absoluteString)
+        XCTAssertFalse(pool.recommended_relays.contains { $0.url.host == "ignored.example" })
+        pool.set_relay_ignored(descriptor, ignored: false)
+        XCTAssertEqual(pool.recommended_relays.filter { $0.url.host == "ignored.example" }.count, 1)
+    }
+
+    func testRelayRecommendationsIgnorePersistsAndCanBeRestored() throws {
+        let suite = "RelayRecommendationsTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let relay = RelayDescriptor(url: URL(string: "wss://saved.example/")!, info: .rw)
+        RelayPool(defaults: defaults).set_relay_ignored(relay, ignored: true)
+
+        let restored = RelayPool(defaults: defaults)
+        XCTAssertTrue(restored.is_relay_ignored(URL(string: "wss://saved.example")!))
+        XCTAssertFalse(restored.recommended_relays.contains { $0.url.host == "saved.example" })
+        let ignored = try XCTUnwrap(restored.available_recommendations(show_ignored: true).first {
+            $0.url.host == "saved.example"
+        })
+        restored.set_relay_ignored(ignored, ignored: false)
+        XCTAssertTrue(RelayPool(defaults: defaults).ignored_relays.isEmpty)
+        XCTAssertTrue(restored.recommended_relays.contains { $0.url.host == "saved.example" })
     }
 
     func testRelayInformationRequestUsesHTTPAndNIP11AcceptHeader() throws {

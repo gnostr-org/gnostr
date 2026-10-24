@@ -18,6 +18,7 @@ struct ConfigView: View {
     @State var privkey_copied: Bool = false
     @State var pubkey_copied: Bool = false
     @State var relays: [RelayDescriptor]
+    @State private var show_ignored_relays: Bool = false
     @ObservedObject var pool: RelayPool
     @EnvironmentObject var user_settings: UserSettingsStore
     
@@ -44,7 +45,7 @@ struct ConfigView: View {
     }
     
     var recommended: [RelayDescriptor] {
-        return pool.recommended_relays
+        return pool.available_recommendations(show_ignored: show_ignored_relays)
     }
     
     var body: some View {
@@ -57,8 +58,16 @@ struct ConfigView: View {
                 }
                 
                 Section("Recommended Relays") {
+                    Toggle("Show ignored", isOn: $show_ignored_relays)
                     List(recommended, id: \.url) { r in
-                        RecommendedRelayView(damus: state, relay: r.url.absoluteString, info: r.info)
+                        VStack(alignment: .leading) {
+                            RecommendedRelayView(damus: state, relay: r.url.absoluteString,
+                                                 info: r.info, add_button: !pool.is_relay_ignored(r.url))
+                            Toggle("Ignore", isOn: Binding(
+                                get: { pool.is_relay_ignored(r.url) },
+                                set: { pool.set_relay_ignored(r, ignored: $0) }
+                            ))
+                        }
                     }
                 }
                 

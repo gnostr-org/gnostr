@@ -32,16 +32,64 @@ struct RelayHandler {
 class RelayPool: ObservableObject {
     @Published var relays: [Relay] = []
     @Published private(set) var suggested_relays: [RelayDescriptor] = []
+    @Published private(set) var ignored_relays: Set<String>
+    private let defaults: UserDefaults?
     var handlers: [RelayHandler] = []
 
+    init(defaults: UserDefaults? = .standard) {
+        self.defaults = defaults
+        self.ignored_relays = Set((defaults?.stringArray(forKey: "ignored_relays") ?? [])
+            .compactMap { normalized_relay_url($0)?.absoluteString })
+    }
+
     var recommended_relays: [RelayDescriptor] {
+        return available_recommendations(show_ignored: false)
+    }
+
+    func available_recommendations(show_ignored: Bool) -> [RelayDescriptor] {
         let configured = Set(descriptors.compactMap { normalized_relay_url($0.url.absoluteString) })
         var seen = configured
         let bootstrap = BOOTSTRAP_RELAYS.compactMap { value -> RelayDescriptor? in
             guard let url = normalized_relay_url(value) else { return nil }
             return RelayDescriptor(url: url, info: .rw)
         }
-        return (suggested_relays + bootstrap).filter { seen.insert($0.url).inserted }
+        let ignored = ignored_relays.sorted().compactMap { value -> RelayDescriptor? in
+            guard let url = normalized_relay_url(value) else { return nil }
+            return RelayDescriptor(url: url, info: .rw)
+        }
+        return (suggested_relays + bootstrap + ignored).filter {
+            (show_ignored || !is_relay_ignored($0.url)) && seen.insert($0.url).inserted
+        }
+    }
+
+    func is_relay_ignored(_ url: URL) -> Bool {
+        guard let normalized = normalized_relay_url(url.absoluteString) else { return false }
+        return ignored_relays.contains(normalized.absoluteString)
+    }
+
+    func set_relay_ignored(_ relay: RelayDescriptor, ignored: Bool) {
+        guard let url = normalized_relay_url(relay.url.absoluteString) else { return }
+        remember_relay(relay)
+        if ignored {
+            ignored_relays.insert(url.absoluteString)
+        } else {
+            ignored_relays.remove(url.absoluteString)
+        }
+        defaults?.set(ignored_relays.sorted(), forKey: "ignored_relays")
+    }
+
+    private func remember_relay(_ relay: RelayDescriptor) {
+        guard let url = normalized_relay_url(relay.url.absoluteString) else { return }
+        if let index = suggested_relays.firstIndex(where: { $0.url == url }) {
+            let previous = suggested_relays[index]
+            let info = RelayInfo(read: previous.info.read || relay.info.read,
+                                 write: previous.info.write || relay.info.write)
+            if info.read != previous.info.read || info.write != previous.info.write {
+                suggested_relays[index] = RelayDescriptor(url: url, info: info)
+            }
+        } else {
+            suggested_relays.append(RelayDescriptor(url: url, info: relay.info))
+        }
     }
 
     func collect_relay_recommendations(_ event: NostrEvent) {
@@ -53,16 +101,7 @@ class RelayPool: ObservableObject {
             return
         }
         for recommendation in recommendations {
-            if let index = suggested_relays.firstIndex(where: { $0.url == recommendation.url }) {
-                let previous = suggested_relays[index]
-                let info = RelayInfo(read: previous.info.read || recommendation.info.read,
-                                     write: previous.info.write || recommendation.info.write)
-                if info.read != previous.info.read || info.write != previous.info.write {
-                    suggested_relays[index] = RelayDescriptor(url: previous.url, info: info)
-                }
-            } else {
-                suggested_relays.append(recommendation)
-            }
+            remember_relay(recommendation)
         }
     }
 
@@ -97,6 +136,7 @@ class RelayPool: ObservableObject {
         
         for relay in relays {
             if relay.id == relay_id {
+                remember_relay(relay.descriptor)
                 relays.remove(at: i)
                 break
             }
@@ -244,4 +284,3 @@ func add_rw_relay(_ pool: RelayPool, _ url: String) {
     let url_ = URL(string: url)!
     try? pool.add_relay(url_, info: RelayInfo.rw)
 }
-

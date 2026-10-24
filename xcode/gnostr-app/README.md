@@ -54,6 +54,10 @@ damus implements the following [Nostr Implementation Possibilities][nips]
     Read/write markers are preserved when adding a suggestion. Duplicate and
     already configured relays are hidden; discovering a relay does not connect
     to it automatically. Discovered suggestions last for the current session.
+    Adding a relay hides its suggestion; removing a configured relay returns
+    it to recommendations. Toggle Ignore to hide a suggestion across launches,
+    and enable Show ignored to turn Ignore off again. Ignored relays remain
+    hidden when removed or rediscovered.
   - Configured and recommended relays fetch NIP-11 metadata over HTTPS/HTTP
     with `Accept: application/nostr+json`. The NIP-34 label reports whether
     `supported_nips` advertises `34`; this is not a guarantee that every Git
