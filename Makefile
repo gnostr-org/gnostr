@@ -67,6 +67,11 @@ cargo-install: 	###         cargo install --path . $(FORCE)
 	@. $(HOME)/.cargo/env
 	@cargo install -j $(NPROC) --locked --path ./bins $(FORCE)
 	@cargo install -j $(NPROC) --locked --path . $(FORCE)
+cargo-install-update: 	###         ./scripts/update && cargo install --path . $(FORCE)
+	@. $(HOME)/.cargo/env
+	@./scripts/update
+	@cargo install -j $(NPROC) --locked --path ./bins $(FORCE)
+	@cargo install -j $(NPROC) --locked --path . $(FORCE)
 
 cargo-sort: 	cargo-sort
 	for cargo_toml in $(shell ls */Cargo.toml); do cargo sort -n $(cargo_toml);done
