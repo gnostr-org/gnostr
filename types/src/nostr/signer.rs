@@ -128,6 +128,14 @@ pub trait Signer: fmt::Debug {
         // Generate Id
         let id = input.hash()?;
 
+        if log::log_enabled!(log::Level::Debug) {
+            log::debug!(
+                "Pre-signed event JSON: id={}, event={}",
+                id,
+                serde_json::to_string(&input)?
+            );
+        }
+
         // Generate Signature
         let signature = self.sign_id(id)?;
 
@@ -247,20 +255,7 @@ pub trait Signer: fmt::Debug {
 
         // We found the nonce. Do it for reals
         input.tags[index].set_index(1, format!("{}", nonce.load(Ordering::Relaxed)));
-        let id = input.hash().unwrap();
-
-        // Signature
-        let signature = self.sign_id(id)?;
-
-        Ok(Event {
-            id,
-            pubkey: input.pubkey,
-            created_at: input.created_at,
-            kind: input.kind,
-            tags: input.tags,
-            content: input.content,
-            sig: signature,
-        })
+        self.sign_event(input)
     }
 
     /// Giftwrap an event

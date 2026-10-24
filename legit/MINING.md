@@ -186,6 +186,11 @@ single-threaded implementation that signs each candidate.
 `EventBuilder::to_pow_event` delegates positive targets to this working
 multithreaded miner and signs normally for a zero target.
 
+Enable `RUST_LOG=gnostr_legit=debug,gnostr_types::nostr::signer=debug` to log
+the full unsigned event JSON and its event ID immediately before signing.
+Mined events include the winning NIP-13 nonce, not every candidate. These
+debug records contain event content and tags, but no signing private key.
+
 ## Source and focused checks
 
 The candidate loop and nonce formatting live in
