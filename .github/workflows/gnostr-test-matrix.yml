@@ -357,7 +357,7 @@ jobs:
         # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
         run: |
-          cargo install --path . --force
+          cargo install --path . --locked --force
 
       - name: Save Cargo target and bin cache (post-install)
         if: always()
@@ -370,7 +370,7 @@ jobs:
         # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
         run: |
-          cargo install --path ./bins --force --bin git-remote-nostr
+          cargo install --path ./bins --locked --force --bin git-remote-nostr
           git fetch --all
 
       - name: Save Cargo target cache (post-git-remote-nostr)
