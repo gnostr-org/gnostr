@@ -16,3 +16,6 @@ openssl-3.0.4.tar.gz
 openssl-3.0.4/
 pcre-8.45/
 v1.3.1.zip
+
+# This source header is required even when a global ignore excludes config.h.
+!/damus-c/config.h

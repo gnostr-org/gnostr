@@ -6,6 +6,13 @@ A twitter-like [nostr][nostr] client for iPhone, iPad and MacOS.
 
 [nostr]: https://github.com/fiatjaf/nostr
 
+## Building from source
+
+Open `gnostr.xcodeproj` and build the `gnostr` scheme, or run `./build.sh`
+to build for My Mac. The CCAN helpers use the checked-in
+`damus-c/config.h` for Apple Clang; no configure or header-generation step
+is required.
+
 ## Spec Compliance
 
 damus implements the following [Nostr Implementation Possibilities][nips]
