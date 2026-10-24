@@ -393,9 +393,6 @@ impl ChatApp {
         let clock_slew = format!("{:.6}", metrics.slew_rate);
         let clock_last_sync = format!("{}s", metrics.last_sync_secs_ago);
         let peers = self.connected_peers.clone();
-        let header_clock_status = clock_status.clone();
-        let header_clock_offset = clock_offset.clone();
-        let header_clock_slew = clock_slew.clone();
         let selected_msg = self.selected_message().cloned();
 
         #[cfg(feature = "fractal")]
@@ -405,7 +402,7 @@ impl ChatApp {
 
         MultiPanel::new()
             .header_title("gnostr-chat")
-            .header_height(5)
+            .header_height(7)
             .header_content(move |_state, area, buf| {
                 let clock_width = 32.min(area.width);
                 let chunks = Layout::default()
@@ -437,22 +434,24 @@ impl ChatApp {
                         Span::raw(&clock_now),
                     ]),
                     Line::from(vec![
+                        Span::styled("status: ", Style::default().fg(Color::Magenta)),
+                        Span::styled(&clock_status, clock_status_style),
+                    ]),
+                    Line::from(vec![
                         Span::styled("offset: ", Style::default().fg(Color::Magenta)),
-                        Span::raw(&header_clock_offset),
+                        Span::raw(&clock_offset),
                     ]),
                     Line::from(vec![
                         Span::styled("slew: ", Style::default().fg(Color::Magenta)),
-                        Span::raw(&header_clock_slew),
+                        Span::raw(&clock_slew),
+                    ]),
+                    Line::from(vec![
+                        Span::styled("sync: ", Style::default().fg(Color::Magenta)),
+                        Span::raw(&clock_last_sync),
                     ]),
                 ];
                 Paragraph::new(right_lines)
                     .wrap(Wrap { trim: true })
-                    .block(
-                        Block::default()
-                            .title(header_clock_status.clone())
-                            .borders(Borders::ALL)
-                            .border_style(clock_status_style),
-                    )
                     .render(chunks[1], buf);
             })
             .left_title("status")
@@ -477,29 +476,6 @@ impl ChatApp {
                     Line::from(vec![
                         Span::styled("keys: ", Style::default().fg(Color::Magenta)),
                         Span::raw("tab switch, enter send, ? help, q quit"),
-                    ]),
-                    Line::from(""),
-                    Line::from(vec![Span::styled(
-                        "bft clock",
-                        Style::default()
-                            .fg(Color::Cyan)
-                            .add_modifier(Modifier::BOLD),
-                    )]),
-                    Line::from(vec![
-                        Span::styled("status: ", Style::default().fg(Color::Magenta)),
-                        Span::styled(&clock_status, clock_status_style),
-                    ]),
-                    Line::from(vec![
-                        Span::styled("offset: ", Style::default().fg(Color::Magenta)),
-                        Span::raw(&clock_offset),
-                    ]),
-                    Line::from(vec![
-                        Span::styled("slew: ", Style::default().fg(Color::Magenta)),
-                        Span::raw(&clock_slew),
-                    ]),
-                    Line::from(vec![
-                        Span::styled("sync: ", Style::default().fg(Color::Magenta)),
-                        Span::raw(&clock_last_sync),
                     ]),
                 ];
 
