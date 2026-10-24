@@ -13,7 +13,7 @@ use gnostr_types::nostr::patch::{
 };
 use gnostr_types::nostr::{
     client::Options as ClientOptions, patch::install_rustls_crypto_provider, Client, Event,
-    EventKind, Filter, Id, Metadata, PublicKey, Tag,
+    EventBuilder, EventKind, Filter, Id, Metadata, PublicKey, Tag,
 };
 use std::time::Duration;
 use time_0_3::OffsetDateTime;
@@ -305,6 +305,23 @@ impl Gitminer {
         })
     }
 
+    fn commit_profile_follow_event(keys: &Keys, nonce_tag: Tag) -> anyhow::Result<Event> {
+        let followed = PublicKey::try_from_bech32_string(
+            "npub1gulj0vlre2dcpxltznw790wcds382wpkxg6kt444hvmefpdmm9wqtqv4vx",
+            true,
+        )?;
+        EventBuilder::new(
+            EventKind::ContactList,
+            String::new(),
+            vec![
+                Tag::new_tag("p", &followed.as_hex_string()),
+                Tag::new_tag("t", "gnostr"),
+                nonce_tag,
+            ],
+        )
+        .to_event(&keys.secret_key()?)
+    }
+
     fn mined_commit_nonce(blob: &str) -> Result<&str, &'static str> {
         let nonce = blob.rsplit_once("\n\n").map(|(_, nonce)| nonce);
         match nonce {
@@ -518,7 +535,10 @@ impl Gitminer {
                         keys.public_key()
                     );
                     let metadata_id = client
-                        .set_metadata_with_tags(&metadata, vec![Tag::new_tag("t", "gnostr"), nonce_tag])
+                        .set_metadata_with_tags(
+                            &metadata,
+                            vec![Tag::new_tag("t", "gnostr"), nonce_tag.clone()],
+                        )
                         .await
                         .map_err(|err| {
                             error!(
@@ -530,6 +550,28 @@ impl Gitminer {
                     info!(
                         "Published commit profile metadata: id={}, commit={}, pubkey={}",
                         metadata_id,
+                        head_hash,
+                        keys.public_key()
+                    );
+                    let follows = Self::commit_profile_follow_event(&keys, nonce_tag).map_err(
+                        |err| {
+                            error!(
+                                "Failed to build follow list for commit {}: {}",
+                                head_hash, err
+                            );
+                            "Failed to build commit profile follow list"
+                        },
+                    )?;
+                    let follows_id = client.send_event(follows).await.map_err(|err| {
+                        error!(
+                            "Failed to publish follow list for commit {}: {}",
+                            head_hash, err
+                        );
+                        "Failed to publish commit profile follow list"
+                    })?;
+                    info!(
+                        "Published commit profile follow list: id={}, commit={}, pubkey={}",
+                        follows_id,
                         head_hash,
                         keys.public_key()
                     );
@@ -749,7 +791,7 @@ impl Gitminer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use gnostr_types::nostr::{EventBuilder, Unixtime, DEFAULT_AVATAR, DEFAULT_BANNER};
+    use gnostr_types::nostr::{Unixtime, DEFAULT_AVATAR, DEFAULT_BANNER};
 
     fn miner() -> (tempfile::TempDir, Gitminer) {
         let directory = tempfile::tempdir().unwrap();
@@ -797,6 +839,30 @@ mod tests {
         let commit = "000dba5dac8fb736d0a7e811b289cca088064ea4";
         assert!(miner.commit_profile_metadata(commit).is_none());
         assert!(miner.clone().commit_profile_metadata(commit).is_none());
+    }
+
+    #[test]
+    fn commit_profile_follows_empty_sha256_identity_with_signed_kind_3() {
+        let keys = Keys::generate();
+        let nonce = commit_nonce_tag("01-00000122").unwrap();
+        let event = Gitminer::commit_profile_follow_event(&keys, nonce.clone()).unwrap();
+        event.verify(None).unwrap();
+        assert_eq!(event.kind, EventKind::ContactList);
+        assert_eq!(event.pubkey, keys.public_key());
+        assert!(event.content.is_empty());
+        let followed = PublicKey::try_from_bech32_string(
+            "npub1gulj0vlre2dcpxltznw790wcds382wpkxg6kt444hvmefpdmm9wqtqv4vx",
+            true,
+        )
+        .unwrap();
+        assert_eq!(
+            event.tags,
+            vec![
+                Tag::new_tag("p", &followed.as_hex_string()),
+                Tag::new_tag("t", "gnostr"),
+                nonce,
+            ]
+        );
     }
 
     #[test]

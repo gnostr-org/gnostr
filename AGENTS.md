@@ -402,7 +402,12 @@ Without `--nsec`, a kind-0 profile event with the gnostr avatar/banner is sent
 before the NIP-34 patch, using the same commit-derived key and selected relays.
 Its `name` and `display_name` are both `gnostr@<commit short hash>`, using the
 first seven hexadecimal characters of the mined commit hash.
-An explicit `--nsec` never triggers automatic profile metadata publication.
+Generated profiles also publish a kind-3 NIP-02 follow list for
+`npub1gulj0vlre2dcpxltznw790wcds382wpkxg6kt444hvmefpdmm9wqtqv4vx`,
+the empty-SHA-256 identity, before the patch. It uses the same signer and relays,
+includes `#gnostr` and the commit nonce, and logs its event ID. Follow-list errors
+propagate. An explicit `--nsec` never triggers automatic profile metadata or
+follow-list publication.
 `gnostr_types::nostr::Metadata::default()` and `Metadata::new()` include the
 default avatar and banner URLs; deserialization does not inject these defaults.
 All legit-generated events carry the hashtag tag `["t","gnostr"]` (`#gnostr`).

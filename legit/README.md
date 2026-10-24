@@ -83,9 +83,15 @@ event signed by the key derived from the zero-padded commit hash. Its `name`
 and `display_name` are both `gnostr@<commit short hash>`, using the first seven
 hexadecimal characters of the mined commit hash (for example, `gnostr@000dba5`). The profile
 uses the gnostr avatar and banner from `gnostr-types`, then publishes the NIP-34
-patch with the same key to the same relays. Both event IDs are logged.
-Metadata publication errors are reported and stop publication of the patch.
-With an explicit `--nsec`, no profile metadata is published or overwritten.
+patch with the same key to the same relays. Before the patch, each generated
+profile also publishes a NIP-02 kind-3 follow list containing
+`npub1gulj0vlre2dcpxltznw790wcds382wpkxg6kt444hvmefpdmm9wqtqv4vx`
+(the identity derived from SHA-256 of the empty string), signed with the same
+commit-derived key and sent to the same relays. This follow list includes
+`#gnostr` and the commit nonce. All event IDs are logged.
+Metadata or follow-list publication errors are reported and stop publication
+of the patch. With an explicit `--nsec`, neither profile metadata nor a follow
+list is published or overwritten.
 `gnostr_types::nostr::Metadata::default()` and `Metadata::new()` supply these
 avatar/banner URLs. Deserializing existing profiles preserves missing or null
 artwork fields rather than inserting the defaults.
