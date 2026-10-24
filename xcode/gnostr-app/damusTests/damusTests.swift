@@ -521,11 +521,16 @@ class damusTests: XCTestCase {
                 frames = value
                 if value.count == tags.count && !fulfilled {
                     fulfilled = true
-                    measured.fulfill()
+                    DispatchQueue.main.async {
+                        measured.fulfill()
+                    }
                 }
             }
         let controller = UIHostingController(rootView: content)
-        controller.view.frame = CGRect(x: 0, y: 0, width: 320, height: 900)
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 900))
+        window.rootViewController = controller
+        window.isHidden = false
+        defer { window.isHidden = true }
         controller.view.layoutIfNeeded()
         await fulfillment(of: [measured], timeout: 5)
         let preview = TagRowPreview(frames: frames)
