@@ -81,6 +81,20 @@ pub fn build_patch_event(
         .map_err(|err| Error::Custom(err.into()))
 }
 
+/// Build a kind-1 announcement with a `nostr:note` content reference and `e`/`t` tags.
+pub fn build_patch_announcement(keys: &Keys, patch_event_id: Id) -> Result<Event, Error> {
+    EventBuilder::new(
+        EventKind::TextNote,
+        format!("nostr:{}", patch_event_id.as_bech32_string()),
+        vec![
+            Tag::new_event(patch_event_id, None, None),
+            Tag::new_tag("t", "gnostr"),
+        ],
+    )
+    .to_event(&keys.secret_key()?)
+    .map_err(|err| Error::Custom(err.into()))
+}
+
 /// Build and publish a tagged NIP-34 patch event.
 pub async fn publish_patch_event(
     keys: &Keys,
@@ -126,6 +140,27 @@ pub async fn publish_patch_event(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn patch_announcement_references_patch_and_uses_same_signer() {
+        let keys = Keys::generate();
+        let patch = build_patch_event(&keys, "repo", "commit", "patch", None).unwrap();
+        let note = build_patch_announcement(&keys, patch.id).unwrap();
+        note.verify(None).unwrap();
+        assert_eq!(note.kind, EventKind::TextNote);
+        assert_eq!(note.pubkey, patch.pubkey);
+        assert_eq!(
+            note.content,
+            format!("nostr:{}", patch.id.as_bech32_string())
+        );
+        assert_eq!(
+            note.tags,
+            vec![
+                Tag::new_event(patch.id, None, None),
+                Tag::new_tag("t", "gnostr"),
+            ]
+        );
+    }
 
     #[test]
     fn patch_has_gnostr_hashtag_and_preserves_manifest_reference() {

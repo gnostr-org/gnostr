@@ -393,6 +393,9 @@ Without `--nsec`, a kind-0 profile event with the gnostr avatar/banner is sent
 before the NIP-34 patch, using the same commit-derived key and selected relays.
 An explicit `--nsec` never triggers automatic profile metadata publication.
 All legit-generated events carry the hashtag tag `["t","gnostr"]` (`#gnostr`).
+After the patch is sent, a kind-1 note references its event ID as `nostr:note1...`
+in the content and an `e` tag. The note uses the same signing key and relays,
+includes `["t","gnostr"]`, and logs its own event ID.
 
 ## Verification summary
 

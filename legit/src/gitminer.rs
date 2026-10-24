@@ -7,7 +7,7 @@ use std::thread;
 // use git2::*;
 use super::worker::Worker;
 use gnostr_asyncgit::types::Keys;
-use gnostr_types::nostr::patch::{get_relay_urls, publish_patch_event};
+use gnostr_types::nostr::patch::{build_patch_announcement, get_relay_urls, publish_patch_event};
 use gnostr_types::nostr::{
     client::Options as ClientOptions, patch::install_rustls_crypto_provider, Client, Metadata, Tag,
     DEFAULT_AVATAR, DEFAULT_BANNER,
@@ -300,23 +300,23 @@ impl Gitminer {
             );
             let runtime = tokio::runtime::Runtime::new().expect("Failed to create async runtime");
             runtime.block_on(async move {
+                install_rustls_crypto_provider();
+                let mut client = Client::new(
+                    &keys,
+                    ClientOptions::new().send_timeout(Some(Duration::from_secs(1))),
+                );
+                client.add_relays(relay_urls.clone()).await.map_err(|err| {
+                    error!("Failed to configure commit event relays: {}", err);
+                    "Failed to configure commit event relays"
+                })?;
+                client.connect().await;
                 if let Some(metadata) = metadata {
-                    install_rustls_crypto_provider();
                     debug!("Commit profile metadata: {:?}", metadata);
                     info!(
                         "Publishing kind-0 metadata for commit {} with public key {}",
                         head_hash,
                         keys.public_key()
                     );
-                    let mut client = Client::new(
-                        &keys,
-                        ClientOptions::new().send_timeout(Some(Duration::from_secs(1))),
-                    );
-                    client.add_relays(relay_urls.clone()).await.map_err(|err| {
-                        error!("Failed to configure commit metadata relays: {}", err);
-                        "Failed to configure commit metadata relays"
-                    })?;
-                    client.connect().await;
                     let metadata_id = client
                         .set_metadata_with_tags(&metadata, vec![Tag::new_tag("t", "gnostr")])
                         .await
@@ -358,6 +358,31 @@ impl Gitminer {
                 info!(
                     "Published NIP-34 patch event: id={}, commit={}, repository={}",
                     event_id, head_hash, repo_name
+                );
+                let announcement = build_patch_announcement(&keys, event_id).map_err(|err| {
+                    error!("Failed to build announcement for patch {}: {}", event_id, err);
+                    "Failed to build patch announcement"
+                })?;
+                debug!(
+                    "Publishing kind-1 patch announcement: id={}, pubkey={}, patch_event={}, content={}",
+                    announcement.id,
+                    announcement.pubkey,
+                    event_id,
+                    announcement.content
+                );
+                let announcement_id = client.send_event(announcement).await.map_err(|err| {
+                    error!(
+                        "Failed to publish announcement for patch {}: {}",
+                        event_id, err
+                    );
+                    "Failed to publish patch announcement"
+                })?;
+                info!(
+                    "Published kind-1 patch announcement: id={}, patch_event={}, commit={}, pubkey={}",
+                    announcement_id,
+                    event_id,
+                    head_hash,
+                    keys.public_key()
                 );
                 Ok::<_, &'static str>(event_id)
             })
