@@ -364,6 +364,74 @@ class damusTests: XCTestCase {
         scoped.unsubscribe()
     }
 
+    func testGlobalSearchNIP34KindSelectionsRejectDisabledKindsAndStopWhenEmpty() {
+        let model = SearchHomeModel(damus_state: .empty)
+        let patch = relayListEvent(tags: [], kind: 1617)
+        let issue = relayListEvent(tags: [], kind: 1621)
+        model.subscribe(nip34_only: true, selected_kinds: [1617])
+        XCTAssertEqual(model.get_base_filter().kinds, [1617])
+        for event in [patch, issue] {
+            model.handle_event(relay_id: "wss://source.example",
+                               conn_ev: .nostr_event(.event(model.base_subid, event)))
+        }
+        XCTAssertEqual(model.events.map { $0.id }, [patch.id])
+        model.subscribe(nip34_only: true, selected_kinds: [1621])
+        XCTAssertTrue(model.events.isEmpty)
+        for event in [patch, issue] {
+            model.handle_event(relay_id: "wss://source.example",
+                               conn_ev: .nostr_event(.event(model.base_subid, event)))
+        }
+        XCTAssertEqual(model.events.map { $0.id }, [issue.id])
+        model.subscribe(nip34_only: true, selected_kinds: [])
+        XCTAssertTrue(model.events.isEmpty)
+        XCTAssertFalse(model.loading)
+        XCTAssertFalse(model.damus_state.pool.handlers.contains { $0.sub_id == model.base_subid })
+    }
+
+    func testSearchNIP34KindSelectionsKeepScopeAndStopWhenEmpty() {
+        let pool = RelayPool(defaults: nil)
+        let model = SearchModel(pool: pool, search: .filter_hashtag(["gnostr"]))
+        let patch = relayListEvent(tags: [["t", "gnostr"]], kind: 1617)
+        let issue = relayListEvent(tags: [["t", "gnostr"]], kind: 1621)
+        model.subscribe(nip34_only: true, selected_kinds: [1617, 1621])
+        model.add_event(patch)
+        model.add_event(issue)
+        XCTAssertEqual(model.events.count, 2)
+        model.subscribe(nip34_only: true, selected_kinds: [1617])
+        model.add_event(patch)
+        model.add_event(issue)
+        XCTAssertEqual(model.events.map { $0.id }, [patch.id])
+        model.subscribe(nip34_only: true, selected_kinds: [])
+        XCTAssertTrue(model.events.isEmpty)
+        XCTAssertFalse(model.loading)
+        XCTAssertFalse(pool.handlers.contains { $0.sub_id == model.sub_id })
+
+        let scoped = SearchModel(pool: pool, search: .filter_kinds([30617]))
+        scoped.subscribe(nip34_only: true, selected_kinds: [1617])
+        XCTAssertEqual(scoped.search.kinds, [])
+        XCTAssertFalse(scoped.loading)
+        scoped.subscribe(nip34_only: false, selected_kinds: [])
+        XCTAssertEqual(scoped.search.kinds, [30617])
+        scoped.unsubscribe()
+    }
+
+    func testSearchNIP34KindSelectionsPersistIncludingAllOff() throws {
+        let suite = "SearchKindSettingsTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let settings = UserSettingsStore(defaults: defaults)
+        settings.search_nip34_kinds.remove(1617)
+        settings.search_nip34_kinds.remove(1621)
+        let restored = UserSettingsStore(defaults: defaults)
+        XCTAssertFalse(restored.search_nip34_kinds.contains(1617))
+        XCTAssertFalse(restored.search_nip34_kinds.contains(1621))
+        XCTAssertTrue(restored.search_nip34_kinds.contains(30617))
+        restored.search_nip34_kinds = []
+        XCTAssertTrue(UserSettingsStore(defaults: defaults).search_nip34_kinds.isEmpty)
+        restored.search_nip34_kinds.insert(1621)
+        XCTAssertEqual(UserSettingsStore(defaults: defaults).search_nip34_kinds, [1621])
+    }
+
     func testPatchPreviewFoldsBelowFourCommitHeaderLines() throws {
         let hash = String(repeating: "1234567890", count: 4)
         let header = """
