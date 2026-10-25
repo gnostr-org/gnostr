@@ -42,16 +42,67 @@ enum FilterState : Int {
     case posts = 0
 }
 
-struct NIP34SearchControls: View {
-    @EnvironmentObject var user_settings: UserSettingsStore
-    let open_settings: () -> Void
-
+struct NIP34SearchControlsActingAsANavBar: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 16) {
+            HStack(spacing: 12) {
+                HStack(spacing: 6) {}
+            }
+        }
+    }
+
+}
+
+struct NIP34SearchControls: View {
+    @EnvironmentObject var user_settings: UserSettingsStore
+    @Binding var search: String
+    @FocusState private var search_focused: Bool
+    let open_search: () -> Void
+    let open_settings: () -> Void
+
+    // acting as a nav bar
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 12) {
+                HStack(spacing: 6) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(.secondary)
+                    TextField("Search...", text: $search)
+                        .autocorrectionDisabled(true)
+                        .textInputAutocapitalization(.never)
+                        .submitLabel(.search)
+                        .focused($search_focused)
+                        .accessibilityIdentifier("global-search")
+                        .onSubmit {
+                            search_focused = false
+                            open_search()
+                        }
+                    if !search.isEmpty {
+                        Button {
+                            search = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Clear search")
+                    }
+                }
+                .padding(8)
+                .background(Color.secondary.opacity(0.2), in: RoundedRectangle(cornerRadius: 8))
+                // insertion
                 Toggle("NIP-34 only", isOn: $user_settings.nip34_only)
-                Button(action: open_settings) {
+                    .fixedSize()
+                Button {
+                    search_focused = false
+                    open_settings()
+                } label: {
                     Image(systemName: "gear")
+                }
+                .onChange(of: search_focused) { focused in
+                    if focused {
+                        open_search()
+                    }
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Settings")
@@ -112,6 +163,7 @@ struct ContentView: View {
     @State var thread_open: Bool = false
     @State var search_open: Bool = false
     @State var settings_open: Bool = false
+    @State private var search_text = ""
     @State var filter_state : FilterState = .posts_and_replies
     @StateObject var home: HomeModel = HomeModel()
     @StateObject var user_settings = UserSettingsStore()
@@ -168,36 +220,42 @@ struct ContentView: View {
     
     func MainContent(damus: DamusState) -> some View {
         VStack {
-            NavigationLink(destination: MaybeProfileView, isActive: $profile_open) {
-                EmptyView()
-            }
-            NavigationLink(destination: MaybeThreadView, isActive: $thread_open) {
-                EmptyView()
-            }
-            NavigationLink(destination: MaybeSearchView, isActive: $search_open) {
-                EmptyView()
-            }
+            //NavigationLink(destination: MaybeProfileView, isActive: $profile_open) {
+              //  EmptyView()
+            //}
+            //NavigationLink(destination: MaybeThreadView, isActive: $thread_open) {
+             //  EmptyView()
+            //}
+            //NavigationLink(destination: MaybeSearchView, isActive: $search_open) {
+              //  EmptyView()
+            //}
             NavigationLink(destination: ConfigView(state: damus).environmentObject(user_settings),
                            isActive: $settings_open) {
                 EmptyView()
             }
             switch selected_timeline {
             case .search:
-                SearchHomeView(damus_state: damus_state!, model: SearchHomeModel(damus_state: damus_state!))
+                //EmptyView()
+                SearchHomeView(damus_state: damus_state!, model: SearchHomeModel(damus_state: damus_state!),
+                               search: $search_text)
                 
             case .home:
+                //EmptyView()
                 PostingTimelineView
                 
             case .notifications:
+                //EmptyView()
                 TimelineView(events: $home.notifications, loading: $home.loading, damus: damus, show_friend_icon: true, filter: { _ in true })
                     .navigationTitle("Notifications")
                 
             case .dms:
+                //EmptyView()
                 DirectMessagesView(damus_state: damus_state!)
                     .environmentObject(home.dms)
             
             case .none:
-                EmptyView()
+                //EmptyView()
+                PostingTimelineView
             }
         }
         .navigationBarTitle(selected_timeline == .home ?  "Home" : "Global", displayMode: .inline)
@@ -238,41 +296,46 @@ struct ContentView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             if let damus = self.damus_state {
-                NIP34SearchControls(open_settings: { settings_open = true })
-                    .padding(.horizontal)
-                    .padding(.vertical, 8)
+                //NIP34SearchControls(search: $search_text,
+                //                    open_search: { switch_timeline(.search) },
+                //                    open_settings: { settings_open = true })
+                //    .padding(.horizontal)
+                //    .padding(.vertical, 8)
+                Divider()
+                EmptyView()
                 Divider()
                 NavigationView {
-                    MainContent(damus: damus)
-                        .toolbar {
-                            ToolbarItem(placement: .navigationBarLeading) {
-                                let profile_model = ProfileModel(pubkey: damus_state!.pubkey, damus: damus_state!)
-                                let followers_model = FollowersModel(damus_state: damus_state!, target: damus_state!.pubkey)
-                                let prof_dest = ProfileView(damus_state: damus_state!, profile: profile_model, followers: followers_model)
-
-                                NavigationLink(destination: prof_dest) {
-                                    /// Verify that the user has a profile picture, if not display a generic SF Symbol
-                                    /// (Resolves an in-app error where ``Robohash`` pictures are not generated so the button dissapears
-                                    if let picture = damus_state?.profiles.lookup(id: pubkey)?.picture {
-                                        ProfilePicView(pubkey: damus_state!.pubkey, size: 32, highlight: .none, profiles: damus_state!.profiles, picture: picture)
-                                    } else {
-                                        Image(systemName: "person.fill")
-                                    }
-                                }
-                                .buttonStyle(PlainButtonStyle())
-                                .accessibilityLabel("Your profile")
-                            }
-
-                            ToolbarItem(placement: .navigationBarTrailing) {
-                                HStack(alignment: .center) {
-                                    if home.signal.signal != home.signal.max_signal {
-                                        Text("\(home.signal.signal)/\(home.signal.max_signal)")
-                                            .font(.callout)
-                                            .foregroundColor(.gray)
-                                    }
-                                }
-                            }
-                        }
+                //    MainContent(damus: damus)
+                //        .toolbar {
+                //            ToolbarItem(placement: .navigationBarLeading) {
+                //                let profile_model = ProfileModel(pubkey: damus_state!.pubkey, damus: damus_state!)
+                //                let followers_model = FollowersModel(damus_state: damus_state!, target: damus_state!.pubkey)
+                //                let prof_dest = ProfileView(damus_state: damus_state!, profile: profile_model, followers: //followers_model)
+//
+                //                NavigationLink(destination: prof_dest) {
+                //                    /// Verify that the user has a profile picture, if not display a generic SF Symbol
+                //                    /// (Resolves an in-app error where ``Robohash`` pictures are not generated so the button dissapears
+                //                    if let picture = damus_state?.profiles.lookup(id: pubkey)?.picture {
+                //                        ProfilePicView(pubkey: damus_state!.pubkey, size: 32, highlight: .none, profiles: //damus_state!.profiles, picture: picture)
+                //                    } else {
+                //                        Image(systemName: "person.fill")
+                //                    }
+                //                }
+                //                .buttonStyle(PlainButtonStyle())
+                //                .accessibilityLabel("Your profile")
+                //            }
+//
+                //            ToolbarItem(placement: .navigationBarTrailing) {
+                //                // back button
+                //                HStack(alignment: .center) {
+                //                    if home.signal.signal != home.signal.max_signal {
+                //                        Text("\(home.signal.signal)/\(home.signal.max_signal)")
+                //                            .font(.callout)
+                //                            .foregroundColor(.gray)
+                //                    }
+                //                }
+                //            }
+                //        }
                 }
                 .navigationViewStyle(.stack)
             }
@@ -419,6 +482,7 @@ struct ContentView: View {
         }
     }
     
+    //
     func switch_timeline(_ timeline: Timeline) {
         NotificationCenter.default.post(name: .switched_timeline, object: timeline)
         
