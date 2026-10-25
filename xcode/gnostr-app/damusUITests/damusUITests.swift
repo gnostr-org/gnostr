@@ -61,17 +61,6 @@ class damusUITests: XCTestCase {
         settings.tap()
         XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 5))
 
-        search.tap()
-        search.typeText("#gnostr\n")
-        let hashtag = app.buttons["Search hashtag: #gnostr"]
-        XCTAssertTrue(hashtag.waitForExistence(timeout: 5))
-        XCTAssertEqual(search.value as? String, "#gnostr")
-        XCTAssertEqual(repositories.value as? String, "Off")
-        hashtag.tap()
-        XCTAssertTrue(app.navigationBars["#gnostr"].waitForExistence(timeout: 5))
-        XCTAssertTrue(search.isHittable)
-        XCTAssertTrue(toggle.isHittable)
-        XCTAssertTrue(settings.isHittable)
         XCTAssertEqual(app.switches.matching(identifier: "NIP-34 only").count, 1)
         XCTAssertTrue(toggle.isHittable)
         XCTAssertTrue(settings.isHittable)
@@ -83,6 +72,18 @@ class damusUITests: XCTestCase {
         XCTAssertTrue(toggle.isHittable)
         settings.tap()
         XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 5))
+
+        search.tap()
+        search.typeText("#gnostr\n")
+        let hashtag = app.buttons["Search hashtag: #gnostr"]
+        XCTAssertTrue(hashtag.waitForExistence(timeout: 5))
+        XCTAssertEqual(search.value as? String, "#gnostr")
+        XCTAssertEqual(repositories.value as? String, "Off")
+        hashtag.tap()
+        XCTAssertTrue(app.navigationBars["#gnostr"].waitForExistence(timeout: 5))
+        XCTAssertTrue(search.isHittable)
+        XCTAssertTrue(toggle.isHittable)
+        XCTAssertTrue(settings.isHittable)
     }
 
     func testLaunchPerformance() throws {
