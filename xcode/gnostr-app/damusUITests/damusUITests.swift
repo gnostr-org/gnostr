@@ -38,21 +38,40 @@ class damusUITests: XCTestCase {
             "-auto_subscribe_nip34", "NO",
         ]
         app.launch()
+        let search = app.textFields["global-search"]
         let toggle = app.switches["NIP-34 only"]
         let settings = app.buttons["global-settings"]
         XCTAssertTrue(toggle.waitForExistence(timeout: 15))
         XCTAssertTrue(settings.isHittable)
+        XCTAssertTrue(search.isHittable)
+        XCTAssertLessThan(search.frame.midX, toggle.frame.midX)
         XCTAssertGreaterThan(settings.frame.midX, toggle.frame.midX)
         XCTAssertLessThan(abs(settings.frame.midY - toggle.frame.midY), 20)
-        toggle.tap()
+        toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
+        XCTAssertEqual(toggle.value as? String, "1")
         let repositories = app.buttons["nip34-kind-30617"]
         XCTAssertTrue(repositories.waitForExistence(timeout: 5))
+        if repositories.value as? String == "Off" {
+            repositories.tap()
+        }
         XCTAssertEqual(repositories.value as? String, "On")
         repositories.tap()
         XCTAssertEqual(repositories.value as? String, "Off")
 
         settings.tap()
         XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 5))
+
+        search.tap()
+        search.typeText("#gnostr\n")
+        let hashtag = app.buttons["Search hashtag: #gnostr"]
+        XCTAssertTrue(hashtag.waitForExistence(timeout: 5))
+        XCTAssertEqual(search.value as? String, "#gnostr")
+        XCTAssertEqual(repositories.value as? String, "Off")
+        hashtag.tap()
+        XCTAssertTrue(app.navigationBars["#gnostr"].waitForExistence(timeout: 5))
+        XCTAssertTrue(search.isHittable)
+        XCTAssertTrue(toggle.isHittable)
+        XCTAssertTrue(settings.isHittable)
         XCTAssertEqual(app.switches.matching(identifier: "NIP-34 only").count, 1)
         XCTAssertTrue(toggle.isHittable)
         XCTAssertTrue(settings.isHittable)
