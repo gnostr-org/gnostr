@@ -7480,6 +7480,7 @@ dependencies = [
  "gnostr-asyncgit",
  "gnostr-filetreelist",
  "gnostr-git2-testing",
+ "gnostr-tui",
  "indicatif 0.14.0",
  "log",
  "nostr-sdk",

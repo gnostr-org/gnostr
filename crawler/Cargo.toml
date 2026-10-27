@@ -79,7 +79,12 @@ url = "2.5.0"
 
 [dev-dependencies]
 gnostr-git2-testing = { path = "../git2-testing" }
+gnostr-tui = { path = "../tui", default-features = false, features = ["browser"] }
 
 [[test]]
 name = "crawler_helpers"
 path = "tests/crawler_helpers.rs"
+
+[[example]]
+name = "crawler_web_browser"
+path = "examples/crawler_web_browser.rs"
