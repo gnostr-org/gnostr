@@ -236,10 +236,15 @@ async fn main() -> Result<(), anyhow::Error> {
                 .join("ipfs")
         });
         let _ = std::fs::create_dir_all(&repo);
-        let state = gnostr_web::app::methods::ipfs::IpfsState::init(
-            &repo.to_string_lossy(),
-            args.ipfs_online,
-        );
+        let repo_for_init = repo.clone();
+        let state = tokio::task::spawn_blocking(move || {
+            gnostr_web::app::methods::ipfs::IpfsState::init(
+                &repo_for_init.to_string_lossy(),
+                args.ipfs_online,
+            )
+        })
+        .await
+        .expect("IPFS initialization panicked");
         if state.enabled {
             if let Some(url) = state.gateway.lock().await.clone() {
                 info!("Kubo gateway listening at {url}");

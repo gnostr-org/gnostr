@@ -4,6 +4,8 @@ use std::sync::Arc;
 #[cfg(feature = "ipfs")]
 use axum::{extract::Extension, http::StatusCode, response::IntoResponse, Json};
 #[cfg(feature = "ipfs")]
+use futures_util::StreamExt;
+#[cfg(feature = "ipfs")]
 use serde::Serialize;
 #[cfg(feature = "ipfs")]
 use tokio::sync::Mutex;
@@ -308,11 +310,7 @@ async fn external_add(api_url: &str, data: &[u8]) -> Result<String, String> {
 async fn external_cat(api_url: &str, cid: &str) -> Result<Vec<u8>, String> {
     let client = reqwest::Client::new();
     let url = format!("{api_url}/api/v0/cat?arg={cid}");
-    let resp = client
-        .post(&url)
-        .send()
-        .await
-        .map_err(|e| e.to_string())?;
+    let resp = client.post(&url).send().await.map_err(|e| e.to_string())?;
     if !resp.status().is_success() {
         return Err(format!("cat failed: {}", resp.status()));
     }
@@ -326,11 +324,7 @@ async fn external_cat(api_url: &str, cid: &str) -> Result<Vec<u8>, String> {
 async fn external_pin_add(api_url: &str, cid: &str) -> Result<String, String> {
     let client = reqwest::Client::new();
     let url = format!("{api_url}/api/v0/pin/add?arg={cid}");
-    let resp = client
-        .post(&url)
-        .send()
-        .await
-        .map_err(|e| e.to_string())?;
+    let resp = client.post(&url).send().await.map_err(|e| e.to_string())?;
     if !resp.status().is_success() {
         return Err(format!("pin add failed: {}", resp.status()));
     }
@@ -341,11 +335,7 @@ async fn external_pin_add(api_url: &str, cid: &str) -> Result<String, String> {
 async fn external_pin_ls(api_url: &str) -> Result<String, String> {
     let client = reqwest::Client::new();
     let url = format!("{api_url}/api/v0/pin/ls?stream=true");
-    let resp = client
-        .post(&url)
-        .send()
-        .await
-        .map_err(|e| e.to_string())?;
+    let resp = client.post(&url).send().await.map_err(|e| e.to_string())?;
     if !resp.status().is_success() {
         return Err(format!("pin ls failed: {}", resp.status()));
     }
@@ -363,7 +353,9 @@ async fn external_swarm_peers(api_url: &str) -> Vec<String> {
                     return peers
                         .iter()
                         .filter_map(|p| {
-                            p.get("Peer").and_then(|v| v.as_str()).map(|s| s.to_string())
+                            p.get("Peer")
+                                .and_then(|v| v.as_str())
+                                .map(|s| s.to_string())
                         })
                         .collect();
                 }
@@ -470,8 +462,38 @@ pub async fn ipfs_proxy(
     let Some(base) = gw else {
         return (StatusCode::SERVICE_UNAVAILABLE, "no gateway").into_response();
     };
-    // Redirect to the Kubo gateway (avoids streaming through axum).
-    axum::response::Redirect::temporary(&format!("{base}/ipfs/{cid}")).into_response()
+
+    let url = format!("{base}/ipfs/{cid}");
+    let resp = match reqwest::get(&url).await {
+        Ok(resp) => resp,
+        Err(e) => {
+            return (StatusCode::BAD_GATEWAY, e.to_string()).into_response();
+        }
+    };
+
+    let status = axum::http::StatusCode::from_u16(resp.status().as_u16())
+        .unwrap_or(StatusCode::OK);
+    let mut builder = axum::response::Response::builder().status(status);
+
+    for header in [
+        axum::http::header::CONTENT_TYPE,
+        axum::http::header::CONTENT_LENGTH,
+        axum::http::header::ACCEPT_RANGES,
+        axum::http::header::CACHE_CONTROL,
+    ] {
+        if let Some(value) = resp.headers().get(&header) {
+            builder = builder.header(header, value);
+        }
+    }
+
+    let stream = resp.bytes_stream().map(|result| {
+        result.map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
+    });
+    let body = axum::body::Body::from_stream(stream);
+
+    builder
+        .body(body)
+        .unwrap_or_else(|_| (StatusCode::INTERNAL_SERVER_ERROR, "proxy error").into_response())
 }
 
 #[cfg(feature = "ipfs")]
