@@ -51,6 +51,10 @@ struct ConfigView: View {
     var body: some View {
         ZStack(alignment: .leading) {
             Form {
+                Section("Git (NIP-34)") {
+                    Toggle("Show NIP-34 kinds only", isOn: $user_settings.nip34_only).toggleStyle(.switch)
+                }
+                // make list fold - default closed
                 Section("Relays") {
                     Toggle("Auto-subscribe to NIP-34 relays", isOn: $pool.auto_subscribe_nip34)
                     List(state.pool.relays) { relay in
@@ -63,7 +67,7 @@ struct ConfigView: View {
                         }
                     }
                 }
-                
+                // make list fold - default closed
                 Section("Recommended Relays") {
                     Toggle("Show ignored", isOn: $show_ignored_relays)
                     List(recommended, id: \.url) { r in
@@ -115,11 +119,7 @@ struct ConfigView: View {
                         }
                     }
                 }
-                
-                Section("Git (NIP-34)") {
-                    Toggle("Show NIP-34 kinds only", isOn: $user_settings.nip34_only).toggleStyle(.switch)
-                }
-                
+                                
                 Section("Reset") {
                     Button("Logout") {
                         confirm_logout = true

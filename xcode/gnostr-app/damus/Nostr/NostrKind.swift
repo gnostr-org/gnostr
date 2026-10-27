@@ -28,19 +28,21 @@ enum NostrKind: Int {
 
     static func nip34_kind_name(_ kind: Int) -> String {
         switch NostrKind(rawValue: kind) {
-        case .repository_announcement: return "Repositories"
-        case .repository_state_announcement: return "Repository state"
-        case .repository_patch: return "Patches"
-        case .repository_pull_request: return "Pull requests"
-        case .repository_pull_request_update: return "PR updates"
-        case .repository_issue: return "Issues"
-        case .repository_reply: return "Replies"
-        case .repository_reply_legacy: return "Legacy replies"
-        case .repository_issue_open: return "Open"
-        case .repository_issue_applied: return "Applied / resolved"
-        case .repository_issue_closed: return "Closed"
-        case .repository_issue_draft: return "Draft"
-        case .repository_grasp_list: return "Grasp servers"
+            
+        //Commented out for ui space
+        case .repository_announcement: return ""//"Repositories"
+        case .repository_state_announcement: return ""//"Repository state"
+        case .repository_patch: return ""//"Patches"
+        case .repository_pull_request: return ""//"Pull requests"
+        case .repository_pull_request_update: return ""//"PR updates"
+        case .repository_issue: return ""//"Issues"
+        case .repository_reply: return ""//"Replies"
+        case .repository_reply_legacy: return ""//"Legacy replies"
+        case .repository_issue_open: return ""//"Open"
+        case .repository_issue_applied: return ""//"Applied / resolved"
+        case .repository_issue_closed: return ""//"Closed"
+        case .repository_issue_draft: return ""//"Draft"
+        case .repository_grasp_list: return ""//"Grasp servers"
         default: return "Kind \(kind)"
         }
     }
