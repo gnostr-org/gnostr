@@ -1073,8 +1073,10 @@ impl BrowserApp {
         self.is_loading = true;
         self.status_message = format!("Loading {}...", target_url);
 
+        eprintln!("DEBUG fetch_url target={}", target_url);
         match self.client.fetch_url(&target_url).await {
             Ok((final_url, html_content)) => {
+                eprintln!("DEBUG ok final={}", final_url);
                 // Update History
                 if self.history.is_empty() {
                     self.history.push(final_url.clone());
@@ -1151,6 +1153,7 @@ impl BrowserApp {
                 }
             }
             Err(e) => {
+                eprintln!("DEBUG err={:#}", e);
                 self.status_message = format!("Error: {:#}", e);
                 self.content = vec![format!("Failed to load: {:#}", e)];
                 self.links.clear();

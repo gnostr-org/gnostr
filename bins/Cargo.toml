@@ -337,6 +337,10 @@ name = "warp_filters"
 path = "src/bin/warp_filters.rs"
 required-features = ["blossom"]
 
+[[bin]]
+name = "reqwest-test"
+path = "src/bin/reqwest-test.rs"
+
 [features]
 default = ["blossom"]
 blossom = []
@@ -346,7 +350,7 @@ git = ["dep:gnostr_ngit", "dep:gnostr-tui", "dep:git-version"]
 legit = ["dep:gnostr-legit"]
 chat = ["dep:gnostr-chat"]
 p2p = ["dep:gnostr-p2p", "vendored-openssl"]
-ipfs = ["web", "p2p", "gnostr-web/ipfs", "gnostr-p2p/ipfs"]
+ipfs = ["web", "p2p", "gnostr-web/ipfs", "gnostr-p2p/ipfs", "dep:kubo-ffi"]
 crawler = ["dep:gnostr-crawler", "dep:gnostr_filetreelist"]
 metrics = []
 rate_limiter = []
@@ -386,6 +390,7 @@ gnostr-crawler = { package = "gnostr-crawler", path = "../crawler", version = ">
 gnostr-extensions = { package = "gnostr-extensions", path = "../relay/extensions", version = ">=973442.1842.47355" }
 gnostr-git-helpers = { package = "gnostr-git-helpers", path = "../git-helpers", version = ">=973442.1842.47355" }
 gnostr-js = { package = "gnostr-js", path = "../js", version = ">=973442.1842.47355", optional = true }
+kubo-ffi = { path = "../ipfs/ffi/rust", optional = true }
 gnostr-legit = { package = "gnostr-legit", path = "../legit", version = ">=973442.1842.47355", optional = true }
 gnostr-p2p = { package = "gnostr-p2p", path = "../p2p", version = ">=973442.1842.47355", optional = true }
 gnostr-relay = { package = "gnostr-relay", path = "../relay", version = ">=973442.1842.47355", optional = true }

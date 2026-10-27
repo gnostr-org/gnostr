@@ -59,12 +59,14 @@ impl NetworkClient {
             clean_url.to_string()
         };
 
+        eprintln!("NET send start {}", target_url);
         let response = self
             .client
             .get(&target_url)
             .send()
             .await
             .context("Failed to send request")?;
+        eprintln!("NET send done status={} url={}", response.status(), response.url());
 
         let final_url = response.url().to_string();
         let status = response.status();
@@ -73,10 +75,12 @@ impl NetworkClient {
             return Err(anyhow::anyhow!("HTTP Error: {}", status));
         }
 
+        eprintln!("NET text start");
         let content = response
             .text()
             .await
             .context("Failed to read response body")?;
+        eprintln!("NET text done len={}", content.len());
 
         Ok((final_url, content))
     }
