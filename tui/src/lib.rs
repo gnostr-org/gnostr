@@ -1,10 +1,16 @@
+#[cfg(feature = "browser")]
+pub mod browser;
 pub mod animation;
 pub mod chart;
+#[cfg(feature = "git")]
 pub mod file_tree;
+#[cfg(feature = "git")]
 pub mod git;
 pub mod keyboard;
 pub mod layout;
 pub mod mouse;
+#[cfg(feature = "git")]
 pub mod multi_panel;
+#[cfg(feature = "git")]
 pub mod report_grid;
 pub mod terminal;

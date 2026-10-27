@@ -10,6 +10,12 @@ exclude.workspace = true
 
 [dependencies]
 anyhow = "1.0.100"
+chrono = { version = "0.4", optional = true }
+clap = { workspace = true, optional = true }
+html-escape = { version = "0.2", optional = true }
+html2text = { version = "0.12.0", optional = true }
+regex = { version = "1.11.1", optional = true }
+reqwest = { workspace = true, optional = true }
 crossbeam-channel = "0.5"
 crossterm = { workspace = true }
 dirs = "5.0"
@@ -29,3 +35,4 @@ vt100 = { workspace = true }
 [features]
 default = ["git"]
 git = ["dep:gnostr-asyncgit"]
+browser = ["dep:chrono", "dep:clap", "dep:html-escape", "dep:html2text", "dep:regex", "dep:reqwest"]

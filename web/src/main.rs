@@ -587,7 +587,7 @@ async fn main() -> Result<(), anyhow::Error> {
         res = indexer_wakeup_task => res.context("failed to run indexer"),
         res = async {
             if let Some(url) = tui_url {
-                gnostr_web::browser::run_url(Some(url)).await
+                gnostr_tui::browser::run_url(Some(url)).await
             } else {
                 std::future::pending::<Result<(), anyhow::Error>>().await
             }
