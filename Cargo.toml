@@ -62,6 +62,7 @@ members = [
     "bins",
     "chat",
     "crawler",
+    "docker",
     "filetreelist",
     "git2-hooks",
     "git2-testing",

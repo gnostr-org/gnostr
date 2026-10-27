@@ -7497,6 +7497,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "gnostr-docker"
+version = "0.0.1"
+dependencies = [
+ "anyhow",
+ "bollard",
+ "cansi",
+ "clap 4.6.7",
+ "crossterm 0.29.0",
+ "directories 6.0.0",
+ "futures",
+ "futures-util",
+ "insta",
+ "jiff",
+ "parking_lot 0.12.5",
+ "ratatui",
+ "reqwest 0.12.28",
+ "serde",
+ "serde_json",
+ "serde_jsonc",
+ "tokio",
+ "tokio-util",
+ "toml 1.1.8+spec-1.1.0",
+ "tracing",
+ "tracing-subscriber",
+ "uuid",
+]
+
+[[package]]
 name = "gnostr-extensions"
 version = "972975.1842.655782"
 dependencies = [
