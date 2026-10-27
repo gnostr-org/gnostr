@@ -471,8 +471,7 @@ pub async fn ipfs_proxy(
         }
     };
 
-    let status = axum::http::StatusCode::from_u16(resp.status().as_u16())
-        .unwrap_or(StatusCode::OK);
+    let status = axum::http::StatusCode::from_u16(resp.status().as_u16()).unwrap_or(StatusCode::OK);
     let mut builder = axum::response::Response::builder().status(status);
 
     for header in [
@@ -486,9 +485,9 @@ pub async fn ipfs_proxy(
         }
     }
 
-    let stream = resp.bytes_stream().map(|result| {
-        result.map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
-    });
+    let stream = resp
+        .bytes_stream()
+        .map(|result| result.map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e)));
     let body = axum::body::Body::from_stream(stream);
 
     builder
