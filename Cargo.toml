@@ -117,7 +117,7 @@ actix-test = "0.1.5"
 actix-web = { version = "4.9.0" }
 aes = "0.8"
 anyhow = { version = "1.0.98" }
-gnostr-mcp-agent = { path = "../github_mcp_agent" }
+gnostr-docker = { path = "./docker" }
 arc-swap = "1.8.0"
 ascii = "1.1.0"
 askama = { version = "0.12.1", default-features = false }
@@ -555,7 +555,7 @@ nightly = []
 coverage = []
 [dependencies]
 
-gnostr-mcp-agent = { workspace = true }
+gnostr-docker = { workspace = true }
 
 ## relay
 actix-cors = { version = "0.7.0", optional = true }

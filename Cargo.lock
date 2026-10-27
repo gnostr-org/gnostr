@@ -7017,6 +7017,7 @@ dependencies = [
  "gnostr-asyncgit",
  "gnostr-chat",
  "gnostr-crawler",
+ "gnostr-docker",
  "gnostr-filetreelist",
  "gnostr-git-helpers",
  "gnostr-git2-hooks",
@@ -7024,7 +7025,6 @@ dependencies = [
  "gnostr-invalidstring",
  "gnostr-js",
  "gnostr-legit",
- "gnostr-mcp-agent",
  "gnostr-ngit",
  "gnostr-p2p",
  "gnostr-relay",
@@ -7661,33 +7661,6 @@ dependencies = [
  "tempfile",
  "time 0.3.55",
  "tokio",
-]
-
-[[package]]
-name = "gnostr-mcp-agent"
-version = "0.0.1"
-dependencies = [
- "anyhow",
- "bollard",
- "cansi",
- "clap 4.6.7",
- "crossterm 0.29.0",
- "directories 6.0.0",
- "futures",
- "futures-util",
- "jiff",
- "parking_lot 0.12.5",
- "ratatui",
- "reqwest 0.12.28",
- "serde",
- "serde_json",
- "serde_jsonc",
- "tokio",
- "tokio-util",
- "toml 1.1.8+spec-1.1.0",
- "tracing",
- "tracing-subscriber",
- "uuid",
 ]
 
 [[package]]
