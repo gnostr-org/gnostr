@@ -58,24 +58,11 @@ pub struct Args {
     static_homepage: bool,
 }
 
-pub async fn run() -> Result<(), anyhow::Error> {
-    let args = Args::parse();
-
-    // Determine default engine
-    let engine = if args.google {
-        SearchEngine::Google
-    } else if args.bing {
-        SearchEngine::Bing
-    } else if args.brave {
-        SearchEngine::Brave
-    } else if args.swisscows {
-        SearchEngine::Swisscows
-    } else if args.qwant {
-        SearchEngine::Qwant
-    } else {
-        SearchEngine::DuckDuckGo
-    };
-
+pub async fn run_with(
+    engine: SearchEngine,
+    url: Option<String>,
+    static_homepage: bool,
+) -> Result<(), anyhow::Error> {
     // Setup Terminal
     enable_raw_mode()?;
     let mut stdout = io::stdout();
@@ -88,7 +75,7 @@ pub async fn run() -> Result<(), anyhow::Error> {
     app.load_bookmarks();
 
     // Initial Load
-    app.load_initial_url(args.url, args.static_homepage).await;
+    app.load_initial_url(url, static_homepage).await;
 
     // Main Loop
     loop {
@@ -112,4 +99,30 @@ pub async fn run() -> Result<(), anyhow::Error> {
     terminal.show_cursor()?;
 
     Ok(())
+}
+
+pub async fn run() -> Result<(), anyhow::Error> {
+    let args = Args::parse();
+
+    // Determine default engine
+    let engine = if args.google {
+        SearchEngine::Google
+    } else if args.bing {
+        SearchEngine::Bing
+    } else if args.brave {
+        SearchEngine::Brave
+    } else if args.swisscows {
+        SearchEngine::Swisscows
+    } else if args.qwant {
+        SearchEngine::Qwant
+    } else {
+        SearchEngine::DuckDuckGo
+    };
+
+    run_with(engine, args.url, args.static_homepage).await
+}
+
+/// Run the terminal browser pointed at a specific URL (used by `--tui`).
+pub async fn run_url(url: Option<String>) -> Result<(), anyhow::Error> {
+    run_with(SearchEngine::DuckDuckGo, url, false).await
 }

@@ -1562,8 +1562,8 @@ pub fn ui(f: &mut Frame, app: &BrowserApp) {
         .style(input_style)
         .scroll((
             0,
-            if url_display.len() > (nav_chunks[2].width as usize - 2) {
-                (url_display.len() as u16).saturating_sub(nav_chunks[2].width - 2)
+            if url_display.len() > (nav_chunks[2].width as usize).saturating_sub(2) {
+                (url_display.len() as u16).saturating_sub(nav_chunks[2].width.saturating_sub(2))
             } else {
                 0
             },
