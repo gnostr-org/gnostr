@@ -27,6 +27,7 @@ clap = { workspace = true }
 comrak = { version = "0.28.0", default-features = false }
 const-hex = "1.12"
 const_format = { workspace = true }
+crossterm = { workspace = true }
 dirs = { version = "5", optional = true }
 flate2 = "1"
 futures = "0.3"
@@ -43,6 +44,8 @@ gnostr-grammar = { workspace = true }
 gnostr-js = { workspace = true }
 gnostr-p2p = { path = "../p2p", optional = true }
 handlebars = { workspace = true }
+html-escape = "0.2"
+html2text = "0.12.0"
 httparse = "1.7"
 humantime = "2.1"
 ignore = "0.4"
@@ -56,6 +59,8 @@ moka = { version = "0.12.0", features = ["future"] }
 path-clean = "1.0.1"
 rand = "0.8.5"
 regex = "1.11.1"
+ratatui = { workspace = true }
+reqwest = { workspace = true }
 rkyv = "0.8"
 rocksdb = { workspace = true }
 serde = { version = "1.0.203", features = ["derive", "rc"] }

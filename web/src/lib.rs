@@ -1,6 +1,7 @@
 extern crate gnostr_asyncgit as git2;
 
 pub mod app;
+pub mod browser;
 pub mod css;
 pub mod images;
 pub mod theme;
