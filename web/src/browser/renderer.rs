@@ -37,14 +37,14 @@ pub fn render_html_to_text(html: &str, width: usize) -> RenderResult {
     let html_with_img_alt = img_re.replace_all(html, |caps: &Captures| {
         let alt = caps[1].to_string();
         if alt.is_empty() {
-            "[IMG]".to_string()
+            String::new()
         } else {
-            format!("[IMG: {}]", alt)
+            alt
         }
     });
     // Fallback for images without alt attribute
     let img_no_alt_re = Regex::new(r#"(?i)<img\s+[^>]*/?>"#).unwrap();
-    let html_with_all_imgs = img_no_alt_re.replace_all(&html_with_img_alt, "[IMG]");
+    let html_with_all_imgs = img_no_alt_re.replace_all(&html_with_img_alt, "");
 
     // 0b. Extract and preserve <noscript> content (since we can't run JS)
     let noscript_re = Regex::new(r#"(?is)<noscript[^>]*>(.*?)</noscript>"#).unwrap();

@@ -1421,7 +1421,6 @@ struct ThemeColors {
     secondary: Color,    // Secondary accent
     text: Color,         // Text color
     border: Color,       // Border color
-    bg_highlight: Color, // Background highlight
 }
 
 impl ThemeColors {
@@ -1432,28 +1431,24 @@ impl ThemeColors {
                 secondary: Color::Blue,
                 text: Color::White,
                 border: Color::Cyan,
-                bg_highlight: Color::DarkGray,
             },
             Theme::Light => ThemeColors {
                 primary: Color::Blue,
                 secondary: Color::Magenta,
                 text: Color::Black,
                 border: Color::Blue,
-                bg_highlight: Color::Gray,
             },
             Theme::Retro => ThemeColors {
                 primary: Color::Green,
                 secondary: Color::Yellow,
                 text: Color::Green,
                 border: Color::Green,
-                bg_highlight: Color::Black,
             },
             Theme::Ocean => ThemeColors {
                 primary: Color::LightBlue,
                 secondary: Color::Cyan,
                 text: Color::White,
                 border: Color::LightBlue,
-                bg_highlight: Color::DarkGray,
             },
         }
     }
@@ -1529,7 +1524,7 @@ pub fn ui(f: &mut Frame, app: &BrowserApp) {
 
     // Address Bar (Middle)
     let input_style = if app.input_mode == InputMode::EditingUrl {
-        Style::default().fg(Color::Yellow).bg(colors.bg_highlight)
+        Style::default().fg(Color::Yellow)
     } else {
         Style::default().fg(colors.text)
     };
@@ -1626,18 +1621,8 @@ pub fn ui(f: &mut Frame, app: &BrowserApp) {
         .alignment(ratatui::layout::Alignment::Left);
     f.render_widget(tab_paragraph, vertical_chunks[2]);
 
-    // 5. Content Area
-    let content_block = Block::default()
-        .borders(Borders::ALL)
-        .border_type(BorderType::Thick)
-        .border_style(Style::default().fg(colors.border))
-        .title(" Web View ");
-    f.render_widget(content_block.clone(), vertical_chunks[3]);
-
-    let inner_area = vertical_chunks[3].inner(Margin {
-        vertical: 1,
-        horizontal: 1,
-    });
+    // 5. Content Area (no extra styling/background; render the page directly)
+    let inner_area = vertical_chunks[3];
 
     // Calculate content slice
     let height = inner_area.height as usize;
@@ -1653,7 +1638,7 @@ pub fn ui(f: &mut Frame, app: &BrowserApp) {
                 {
                     Line::from(Span::styled(
                         l,
-                        Style::default().fg(Color::Black).bg(Color::Yellow),
+                        Style::default().fg(Color::Black),
                     ))
                 } else {
                     Line::from(l.as_str())
@@ -1730,23 +1715,18 @@ pub fn ui(f: &mut Frame, app: &BrowserApp) {
     // 6. Status Bar
     let mode_style = match app.input_mode {
         InputMode::Normal => Style::default()
-            .bg(Color::Blue)
             .fg(Color::White)
             .add_modifier(Modifier::BOLD),
         InputMode::EditingUrl => Style::default()
-            .bg(Color::Yellow)
             .fg(Color::Black)
             .add_modifier(Modifier::BOLD),
         InputMode::Searching => Style::default()
-            .bg(Color::Magenta)
             .fg(Color::White)
             .add_modifier(Modifier::BOLD),
         InputMode::LinkFollow => Style::default()
-            .bg(Color::Green)
             .fg(Color::Black)
             .add_modifier(Modifier::BOLD),
         InputMode::FormInput => Style::default()
-            .bg(Color::Cyan)
             .fg(Color::Black)
             .add_modifier(Modifier::BOLD),
     };
@@ -1789,7 +1769,7 @@ pub fn ui(f: &mut Frame, app: &BrowserApp) {
         ),
     ]);
 
-    let status_block = Block::default().style(Style::default().bg(Color::Black));
+    let status_block = Block::default();
 
     let status_paragraph = Paragraph::new(status_line).block(status_block);
 
@@ -1924,8 +1904,7 @@ pub fn ui(f: &mut Frame, app: &BrowserApp) {
                     let style = if i == app.selected_index {
                         Style::default()
                             .fg(Color::Black)
-                            .bg(Color::Cyan)
-                            .add_modifier(Modifier::BOLD)
+                                            .add_modifier(Modifier::BOLD)
                     } else {
                         Style::default().fg(Color::White)
                     };
@@ -1963,8 +1942,7 @@ pub fn ui(f: &mut Frame, app: &BrowserApp) {
                     let style = if actual_idx == app.selected_index {
                         Style::default()
                             .fg(Color::Black)
-                            .bg(Color::Magenta)
-                            .add_modifier(Modifier::BOLD)
+                                            .add_modifier(Modifier::BOLD)
                     } else {
                         Style::default().fg(Color::White)
                     };
