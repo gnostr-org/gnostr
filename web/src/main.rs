@@ -241,13 +241,13 @@ async fn main() -> Result<(), anyhow::Error> {
             args.ipfs_online,
         );
         if state.enabled {
-            if let Some(url) = state.gateway.lock().unwrap().clone() {
+            if let Some(url) = state.gateway.lock().await.clone() {
                 info!("Kubo gateway listening at {url}");
             }
         } else {
             tracing::warn!(
                 "Kubo node not started: {:?}",
-                state.last_error.lock().unwrap().clone()
+                state.last_error.lock().await.clone()
             );
         }
         state

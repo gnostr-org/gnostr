@@ -213,9 +213,15 @@ are currently exact copies), or refactor them to share server-building code.
 ## IPFS / Helia interop
 
 `gnostr-web` can embed a Kubo (IPFS) node when built with `--features ipfs`.
-The node starts at process startup and exposes:
+At startup it first probes for an already-running Kubo daemon by reading the
+repo's `api` file (if it exists) and the default local endpoint
+`127.0.0.1:5001`. If a daemon responds to `/api/v0/version`, `gnostr-web` reuses
+its API and gateway instead of starting a second node. Only when no daemon is
+found does it initialize the configured repo and start an embedded node.
 
-- `GET /api/ipfs/status` — `{ enabled, gateway, error }`
+Endpoints exposed when the `ipfs` feature is enabled:
+
+- `GET /api/ipfs/status` — `{ enabled, gateway, api_url, error }`
 - `POST /api/ipfs/add` — add bytes, returns `{ cid }`
 - `POST /api/ipfs/add-batch` — add many items, returns `{ cids }`
 - `GET /api/ipfs/cat/:cid` — fetch stored bytes
@@ -234,8 +240,8 @@ Configuration (only meaningful with `--features ipfs`):
 - `--ipfs-repo <path>` / `GNOSTR_IPFS_REPO` — Kubo repository location
   (default: OS app data dir `…/gnostr/ipfs`).
 - `--ipfs-online` / `GNOSTR_IPFS_ONLINE=true` — enable swarm participation
-  (default: offline, local-only). When enabled together with the embedded node,
-  `start_api` is invoked so the full Kubo RPC API + WebUI are available.
+  (default: offline, local-only). When an embedded node is started, it also
+  exposes the full Kubo RPC API + WebUI on a local ephemeral port.
 
 The Kubo FFI lives in `../ipfs/ffi/rust` (`kubo-ffi`) and requires a Go
 toolchain at build time. The `ipfs` feature is off by default so a plain
