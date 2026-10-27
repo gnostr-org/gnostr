@@ -18,8 +18,8 @@ actix-web = "4"
 anyhow = { workspace = true }
 clap = { workspace = true }
 futures-util = "0.3.31"
-gnostr-crawler = { version = ">=973442.1842.47042", path = "../crawler" }
-gnostr-relay = { version = ">=973442.1842.47042", path = "../relay" }
+gnostr-crawler = { version = ">=973442.1842.47355", path = "../crawler" }
+gnostr-relay = { version = ">=973442.1842.47355", path = "../relay" }
 handlebars = "6.3.2"
 ignore = "0.4"
 lazy_static = "1.5.0"
