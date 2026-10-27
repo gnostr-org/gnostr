@@ -1,3 +1,4 @@
+mod docker;
 mod files;
 mod home;
 mod revlog;
@@ -6,6 +7,7 @@ mod stashing;
 mod stashlist;
 mod status;
 
+pub use docker::DockerTab;
 pub use files::FilesTab;
 pub use home::Chatlog;
 pub use revlog::Revlog;

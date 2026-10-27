@@ -461,9 +461,9 @@ async fn main() -> anyhow::Result<()> {
             .await
             .map_err(|e| anyhow!("Error in set_user_status subcommand: {}", e))
         }
-        Some(GnostrCommands::Docker) => {
+        Some(GnostrCommands::Docker { args }) => {
             debug!("docker subcommand");
-            sub_commands::docker::docker()
+            sub_commands::docker::docker(args.to_vec())
                 .await
                 .map_err(|e| anyhow!("Error in docker subcommand: {}", e))
         }

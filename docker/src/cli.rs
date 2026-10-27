@@ -283,9 +283,18 @@ impl Command {
 }
 
 pub async fn run() -> Result<()> {
+    run_from(std::env::args().collect()).await
+}
+
+pub async fn run_from(mut raw_args: Vec<String>) -> Result<()> {
+    // Ensure a program name is present for clap parsing.
+    if raw_args.is_empty() || !raw_args[0].contains("gnostr") && !raw_args[0].contains("docker") && !raw_args[0].contains("mcp") {
+        raw_args.insert(0, "gnostr-docker".to_string());
+    }
+
     // Pre-handle `call <tool> --help|-h|help` so the tool schema is shown
     // instead of the generic clap help.
-    let raw_args: Vec<String> = std::env::args().collect();
+    let raw_args = raw_args;
     if let Some(call_pos) = raw_args.iter().position(|a| a == "call") {
         if raw_args.len() > call_pos + 2 {
             let tool = &raw_args[call_pos + 1];
@@ -311,7 +320,7 @@ pub async fn run() -> Result<()> {
         }
     }
 
-    let cli = Cli::parse();
+    let cli = Cli::parse_from(raw_args.clone());
 
     let github_token = cli
         .github_token

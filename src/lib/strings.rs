@@ -102,6 +102,10 @@ pub fn tab_stashes(key_config: &SharedKeyConfig) -> String {
         key_config.get_hint(key_config.keys.tab_stashes)
     )
 }
+
+pub fn tab_docker(key_config: &SharedKeyConfig) -> String {
+    format!("Docker [{}]", key_config.get_hint(key_config.keys.tab_docker))
+}
 pub fn tab_divider(_key_config: &SharedKeyConfig) -> String {
     " | ".to_string()
 }

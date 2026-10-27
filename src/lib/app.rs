@@ -51,7 +51,7 @@ use crate::{
     setup_popups,
     strings::{self, ellipsis_trim_start, order},
     sub_commands::tui::{AsyncAppNotification, AsyncNotification},
-    tabs::{Chatlog, FilesTab, Revlog, StashTab, Status},
+    tabs::{Chatlog, DockerTab, FilesTab, Revlog, StashTab, Status},
     try_or_popup,
     ui::style::{SharedTheme, Theme},
     weeble_sync, wobble_sync,
@@ -109,6 +109,7 @@ pub struct App {
     stash_tab: StashTab,
     files_tab: FilesTab,
     chat_tab: Chatlog,
+    docker_tab: DockerTab,
     queue: Queue,
     theme: SharedTheme,
     key_config: SharedKeyConfig,
@@ -230,6 +231,7 @@ impl App {
             files_tab: FilesTab::new(&env),
             //chat_tab
             chat_tab: Chatlog::new(&env).await,
+            docker_tab: DockerTab::new(&env),
             tab: 0,
             queue: env.queue,
             theme: env.theme,
@@ -292,6 +294,7 @@ impl App {
                 2 => self.revlog.draw(f, chunks_main[1])?,
                 3 => self.files_tab.draw(f, chunks_main[1])?,
                 4 => self.stash_tab.draw(f, chunks_main[1])?,
+                5 => self.docker_tab.draw(f, chunks_main[1])?,
                 _ => bail!("unknown tab"),
             };
         }
@@ -326,6 +329,7 @@ impl App {
                     || key_match(k, self.key_config.keys.tab_files)
                     || key_match(k, self.key_config.keys.tab_stashing)
                     || key_match(k, self.key_config.keys.tab_stashes)
+                    || key_match(k, self.key_config.keys.tab_docker)
                 {
                     self.switch_tab(k)?;
                     NeedsUpdate::COMMANDS
@@ -633,6 +637,7 @@ impl App {
             &mut self.revlog,
             &mut self.files_tab,
             &mut self.stash_tab,
+            &mut self.docker_tab,
         ]
     }
 
@@ -662,6 +667,8 @@ impl App {
             self.switch_to_tab(&AppTabs::Stashing)?;
         } else if key_match(k, self.key_config.keys.tab_stashes) {
             self.switch_to_tab(&AppTabs::Stashlist)?;
+        } else if key_match(k, self.key_config.keys.tab_docker) {
+            self.switch_to_tab(&AppTabs::Docker)?;
         }
 
         Ok(())
@@ -703,6 +710,9 @@ impl App {
                 self.stash_tab.select_stashes()?;
                 self.set_tab_internal(4, false)
             }
+            7 => {
+                self.set_tab_internal(5, false)
+            }
             _ => bail!("invalid --tab value {tab}; expected 1..=6"),
         }
     }
@@ -721,6 +731,9 @@ impl App {
             AppTabs::Stashlist => {
                 self.stash_tab.select_stashes()?;
                 self.set_tab(4)?;
+            }
+            AppTabs::Docker => {
+                self.set_tab(5)?;
             }
         }
         Ok(())
@@ -1204,6 +1217,7 @@ impl App {
             Span::raw(strings::tab_log(&self.key_config)),
             Span::raw(strings::tab_files(&self.key_config)),
             Span::raw(strings::tab_stash(&self.key_config)),
+            Span::raw(strings::tab_docker(&self.key_config)),
         ];
         let divider = strings::tab_divider(&self.key_config);
 

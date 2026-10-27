@@ -88,6 +88,7 @@ pub enum AppTabs {
     Files,
     Stashing,
     Stashlist,
+    Docker,
 }
 
 /// Commands related to Nostr interactions

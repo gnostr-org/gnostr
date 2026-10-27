@@ -134,12 +134,12 @@ pub struct GnostrCli {
     )]
     /// gitdir
     pub gitdir: Option<RepoPath>,
-    /// start on a specific tab (1-6; stash uses 5/6)
+    /// start on a specific tab (1-7; stash uses 5/6; docker uses 7)
     #[arg(
         long,
         global = true,
         value_name = "TAB",
-        help = "Start on tab number (1-6)"
+        help = "Start on tab number (1-7)"
     )]
     pub tab: Option<usize>,
     /// directory
@@ -247,7 +247,11 @@ pub enum GnostrCommands {
     /// Convert bech32 string to other formats
     Bech32ToAny(bech32_to_any::Bech32ToAnySubCommand),
     /// Docker helper (github-mcp-agent)
-    Docker,
+    #[command(disable_help_flag = true)]
+    Docker {
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+        args: Vec<String>,
+    },
     /// Broadcast events from file
     BroadcastEvents(broadcast_events::BroadcastEventsSubCommand),
     /// Chat sub commands
