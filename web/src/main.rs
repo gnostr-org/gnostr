@@ -142,15 +142,6 @@ async fn main() -> Result<(), anyhow::Error> {
         }
     }
 
-    // In TUI mode, silence the repository indexer's logging so it does not
-    // corrupt the terminal UI.
-    if args.tui {
-        let current = std::env::var("RUST_LOG").unwrap_or_else(|_| "warn".to_string());
-        if !current.contains("gnostr_web::app::database::indexer") {
-            unsafe { std::env::set_var("RUST_LOG", format!("{},gnostr_web::app::database::indexer=off", current)) };
-        }
-    }
-
     let logger_layer = tracing_subscriber::fmt::layer().with_span_events(FmtSpan::CLOSE);
     let env_filter = EnvFilter::from_default_env();
 
@@ -164,7 +155,7 @@ async fn main() -> Result<(), anyhow::Error> {
         .canonicalize()
         .context("Could not canonicalize scan path")?;
 
-    tracing::info!("canonical_scan_path={}", &canonical_scan_path.display());
+    println!("canonical_scan_path={}", &canonical_scan_path.display());
     let _fixture =
         gnostr_web::app::database::indexer::ensure_bare_repo_fixture(&canonical_scan_path, "crlf")
             .context("failed to prepare crlf learning fixture")?;
@@ -569,29 +560,16 @@ async fn main() -> Result<(), anyhow::Error> {
         .layer(Extension(Arc::new(canonical_scan_path)))
         .layer(CorsLayer::new());
 
-    tracing::info!("{}", &args.bind_port);
+    println!("{}", &args.bind_port);
     let socket = SocketAddr::new(args.bind_address, args.bind_port);
 
     let listener = TcpListener::bind(&socket).await?;
     let app = app.into_make_service_with_connect_info::<SocketAddr>();
     let server = axum::serve(listener, app).into_future();
 
-    let tui_url = if args.tui {
-        Some(format!("http://127.0.0.1:{}", args.bind_port))
-    } else {
-        None
-    };
-
     tokio::select! {
         res = server => res.context("failed to run server"),
         res = indexer_wakeup_task => res.context("failed to run indexer"),
-        res = async {
-            if let Some(url) = tui_url {
-                gnostr_tui::browser::run_url(Some(url)).await
-            } else {
-                std::future::pending::<Result<(), anyhow::Error>>().await
-            }
-        } => res.context("failed to run tui browser"),
         _ = tokio::signal::ctrl_c() => {
             info!("Received ctrl-c, shutting down");
             Ok(())

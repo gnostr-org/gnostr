@@ -248,7 +248,7 @@ fn update_repository_metadata(scan_path: &Path, db: &rocksdb::DB) {
             relative.display(),
             repository.display()
         );
-        tracing::debug!("Processing repository: repository={}", repository.display());
+        println!("Processing repository: repository={}", repository.display());
 
         let id = match Repository::open(db, relative) {
             Ok(v) => v.map_or_else(RepositoryId::new, |v| {
@@ -703,7 +703,7 @@ fn discover_repositories(scan_path: &Path, discovered_repos: &mut Vec<PathBuf>) 
                 return true;
             }
             if is_bare_repository(path) || is_git_worktree(path) {
-                tracing::debug!("Discovered repository: {}", path.display());
+                println!("Discovered repository: {}", path.display());
                 discovered_filter.lock().unwrap().push(path.to_path_buf());
                 return false; // do not descend into repositories
             }
@@ -713,7 +713,7 @@ fn discover_repositories(scan_path: &Path, discovered_repos: &mut Vec<PathBuf>) 
 
     for result in &mut walker {
         if let Err(err) = result {
-            tracing::warn!("Repository discovery walk error: {}", err);
+            eprintln!("Repository discovery walk error: {}", err);
         }
     }
 

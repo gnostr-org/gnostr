@@ -546,7 +546,4 @@ pub struct GnitArgs {
     /// Run the process in the background (daemonize)
     #[arg(long, default_value_t = false)]
     pub detach: bool,
-    /// Also run a terminal (TUI) browser against this web app on the same port.
-    #[arg(long, default_value_t = false)]
-    pub tui: bool,
 }
