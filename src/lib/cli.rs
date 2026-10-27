@@ -249,6 +249,7 @@ pub enum GnostrCommands {
     /// Docker helper (github-mcp-agent)
     #[command(disable_help_flag = true)]
     Docker {
+        /// Arguments forwarded to the gnostr-docker CLI
         #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
         args: Vec<String>,
     },

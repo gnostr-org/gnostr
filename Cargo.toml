@@ -951,7 +951,7 @@ actix-test = "0.1.5"
 anyhow = { workspace = true }
 assert_cmd = { workspace = true }
 comma = "1.0.0"
-crossterm = { version = "0.28.1" }
+crossterm = { workspace = true }
 ctor = "0.6.3"
 dep-graph = "0.2.0"
 dialoguer = { workspace = true }

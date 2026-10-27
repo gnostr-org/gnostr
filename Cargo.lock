@@ -6984,7 +6984,6 @@ dependencies = [
  "constant_time_eq",
  "core-net",
  "crossbeam-channel 0.5.17",
- "crossterm 0.28.1",
  "crossterm 0.29.0",
  "csv",
  "ctor",
