@@ -246,6 +246,8 @@ pub enum GnostrCommands {
     AwardBadge(award_badge::AwardBadgeSubCommand),
     /// Convert bech32 string to other formats
     Bech32ToAny(bech32_to_any::Bech32ToAnySubCommand),
+    /// Docker helper (github-mcp-agent)
+    Docker,
     /// Broadcast events from file
     BroadcastEvents(broadcast_events::BroadcastEventsSubCommand),
     /// Chat sub commands

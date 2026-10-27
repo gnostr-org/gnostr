@@ -461,6 +461,12 @@ async fn main() -> anyhow::Result<()> {
             .await
             .map_err(|e| anyhow!("Error in set_user_status subcommand: {}", e))
         }
+        Some(GnostrCommands::Docker) => {
+            debug!("docker subcommand");
+            sub_commands::docker::docker()
+                .await
+                .map_err(|e| anyhow!("Error in docker subcommand: {}", e))
+        }
         Some(GnostrCommands::Tui(sub_command_args)) => {
             debug!("main:318:sub_command_args:{:?}", sub_command_args.clone());
             let mut sub_command_args_mut = sub_command_args.clone();

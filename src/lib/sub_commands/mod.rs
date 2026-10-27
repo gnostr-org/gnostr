@@ -9,6 +9,7 @@ pub mod custom_event;
 pub mod delete_event;
 pub mod delete_profile;
 pub mod dm;
+pub mod docker;
 
 pub mod crawler;
 pub mod fetch;
