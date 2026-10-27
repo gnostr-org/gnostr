@@ -219,6 +219,10 @@ path = "src/bin/git-remote-ipfs.rs"
 required-features = ["blossom"]
 
 [[bin]]
+name = "gnostr-ipfs-browser"
+path = "src/bin/gnostr-ipfs-browser.rs"
+required-features = ["ipfs", "git"]
+[[bin]]
 name = "git-remote-nostr"
 path = "src/bin/git-remote-nostr.rs"
 required-features = ["blossom"]
@@ -385,7 +389,7 @@ gnostr-js = { package = "gnostr-js", path = "../js", version = ">=973442.1842.47
 gnostr-legit = { package = "gnostr-legit", path = "../legit", version = ">=973442.1842.47355", optional = true }
 gnostr-p2p = { package = "gnostr-p2p", path = "../p2p", version = ">=973442.1842.47355", optional = true }
 gnostr-relay = { package = "gnostr-relay", path = "../relay", version = ">=973442.1842.47355", optional = true }
-gnostr-tui = { package = "gnostr-tui", path = "../tui", version = ">=973442.1842.47355", optional = true }
+gnostr-tui = { package = "gnostr-tui", path = "../tui", version = ">=973442.1842.47355", optional = true, features = ["browser"] }
 gnostr-web = { package = "gnostr-web", path = "../web", version = ">=973442.1842.47355", optional = true }
 gnostr_filetreelist = { package = "gnostr-filetreelist", path = "../filetreelist", version = ">=973442.1842.47355", optional = true }
 gnostr_ngit = { package = "gnostr-ngit", path = "../ngit", version = ">=973442.1842.47355", optional = true }
