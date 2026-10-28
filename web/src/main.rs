@@ -259,6 +259,30 @@ async fn main() -> Result<(), anyhow::Error> {
     };
 
     #[cfg(feature = "ipfs")]
+    {
+        let publisher_state = ipfs_state.clone();
+        let publisher_db = db.clone();
+        let publisher_interval = match args.refresh_interval {
+            gnostr_web::app::RefreshInterval::Never => std::time::Duration::from_secs(300),
+            gnostr_web::app::RefreshInterval::Duration(d) => d,
+        };
+        tokio::spawn(async move {
+            loop {
+                match gnostr_web::app::methods::ipfs::publish_repo_manifest(
+                    &publisher_state,
+                    publisher_db.clone(),
+                )
+                .await
+                {
+                    Ok(cid) => tracing::info!("Published repo manifest to IPFS: {cid}"),
+                    Err(e) => tracing::warn!("Failed to publish repo manifest to IPFS: {e}"),
+                }
+                tokio::time::sleep(publisher_interval).await;
+            }
+        });
+    }
+
+    #[cfg(feature = "ipfs")]
     let ipfs_routes = Router::new()
         .route("/api/ipfs/add", axum::routing::post(methods::ipfs::add))
         .route(
@@ -276,7 +300,11 @@ async fn main() -> Result<(), anyhow::Error> {
             "/api/ipfs/manifest",
             axum::routing::post(methods::ipfs::publish_manifest),
         )
-        .nest("/ipfs", Router::new().fallback(methods::ipfs::ipfs_proxy))
+        .route(
+            "/api/ipfs/publish-repos",
+            axum::routing::post(methods::ipfs::publish_repos),
+        )
+        .route("/ipfs/*ipfs_path", get(methods::ipfs::ipfs_proxy))
         .route("/api/ipfs/gateway", get(methods::ipfs::gateway))
         .route("/api/ipfs/status", get(methods::ipfs::status));
     #[cfg(not(feature = "ipfs"))]

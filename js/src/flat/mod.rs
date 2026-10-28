@@ -4,9 +4,24 @@ pub mod scan;
 use anyhow::Result;
 use clap::Parser;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 const MAX_DEFAULT_BYTES: u64 = 51200; // 50 KiB
+
+/// Build a self-contained flat HTML snapshot from a local directory.
+///
+/// This is useful for publishing an on-disk repository to IPFS without
+/// cloning it from a remote URL first.
+pub fn build_html_from_dir<P: AsRef<Path>>(dir: P, max_bytes: u64) -> Result<String> {
+    let dir = dir.as_ref();
+    let files = scan::collect_files(dir, max_bytes)?;
+    let url = dir.to_string_lossy().to_string();
+    let stem = dir
+        .file_name()
+        .map(|n| n.to_string_lossy().to_string())
+        .unwrap_or_else(|| "repo".to_string());
+    Ok(render::build_html(&url, &files, &stem))
+}
 
 #[derive(Parser, Debug)]
 #[command(author, version, about = "Strictly-compliant Repo Flattener")]

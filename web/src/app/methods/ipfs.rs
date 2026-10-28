@@ -2,11 +2,16 @@
 use std::sync::Arc;
 
 #[cfg(feature = "ipfs")]
-use axum::{extract::Extension, http::StatusCode, response::IntoResponse, Json};
+use axum::{
+    extract::{Extension, Query as AxumQuery},
+    http::StatusCode,
+    response::IntoResponse,
+    Json,
+};
 #[cfg(feature = "ipfs")]
 use futures_util::StreamExt;
 #[cfg(feature = "ipfs")]
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 #[cfg(feature = "ipfs")]
 use tokio::sync::Mutex;
 
@@ -98,12 +103,15 @@ impl IpfsState {
 
         let mut node_opt = None;
         let mut gw_opt = None;
+        let mut api_opt = None;
         let mut err_opt = None;
 
         match Node::start(&repo_path, online) {
             Ok(node) => {
                 // Full daemon API (CoreAPI + WebUI) for trusted/local use.
-                let _ = node.start_api("/ip4/127.0.0.1/tcp/0");
+                if let Some(api_ma) = node.start_api("/ip4/127.0.0.1/tcp/0") {
+                    api_opt = multiaddr_to_http_url(&api_ma);
+                }
                 // Keep a public-safe gateway for /ipfs/:cid retrieval.
                 match node.start_gateway("/ip4/127.0.0.1/tcp/0") {
                     Some(ma) => {
@@ -126,7 +134,7 @@ impl IpfsState {
             repo_path,
             node: Mutex::new(node_opt),
             gateway: Mutex::new(gw_opt),
-            api_url: Mutex::new(None),
+            api_url: Mutex::new(api_opt),
             enabled,
             last_error: Mutex::new(err_opt),
         })
@@ -148,6 +156,19 @@ impl IpfsState {
             .await
             .clone()
             .unwrap_or_else(|| "IPFS not available".into()))
+    }
+
+    /// Add `data` as a single file named `filename` wrapped in a directory.
+    ///
+    /// The returned CID points at the directory root, so `/ipfs/<cid>/`
+    /// resolves to the file. This is the preferred shape for serving HTML
+    /// snapshots from a Kubo gateway.
+    pub async fn add_directory(&self, filename: &str, data: &[u8]) -> Result<String, String> {
+        if let Some(api_url) = self.api_url.lock().await.clone() {
+            return external_add_wrapped(&api_url, filename, data).await;
+        }
+        // Fall back to a plain file CID if the API is unavailable.
+        self.add_bytes(data).await
     }
 
     pub async fn cat_bytes(&self, cid: &str) -> Result<Vec<u8>, String> {
@@ -298,6 +319,35 @@ async fn external_add(api_url: &str, data: &[u8]) -> Result<String, String> {
         return Err(format!("add failed: {}", resp.status()));
     }
     let text = resp.text().await.map_err(|e| e.to_string())?;
+    let last = text.lines().last().unwrap_or(&text);
+    let json: serde_json::Value = serde_json::from_str(last).map_err(|e| e.to_string())?;
+    json.get("Hash")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string())
+        .ok_or_else(|| "add response missing Hash".to_string())
+}
+
+#[cfg(feature = "ipfs")]
+async fn external_add_wrapped(
+    api_url: &str,
+    filename: &str,
+    data: &[u8],
+) -> Result<String, String> {
+    let client = reqwest::Client::new();
+    let url = format!("{api_url}/api/v0/add?wrap-with-directory=true");
+    let part = reqwest::multipart::Part::bytes(data.to_vec()).file_name(filename.to_string());
+    let form = reqwest::multipart::Form::new().part("file", part);
+    let resp = client
+        .post(&url)
+        .multipart(form)
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+    if !resp.status().is_success() {
+        return Err(format!("add failed: {}", resp.status()));
+    }
+    let text = resp.text().await.map_err(|e| e.to_string())?;
+    // The last line is the wrapping directory when wrap-with-directory is set.
     let last = text.lines().last().unwrap_or(&text);
     let json: serde_json::Value = serde_json::from_str(last).map_err(|e| e.to_string())?;
     json.get("Hash")
@@ -532,6 +582,68 @@ pub async fn add_batch(
 #[cfg(feature = "ipfs")]
 pub async fn peers(Extension(state): Extension<Arc<IpfsState>>) -> impl IntoResponse {
     Json(serde_json::json!({"peers": state.peers().await })).into_response()
+}
+
+#[cfg(feature = "ipfs")]
+#[derive(Serialize)]
+pub struct RepoManifestEntry {
+    pub name: String,
+    pub path: String,
+    pub description: Option<String>,
+    pub owner: Option<String>,
+    pub default_branch: Option<String>,
+}
+
+#[cfg(feature = "ipfs")]
+#[derive(Serialize)]
+pub struct RepoManifest {
+    pub repos: Vec<RepoManifestEntry>,
+}
+
+#[cfg(feature = "ipfs")]
+pub async fn publish_repo_manifest(
+    state: &IpfsState,
+    db: Arc<rocksdb::DB>,
+) -> Result<String, anyhow::Error> {
+    use crate::app::database::schema::repository::Repository;
+
+    let repos = tokio::task::spawn_blocking(move || Repository::fetch_all(&db))
+        .await
+        .map_err(|e| anyhow::anyhow!("repository fetch task panicked: {e}"))?
+        .map_err(|e| anyhow::anyhow!("failed to fetch repositories: {e}"))?;
+
+    let entries: Vec<RepoManifestEntry> = repos
+        .into_iter()
+        .map(|(path, repo)| {
+            let repo = repo.get();
+            RepoManifestEntry {
+                name: repo.name.to_string(),
+                path,
+                description: repo.description.as_ref().map(|d| d.to_string()),
+                owner: repo.owner.as_ref().map(|o| o.to_string()),
+                default_branch: repo.default_branch.as_ref().map(|b| b.to_string()),
+            }
+        })
+        .collect();
+
+    let manifest = RepoManifest { repos: entries };
+    let data = serde_json::to_vec(&manifest)?;
+    let cid = state
+        .add_bytes(&data)
+        .await
+        .map_err(|e| anyhow::anyhow!(e))?;
+    Ok(cid)
+}
+
+#[cfg(feature = "ipfs")]
+pub async fn publish_repos(
+    Extension(state): Extension<Arc<IpfsState>>,
+    Extension(db): Extension<Arc<rocksdb::DB>>,
+) -> impl IntoResponse {
+    match publish_repo_manifest(&state, db).await {
+        Ok(cid) => Json(serde_json::json!({ "cid": cid })).into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    }
 }
 
 #[cfg(all(test, feature = "ipfs"))]
