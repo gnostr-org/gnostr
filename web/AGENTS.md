@@ -135,9 +135,10 @@ All warp-based servers call `webbrowser::open()` to launch a browser tab.
 - `gnostr_js::relay_app::run()`
 - `gnostr_js::crawler_control::{start_crawler, crawler_status}`
 - `gnostr_js::relay_control::{start_relay, stop_relay, relay_status}`
-- `gnostr_js::flat::{run, build_html}`
+- `gnostr_js::flat::{run, build_html, build_html_from_dir}`
 - `gnostr_js::embedded::{get_css_assets, get_js_assets, get_images_assets, get_pwa_assets, shell_html}`
 - `gnostr_web::app::{Config, GnitArgs, open_database, run_indexer, init_static_asset_hashes, into_response, methods, Git}`
+- `kubo_ffi::Node::{unixfs_add_bytes, unixfs_cat, block_put, block_get, block_stat, run_on_node}`
 - `gnostr_web::app::methods::repo::service`
 - `gnostr_web::app::layers::logger::LoggingMiddleware`
 
@@ -229,8 +230,20 @@ Endpoints exposed when the `ipfs` feature is enabled:
 - `GET /api/ipfs/ls` — list pinned CIDs
 - `POST /api/ipfs/manifest` — publish a manifest JSON, returns `{ cid }`
 - `POST /api/ipfs/publish-repos` — build a manifest from the scanned Git repositories and publish it to IPFS, returns `{ cid }`
+- `POST /api/ipfs/publish-repo?path=<repo-href>` — build a self-contained flat
+  HTML snapshot of a single local repository and publish it to IPFS as a
+  directory containing `index.html`, returns `{ cid }`. The `path` is the same
+  href shown in the repo list, e.g. `/0e31497d07214e6cfe8d57020e9c9dd2/about`.
 - `GET /api/ipfs/peers` — list swarm peers
-- `GET /ipfs/*` — proxy any IPFS path through the Kubo gateway (streams the gateway response back through `gnostr-web` so Helia/browser clients stay on the same origin)
+- `GET /ipfs/*` — proxy any IPFS path through the Kubo gateway (streams the
+  gateway response back through `gnostr-web` so Helia/browser clients stay on
+  the same origin). Directory CIDs should be accessed with a trailing slash so
+  Kubo serves `index.html`.
+
+The repo-list page (`templates/base.html`) automatically publishes a snapshot of
+every visible repository to IPFS on load and links the directory CID below each
+repo name. `/ipfs/<cid>/` then renders the flat HTML snapshot instead of a raw
+path string.
 
 The browser Helia node talks to Kubo via these endpoints and the local gateway
 URL returned by `/api/ipfs/status`. CIDs are linked to the gateway so content
@@ -239,15 +252,19 @@ can be retrieved directly.
 When the `ipfs` feature is enabled, `gnostr-web` also runs a background task
 that periodically builds a manifest of the scanned Git repositories and publishes
 it to IPFS via `POST /api/ipfs/publish-repos`. The publish interval follows
-`--refresh-interval` (default 30 s, or 5 m if set to `never`).
+`--refresh-interval` (default 30 s, or 5 m if set to `never`). The IPFS routes
+use a 120 s request timeout so publishing repository snapshots does not trip the
+default 10 s limit.
 
 Configuration (only meaningful with `--features ipfs`):
 
 - `--ipfs-repo <path>` / `GNOSTR_IPFS_REPO` — Kubo repository location
   (default: OS app data dir `…/gnostr/ipfs`).
 - `--ipfs-online` / `GNOSTR_IPFS_ONLINE=true` — enable swarm participation
-  (default: offline, local-only). When an embedded node is started, it also
-  exposes the full Kubo RPC API + WebUI on a local ephemeral port.
+  (default: offline, local-only). When an embedded node is started, it exposes
+  the full Kubo RPC API, WebUI, and the `/ipfs` gateway on the same local
+  ephemeral port; `api_url` and `gateway` in `/api/ipfs/status` point to the
+  same URL.
 
 The Kubo FFI lives in `../ipfs/ffi/rust` (`kubo-ffi`) and requires a Go
 toolchain at build time. The `ipfs` feature is off by default so a plain

@@ -323,10 +323,9 @@ async fn main() -> Result<(), anyhow::Error> {
 
     info!("Server starting up...");
 
-    #[allow(deprecated)]
-    let app = Router::new()
+#[allow(deprecated)]
+    let non_ipfs_routes = Router::new()
         .route("/api/cid-manifest", get(methods::manifest::get_manifest).post(methods::manifest::post_manifest))
-        .merge(ipfs_routes)
         .route("/", get(methods::index::handle))
         .route("/gnostr", get(methods::gnostr::handle))
         .route("/gnostr/", get(methods::gnostr::handle)) // Handle trailing slash
@@ -585,12 +584,18 @@ async fn main() -> Result<(), anyhow::Error> {
             get(static_svg(SIGN_OUT_SVG)),
         )
         .fallback(methods::index::handle_spa)
-        .fallback(methods::repo::service);
+        .fallback(methods::repo::service)
+        .layer(TimeoutLayer::new(args.request_timeout.into()));
+
+    #[allow(deprecated)]
+    #[cfg(feature = "ipfs")]
+    let ipfs_routes = ipfs_routes.layer(TimeoutLayer::new(std::time::Duration::from_secs(120)));
+
+    let app = ipfs_routes.merge(non_ipfs_routes);
     #[cfg(feature = "ipfs")]
     let app = app.layer(Extension(ipfs_state));
 
     let app = app
-        .layer(TimeoutLayer::new(args.request_timeout.into()))
         .layer(layer_fn(LoggingMiddleware))
         .layer(Extension(Arc::new(Git::new())))
         .layer(Extension(db))
