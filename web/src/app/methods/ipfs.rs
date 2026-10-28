@@ -1,4 +1,6 @@
 #[cfg(feature = "ipfs")]
+use std::path::PathBuf;
+#[cfg(feature = "ipfs")]
 use std::sync::Arc;
 
 #[cfg(feature = "ipfs")]
@@ -633,6 +635,77 @@ pub async fn publish_repo_manifest(
         .await
         .map_err(|e| anyhow::anyhow!(e))?;
     Ok(cid)
+}
+
+#[cfg(feature = "ipfs")]
+#[derive(Deserialize)]
+pub struct PublishRepoQuery {
+    pub path: String,
+}
+
+#[cfg(feature = "ipfs")]
+#[derive(Serialize)]
+pub struct PublishRepoResponse {
+    pub cid: String,
+}
+
+/// Publish a local repository snapshot to IPFS.
+///
+/// The request path is the same href shown in the repo list (e.g.
+/// `/0e31497d07214e6cfe8d57020e9c9dd2/about`). The handler maps that back to
+/// the on-disk repo directory, builds a self-contained flat HTML snapshot, and
+/// stores it as `index.html` inside a directory CID.
+#[cfg(feature = "ipfs")]
+pub async fn publish_repo(
+    Extension(state): Extension<Arc<IpfsState>>,
+    Extension(scan_path): Extension<Arc<PathBuf>>,
+    AxumQuery(query): AxumQuery<PublishRepoQuery>,
+) -> impl IntoResponse {
+    let mut repo_key = query
+        .path
+        .trim_start_matches('/')
+        .trim_end_matches("/about")
+        .to_string();
+    if repo_key.is_empty() {
+        repo_key = ".".to_string();
+    }
+
+    let repo_dir = scan_path.join(&repo_key);
+    if !repo_dir.is_dir() {
+        return (
+            StatusCode::NOT_FOUND,
+            format!("repo directory not found: {repo_key}"),
+        )
+            .into_response();
+    }
+
+    let html =
+        match tokio::task::spawn_blocking(move || {
+            gnostr_js::flat::build_html_from_dir(&repo_dir, 51_200)
+        })
+        .await
+        {
+            Ok(Ok(html)) => html,
+            Ok(Err(e)) => {
+                return (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("failed to build snapshot: {e}"),
+                )
+                    .into_response();
+            }
+            Err(e) => {
+                return (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("snapshot task panicked: {e}"),
+                )
+                    .into_response();
+            }
+        };
+
+    match state.add_directory("index.html", html.as_bytes()).await {
+        Ok(cid) => Json(PublishRepoResponse { cid }).into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e).into_response(),
+    }
 }
 
 #[cfg(feature = "ipfs")]

@@ -304,6 +304,10 @@ async fn main() -> Result<(), anyhow::Error> {
             "/api/ipfs/publish-repos",
             axum::routing::post(methods::ipfs::publish_repos),
         )
+        .route(
+            "/api/ipfs/publish-repo",
+            axum::routing::post(methods::ipfs::publish_repo),
+        )
         .route("/ipfs/*ipfs_path", get(methods::ipfs::ipfs_proxy))
         .route("/api/ipfs/gateway", get(methods::ipfs::gateway))
         .route("/api/ipfs/status", get(methods::ipfs::status));

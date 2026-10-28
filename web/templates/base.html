@@ -44,57 +44,53 @@
 
       const gatewayUrl = status.gateway || "";
 
-      // Collect repository rows and their refs.
+      // Collect repository rows and publish a snapshot of each repo to IPFS.
       const rows = Array.from(document.querySelectorAll("table.repositories tbody tr"));
-      const refs = [];
       const rowRefs = [];
       for (const row of rows) {
         const link = row.querySelector("td a");
         if (!link) continue;
         const repoRef = (link.getAttribute("href") || link.textContent || "").trim();
         if (!repoRef) continue;
-        refs.push(repoRef);
         rowRefs.push({ row, link, repoRef });
       }
 
-      // Batched store in Kubo.
-      let cids = [];
-      try {
-        const res = await fetch("/api/ipfs/add-batch", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ items: refs }),
-        });
-        if (res.ok) {
-          const data = await res.json();
-          cids = data.cids || [];
-        }
-      } catch (e) {
-        console.error("Batch IPFS add failed", e);
-      }
-
-      // Apply CIDs to rows and verify via /api/ipfs/cat.
       const manifestEntries = [];
-      rowRefs.forEach((entry, idx) => {
-        const cid = cids[idx];
-        if (!cid) return;
-        manifestEntries.push({ repo: entry.repoRef, cid });
-        const nameCell = entry.link.parentElement;
-        if (nameCell && !nameCell.querySelector(".repo-cid")) {
-          const cidEl = document.createElement("a");
-          cidEl.className = "repo-cid";
-          cidEl.style.fontSize = "0.75rem";
-          cidEl.style.opacity = "0.7";
-          cidEl.style.display = "block";
-          cidEl.textContent = `CID: ${cid}`;
-          cidEl.href = gatewayUrl ? `${gatewayUrl}/ipfs/${cid}` : "#";
-          cidEl.target = "_blank";
-          cidEl.rel = "noopener noreferrer";
-          nameCell.appendChild(cidEl);
-        }
-        // Verify availability via axum proxy (Helia talks to Kubo).
-        fetch(`/api/ipfs/cat/${cid}`).catch(() => {});
-      });
+      await Promise.all(
+        rowRefs.map(async (entry) => {
+          let cid = null;
+          try {
+            const res = await fetch(
+              `/api/ipfs/publish-repo?path=${encodeURIComponent(entry.repoRef)}`,
+              { method: "POST" },
+            );
+            if (res.ok) {
+              const data = await res.json();
+              cid = data.cid || null;
+            }
+          } catch (e) {
+            console.error("Failed to publish repo snapshot", entry.repoRef, e);
+          }
+          if (!cid) return;
+
+          manifestEntries.push({ repo: entry.repoRef, cid });
+          const nameCell = entry.link.parentElement;
+          if (nameCell && !nameCell.querySelector(".repo-cid")) {
+            const cidEl = document.createElement("a");
+            cidEl.className = "repo-cid";
+            cidEl.style.fontSize = "0.75rem";
+            cidEl.style.opacity = "0.7";
+            cidEl.style.display = "block";
+            cidEl.textContent = `IPFS: ${cid}`;
+            cidEl.href = gatewayUrl ? `${gatewayUrl}/ipfs/${cid}/` : "#";
+            cidEl.target = "_blank";
+            cidEl.rel = "noopener noreferrer";
+            nameCell.appendChild(cidEl);
+          }
+          // Warm the snapshot through the axum /ipfs proxy.
+          fetch(`/ipfs/${cid}/`).catch(() => {});
+        }),
+      );
 
       // Publish manifest to Kubo too.
       try {
