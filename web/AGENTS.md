@@ -229,7 +229,7 @@ Endpoints exposed when the `ipfs` feature is enabled:
 - `GET /api/ipfs/ls` — list pinned CIDs
 - `POST /api/ipfs/manifest` — publish a manifest JSON, returns `{ cid }`
 - `GET /api/ipfs/peers` — list swarm peers
-- `GET /ipfs/:cid` — proxy the CID through the Kubo gateway (streams the gateway response back through `gnostr-web` so Helia/browser clients stay on the same origin)
+- `GET /ipfs/*` — proxy any IPFS path through the Kubo gateway (streams the gateway response back through `gnostr-web` so Helia/browser clients stay on the same origin)
 
 The browser Helia node talks to Kubo via these endpoints and the local gateway
 URL returned by `/api/ipfs/status`. CIDs are linked to the gateway so content
