@@ -276,7 +276,7 @@ async fn main() -> Result<(), anyhow::Error> {
             "/api/ipfs/manifest",
             axum::routing::post(methods::ipfs::publish_manifest),
         )
-        .route("/ipfs/{*ipfs_path}", get(methods::ipfs::ipfs_proxy))
+        .nest("/ipfs", Router::new().fallback(methods::ipfs::ipfs_proxy))
         .route("/api/ipfs/gateway", get(methods::ipfs::gateway))
         .route("/api/ipfs/status", get(methods::ipfs::status));
     #[cfg(not(feature = "ipfs"))]

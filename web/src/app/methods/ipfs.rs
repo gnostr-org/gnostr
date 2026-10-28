@@ -456,14 +456,15 @@ pub async fn ls(Extension(state): Extension<Arc<IpfsState>>) -> impl IntoRespons
 #[cfg(feature = "ipfs")]
 pub async fn ipfs_proxy(
     Extension(state): Extension<Arc<IpfsState>>,
-    AxumPath(ipfs_path): AxumPath<String>,
+    axum::extract::OriginalUri(uri): axum::extract::OriginalUri,
 ) -> impl IntoResponse {
     let gw = state.gateway.lock().await.clone();
     let Some(base) = gw else {
         return (StatusCode::SERVICE_UNAVAILABLE, "no gateway").into_response();
     };
 
-    let url = format!("{base}/ipfs/{ipfs_path}");
+    let path_and_query = uri.path_and_query().map(|p| p.as_str()).unwrap_or("/");
+    let url = format!("{base}{path_and_query}");
     let resp = match reqwest::get(&url).await {
         Ok(resp) => resp,
         Err(e) => {
