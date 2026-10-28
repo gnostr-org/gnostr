@@ -228,12 +228,18 @@ Endpoints exposed when the `ipfs` feature is enabled:
 - `POST /api/ipfs/pin/:cid` — pin a CID
 - `GET /api/ipfs/ls` — list pinned CIDs
 - `POST /api/ipfs/manifest` — publish a manifest JSON, returns `{ cid }`
+- `POST /api/ipfs/publish-repos` — build a manifest from the scanned Git repositories and publish it to IPFS, returns `{ cid }`
 - `GET /api/ipfs/peers` — list swarm peers
 - `GET /ipfs/*` — proxy any IPFS path through the Kubo gateway (streams the gateway response back through `gnostr-web` so Helia/browser clients stay on the same origin)
 
 The browser Helia node talks to Kubo via these endpoints and the local gateway
 URL returned by `/api/ipfs/status`. CIDs are linked to the gateway so content
 can be retrieved directly.
+
+When the `ipfs` feature is enabled, `gnostr-web` also runs a background task
+that periodically builds a manifest of the scanned Git repositories and publishes
+it to IPFS via `POST /api/ipfs/publish-repos`. The publish interval follows
+`--refresh-interval` (default 30 s, or 5 m if set to `never`).
 
 Configuration (only meaningful with `--features ipfs`):
 
