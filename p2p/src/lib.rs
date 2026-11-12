@@ -1,0 +1,249 @@
+//! `gnostr-p2p` owns the libp2p transport namespace and swarm composition.
+//!
+//! It re-exports the shared asyncgit-backed Nostr wire types for downstream
+//! crates, and it keeps relay bucket, command handling, and quorum-time helpers
+//! local so the dependency graph stays one-way: `types -> asyncgit -> p2p`.
+//!
+//! The crate builds the node transport stack, exposes browser-side assets under
+//! the `js` feature, and adds the optional local Tor transport under `tor`.
+//!
+//! Attestation syndication follows the same deterministic structure used by
+//! `asyncgit`: mined commit, signed attestation event, mined git note, and a
+//! chronological `notes_ref` chain that links each public attestation to the
+//! previous one.
+//#![feature(trivial_bounds)]
+
+#[cfg(not(target_os = "tvos"))]
+pub mod git2 {
+    pub use gnostr_asyncgit::git2::*;
+    pub use gnostr_asyncgit::types;
+}
+
+use std::path::PathBuf;
+
+#[cfg(feature = "ipfs")]
+extern crate kubo_ffi;
+use std::process::{Command, Stdio};
+
+#[cfg(not(target_os = "tvos"))]
+use libp2p::identity;
+#[cfg(not(target_os = "tvos"))]
+use sha2::{Digest, Sha256};
+
+#[cfg(not(target_os = "tvos"))]
+pub mod args;
+#[cfg(not(target_os = "tvos"))]
+pub mod behaviour;
+#[cfg(not(target_os = "tvos"))]
+pub mod cli;
+#[cfg(target_os = "tvos")]
+#[path = "embedded_network_tvos.rs"]
+pub mod embedded_network;
+#[cfg(not(target_os = "tvos"))]
+pub mod embedded_network;
+#[cfg(not(target_os = "tvos"))]
+pub mod fractal;
+// moved to mod fractal #[cfg(not(target_os = "tvos"))]
+// moved to mod fractal pub mod perfect_ip_core;
+// moved to mod fractal #[cfg(not(target_os = "tvos"))]
+// moved to mod fractal pub mod perfect_ip;
+#[cfg(not(doc))]
+#[cfg(all(feature = "js", not(target_os = "tvos")))]
+pub mod bridge;
+#[cfg(not(target_os = "tvos"))]
+pub mod command_handler;
+#[cfg(not(target_os = "tvos"))]
+pub mod crawler_broadcast;
+#[cfg(not(target_os = "tvos"))]
+pub mod event_handler;
+#[cfg(not(target_os = "tvos"))]
+pub mod git_integration;
+#[cfg(not(target_os = "tvos"))]
+pub mod git_publisher;
+#[cfg(all(feature = "ipfs", not(target_os = "tvos")))]
+pub mod ipfs;
+#[cfg(all(feature = "ipfs", not(target_os = "tvos")))]
+pub mod ipfs_bridge;
+#[cfg(not(doc))]
+#[cfg(all(feature = "js", not(target_os = "tvos")))]
+pub mod js;
+#[cfg(not(target_os = "tvos"))]
+pub mod kvs;
+#[cfg(not(target_os = "tvos"))]
+pub mod lookup;
+#[cfg(not(doc))]
+#[cfg(not(target_os = "tvos"))]
+pub mod message;
+#[cfg(not(target_os = "tvos"))]
+pub mod network_config;
+#[cfg(not(target_os = "tvos"))]
+pub mod opt;
+pub mod peer_registry;
+#[cfg(not(doc))]
+#[cfg(not(target_os = "tvos"))]
+pub mod relay_bridge;
+#[cfg(not(target_os = "tvos"))]
+pub mod relay_paths;
+#[cfg(not(target_os = "tvos"))]
+pub mod repo_state;
+#[cfg(not(target_os = "tvos"))]
+pub mod swarm_builder;
+#[cfg(not(doc))]
+#[cfg(all(feature = "js", not(target_os = "tvos")))]
+pub mod template_html;
+#[cfg(not(target_os = "tvos"))]
+pub mod time;
+#[cfg(not(doc))]
+#[cfg(all(feature = "tor", not(target_os = "tvos")))]
+pub mod tor;
+#[cfg(not(target_os = "tvos"))]
+pub mod utils;
+#[cfg(not(target_os = "tvos"))]
+pub use crawler_broadcast as relay_buckets;
+
+/// Crate name.
+pub const PACKAGE_NAME: &str = "gnostr-p2p";
+
+/// Return the absolute path to the bundled JavaScript source tree.
+pub fn js_source_dir() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/js")
+}
+
+/// Build a deterministic libp2p keypair from an optional secret seed string.
+///
+/// Hex SHA-256 seeds are used directly; any other input is hashed into a 32-byte seed.
+/// Derive an IPFS/Kubo swarm key from a Nostr private key (nsec or hex).
+/// Only available with the `ipfs` feature.
+#[cfg(all(feature = "ipfs", not(target_os = "tvos")))]
+pub fn swarm_key_from_nsec(nsec_or_hex: &str) -> Result<String, String> {
+    kubo_ffi::nostr_nsec_to_swarm_key(nsec_or_hex)
+}
+#[cfg(feature = "ipfs")]
+pub fn ipfs_disabled() -> bool {
+    std::env::var("GNOSTR_P2P_IPFS_DISABLE")
+        .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+        .unwrap_or(false)
+}
+
+#[cfg(not(target_os = "tvos"))]
+pub fn keypair_from_seed(secret_key_seed: Option<String>) -> identity::Keypair {
+    match secret_key_seed {
+        Some(seed) => identity::Keypair::ed25519_from_bytes(seed_bytes(&seed))
+            .expect("only errors on wrong length"),
+        None => identity::Keypair::generate_ed25519(),
+    }
+}
+
+#[cfg(not(target_os = "tvos"))]
+fn seed_bytes(seed: &str) -> [u8; 32] {
+    if seed.len() == 64 && seed.chars().all(|c| c.is_ascii_hexdigit()) {
+        let mut bytes = [0u8; 32];
+        for (idx, chunk) in seed.as_bytes().chunks_exact(2).enumerate() {
+            bytes[idx] = u8::from_str_radix(std::str::from_utf8(chunk).unwrap(), 16)
+                .expect("validated hex digest");
+        }
+        return bytes;
+    }
+
+    let digest = Sha256::digest(seed.as_bytes());
+    digest.into()
+}
+
+#[cfg(all(not(doc), feature = "js", not(target_os = "tvos")))]
+pub use bridge::{asset_content_type, asset_response, shell_html};
+#[cfg(not(target_os = "tvos"))]
+pub use fractal::fractal_ip as perfect_ip;
+#[cfg(not(target_os = "tvos"))]
+pub use fractal::fractal_ip_core as perfect_ip_core;
+#[cfg(not(target_os = "tvos"))]
+pub use fractal::fractal_ip_core::{
+    calculate_parity, generate_manifest, list_directory, packetize, process_slice,
+    reconstruct_directory, reconstruct_payload, recover_missing_data, recover_missing_slice,
+    run_directory_walk, sha256_hex, summarize_packets, DirectoryWalk, Header, IntegrityManager,
+    PacketBatch, ProtocolSlice, MTU_PAYLOAD,
+};
+#[cfg(not(target_os = "tvos"))]
+pub use fractal::fractal_ip_core_v2 as perfect_ip_core_v2;
+#[cfg(not(target_os = "tvos"))]
+pub use fractal::fractal_ip_core_v2::{
+    build_fractal_swarm_v2, build_fractal_swarm_v2_with_protocols, git_fsck_strict,
+    request_slices_v2, run_fractal_engine_v2, FractalBehaviourV2, FractalBehaviourV2Event,
+    PostcardCodec, RepairResponseV2, WireCodecV2,
+};
+#[cfg(not(target_os = "tvos"))]
+pub use fractal::fractal_ip_v2 as perfect_ip_v2;
+#[cfg(not(target_os = "tvos"))]
+pub use fractal::{
+    build_fractal_swarm, run_fractal_engine, FractalBehaviour, FractalBehaviourEvent, FractalSlice,
+};
+#[cfg(not(target_os = "tvos"))]
+pub use gnostr_types::perfect_ip_v2::{
+    generate_manifest_v2, packetize_v2, reconstruct_directory_v2, run_directory_walk_v2,
+    DirectoryWalkV2, FileEntryV2, HeaderV2, IntegrityManagerV2, ManifestEntry, PacketBatchV2,
+    ProtocolSliceV2, ReconstructErrorV2, RecoveryReport, RejectedSlice,
+};
+#[cfg(not(target_os = "tvos"))]
+pub use gnostr_types::perfect_ip_nostr::{
+    event_to_manifest_v1, event_to_manifest_v2, event_to_slice_v1, event_to_slice_v2,
+    manifest_event_v1, manifest_event_v2, slice_event_v1, slice_event_v2, NostrCarrierError,
+    PERFECT_IP_MANIFEST_MARK, PERFECT_IP_NOSTR_KIND, PERFECT_IP_TAG, PERFECT_IP_TOPIC,
+    PERFECT_IP_VERSION_V1, PERFECT_IP_VERSION_V2,
+};
+#[cfg(all(not(doc), feature = "js", not(target_os = "tvos")))]
+pub use js::get_js_assets;
+#[cfg(not(target_os = "tvos"))]
+#[cfg(not(doc))]
+pub use message::*;
+#[cfg(not(target_os = "tvos"))]
+#[cfg(not(doc))]
+pub use relay_bridge::{
+    NostrRelayConnection, RelayBridgeCommand, RelayBridgeNotification, RelayBridgeSession,
+};
+#[cfg(not(target_os = "tvos"))]
+pub use repo_state::{RepoStateQuorum, RepoStateRefs, RepoStateSnapshot};
+#[cfg(all(not(doc), feature = "js", not(target_os = "tvos")))]
+pub use template_html::{get_template_assets, TemplateHtml};
+#[cfg(all(not(doc), feature = "tor", not(target_os = "tvos")))]
+pub use tor::{
+    build_transport as build_tor_transport, AddressConversion, TokioTorStream, TorError,
+    TorTransport, TorTransportError,
+};
+
+pub fn spawn_detached_current_exe<I, S>(args: I) -> Result<u32, Box<dyn std::error::Error>>
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<std::ffi::OsStr>,
+{
+    let current_exe = std::env::current_exe()?;
+    let mut command = Command::new(current_exe);
+    command.args(args);
+    command.stdin(Stdio::null());
+    command.stdout(Stdio::null());
+    command.stderr(Stdio::null());
+    let child = command.spawn()?;
+    Ok(child.id())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn exposes_js_source_dir() {
+        assert!(js_source_dir().ends_with("p2p/src/js"));
+    }
+}
+
+/// Compatibility namespace for the legacy `crate::p2p::...` module paths.
+#[cfg(not(target_os = "tvos"))]
+pub mod p2p {
+    #[cfg(feature = "tor")]
+    pub use crate::tor;
+    pub use crate::{
+        args, behaviour, cli, command_handler, crawler_broadcast, event_handler, fractal,
+        git_integration, git_publisher, keypair_from_seed, kvs, lookup, network_config, opt,
+        relay_paths, repo_state, swarm_builder, time, utils,
+    };
+    #[cfg(not(doc))]
+    pub use crate::{message, relay_bridge};
+}
