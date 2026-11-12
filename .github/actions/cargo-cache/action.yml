@@ -1,0 +1,122 @@
+name: cargo-cache
+description: >-
+  Shared Cargo cache for gnostr workflows. build-artifact.yml is the cache
+  factory (save=true); every other workflow restores from it (save=false,
+  the default). Cache scoping note: only caches created on the default
+  branch (or the current branch) are readable here, which is why
+  build-artifact.yml also runs on pushes to master.
+
+inputs:
+  lock-hash:
+    description: "Caller-computed hashFiles('Cargo.lock'). hashFiles is not available inside composite actions, so the workflow must pass it in."
+    required: true
+  toolchain:
+    description: Rust toolchain channel segment for the cache key.
+    default: stable
+  target:
+    description: >-
+      Optional target-triple segment (build-artifact.yml matrix targets).
+      Consumers (test/clippy workflows) leave this empty so their keys and
+      restore prefixes match any factory target on the same OS/arch.
+    default: ""
+  profile:
+    description: >-
+      Cargo profile segment: "release" for the build-artifact factory,
+      "debug" for consumers that build with cargo's default debug profile
+      (their artifacts live in target/debug, which a release cache never
+      warms). Keys are cargo-v2; the v1 target keys predate the profile
+      segment and are intentionally not restored.
+    default: "release"
+  save:
+    description: >-
+      "true" saves caches on miss. Only the cache factory should set this;
+      concurrent savers with identical keys race and one warns harmlessly,
+      so consumers stay restore-only.
+    default: "false"
+  target-path:
+    description: Cargo target directory to cache.
+    default: target
+
+outputs:
+  registry-hit:
+    description: Whether the registry/git cache was restored.
+    value: ${{ steps.registry-factory.outputs.cache-hit || steps.registry-restore.outputs.cache-hit }}
+  target-hit:
+    description: Whether the target directory cache was restored.
+    value: ${{ steps.target-factory.outputs.cache-hit || steps.target-restore.outputs.cache-hit }}
+
+runs:
+  using: composite
+  steps:
+    - name: Restore Cargo registry and git dependencies
+      if: inputs.save != 'true'
+      id: registry-restore
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+        key: cargo-v1-registry-${{ runner.os }}-${{ runner.arch }}-${{ inputs.toolchain }}-${{ inputs.lock-hash }}
+        restore-keys: |
+          cargo-v1-registry-${{ runner.os }}-${{ runner.arch }}-${{ inputs.toolchain }}-
+          cargo-v1-registry-${{ runner.os }}-${{ runner.arch }}-
+          cargo-v1-registry-${{ runner.os }}-
+
+    - name: Restore Cargo registry and git dependencies (factory)
+      if: inputs.save == 'true'
+      id: registry-factory
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+        key: cargo-v1-registry-${{ runner.os }}-${{ runner.arch }}-${{ inputs.toolchain }}-${{ inputs.lock-hash }}
+        restore-keys: |
+          cargo-v1-registry-${{ runner.os }}-${{ runner.arch }}-${{ inputs.toolchain }}-
+          cargo-v1-registry-${{ runner.os }}-${{ runner.arch }}-
+          cargo-v1-registry-${{ runner.os }}-
+
+    - name: Save Cargo registry and git dependencies (factory, even on failure)
+      # always(): a failed build still downloaded/compiled hundreds of
+      # crates; a partial cache is strictly better than none and cargo's
+      # fingerprinting resumes cleanly from it. Skips when the exact-key
+      # cache already exists (immutable) or the restore hit.
+      if: always() && inputs.save == 'true' && steps.registry-factory.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+        key: cargo-v1-registry-${{ runner.os }}-${{ runner.arch }}-${{ inputs.toolchain }}-${{ inputs.lock-hash }}
+
+    - name: Restore Cargo target directory
+      if: inputs.save != 'true'
+      id: target-restore
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ inputs.target-path }}
+        key: cargo-v2-target-${{ runner.os }}-${{ runner.arch }}-${{ inputs.toolchain }}-${{ inputs.profile }}${{ inputs.target != '' && format('-{0}', inputs.target) || '' }}-${{ inputs.lock-hash }}
+        restore-keys: |
+          cargo-v2-target-${{ runner.os }}-${{ runner.arch }}-${{ inputs.toolchain }}-${{ inputs.profile }}${{ inputs.target != '' && format('-{0}', inputs.target) || '' }}-
+          cargo-v2-target-${{ runner.os }}-${{ runner.arch }}-${{ inputs.toolchain }}-${{ inputs.profile }}-
+
+    - name: Restore Cargo target directory (factory)
+      if: inputs.save == 'true'
+      id: target-factory
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ inputs.target-path }}
+        key: cargo-v2-target-${{ runner.os }}-${{ runner.arch }}-${{ inputs.toolchain }}-${{ inputs.profile }}${{ inputs.target != '' && format('-{0}', inputs.target) || '' }}-${{ inputs.lock-hash }}
+        restore-keys: |
+          cargo-v2-target-${{ runner.os }}-${{ runner.arch }}-${{ inputs.toolchain }}-${{ inputs.profile }}${{ inputs.target != '' && format('-{0}', inputs.target) || '' }}-
+          cargo-v2-target-${{ runner.os }}-${{ runner.arch }}-${{ inputs.toolchain }}-${{ inputs.profile }}-
+
+    - name: Save Cargo target directory (factory, even on failure)
+      # always(): keep the per-crate incremental state (target/ IS the
+      # per-crate cache) when the build dies mid-way, so a re-run resumes
+      # from the last compiled crate instead of starting over.
+      if: always() && inputs.save == 'true' && steps.target-factory.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ inputs.target-path }}
+        key: cargo-v2-target-${{ runner.os }}-${{ runner.arch }}-${{ inputs.toolchain }}-${{ inputs.profile }}${{ inputs.target != '' && format('-{0}', inputs.target) || '' }}-${{ inputs.lock-hash }}

@@ -1,0 +1,58 @@
+name: 'Setup OpenSSL and Perl for Windows'
+description: 'Installs Strawberry Perl and the Perl module required for vendored OpenSSL on Windows.'
+runs:
+  using: 'composite'
+  steps:
+    - name: Restore Strawberry Perl cache
+      if: runner.os == 'Windows'
+      id: perl-cache
+      uses: actions/cache/restore@v4
+      with:
+        # choco install + CPAN module take minutes on every run; both land
+        # under C:\Strawberry. Key is static on purpose (bump v1 -> v2 to
+        # pick up a newer strawberryperl release).
+        path: C:\Strawberry
+        key: strawberry-perl-v1
+
+    - name: Install Strawberry Perl
+      if: runner.os == 'Windows' && steps.perl-cache.outputs.cache-hit != 'true'
+      shell: pwsh
+      run: |
+        choco install strawberryperl -y
+        $strawberryPerl = "C:\Strawberry\perl\bin"
+        $strawberryC = "C:\Strawberry\c\bin"
+        echo "PATH=$strawberryPerl;$strawberryC;$env:PATH" >> $env:GITHUB_ENV
+        echo "PERL=C:\Strawberry\perl\bin\perl.exe" >> $env:GITHUB_ENV
+
+    - name: Put Strawberry Perl on PATH
+      if: runner.os == 'Windows' && steps.perl-cache.outputs.cache-hit == 'true'
+      shell: pwsh
+      run: |
+        $strawberryPerl = "C:\Strawberry\perl\bin"
+        $strawberryC = "C:\Strawberry\c\bin"
+        echo "PATH=$strawberryPerl;$strawberryC;$env:PATH" >> $env:GITHUB_ENV
+        echo "PERL=C:\Strawberry\perl\bin\perl.exe" >> $env:GITHUB_ENV
+
+    - name: Install Perl modules
+      if: runner.os == 'Windows' && steps.perl-cache.outputs.cache-hit != 'true'
+      shell: pwsh
+      run: perl -MCPAN -e "install Locale::Maketext::Simple"
+
+    - name: Save Strawberry Perl cache
+      if: runner.os == 'Windows' && steps.perl-cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: C:\Strawberry
+        key: strawberry-perl-v1
+
+    - name: Print Environment (PowerShell equivalent to printenv)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        Write-Host "--- ALL ENVIRONMENT VARIABLES ---" -ForegroundColor Cyan
+        Get-ChildItem Env: | Sort-Object Name | ForEach-Object {
+            Write-Host ("{0,-30} = {1}" -f $_.Name, $_.Value)
+        }
+
+        Write-Host "`n--- PATH VERIFICATION ---" -ForegroundColor Yellow
+        $env:Path -split ';' | ForEach-Object { Write-Host $_ }

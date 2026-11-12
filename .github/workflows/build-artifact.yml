@@ -1,0 +1,615 @@
+name: build-artifact
+
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.ref || github.event.workflow_run.head_branch || github.ref }}-${{ inputs.targets || 'all' }}-${{ inputs.toolchain || 'stable' }}
+  cancel-in-progress: true
+
+on:
+  push:
+    tags:
+      - '*'
+    branches:
+      # Cache-factory scope: caches created on the default branch are
+      # readable by every other workflow/PR; tag-run caches are not.
+      - master
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: >-
+          Tag or branch to build, "auto" to resolve the numerically
+          greatest <blockheight>/<weeble>/<wobble> branch (per
+          $(gnostr --blockheight)/$(gnostr --weeble)/$(gnostr --wobble)
+          naming), or empty for the default branch.
+        required: false
+        default: ''
+        type: string
+      targets:
+        description: >-
+          Comma- or space-separated targets to build (edit the default
+          list), or "all" to use the per-OS toggles below.
+        required: false
+        default: linux-x64,linux-x64-musl,linux-arm64,linux-arm64-musl,windows-x64,macos-x64,macos-arm64
+        type: string
+      linux_x64:
+        description: "Build linux-x64"
+        required: false
+        default: true
+        type: boolean
+      linux_x64_musl:
+        description: "Build linux-x64-musl"
+        required: false
+        default: true
+        type: boolean
+      linux_arm64:
+        description: "Build linux-arm64"
+        required: false
+        default: true
+        type: boolean
+      linux_arm64_musl:
+        description: "Build linux-arm64-musl"
+        required: false
+        default: true
+        type: boolean
+      windows_x64:
+        description: "Build windows-x64"
+        required: false
+        default: true
+        type: boolean
+      macos_x64:
+        description: "Build macos-x64"
+        required: false
+        default: true
+        type: boolean
+      macos_arm64:
+        description: "Build macos-arm64"
+        required: false
+        default: true
+        type: boolean
+      toolchain:
+        description: "Rust toolchain to use"
+        required: false
+        default: stable
+        type: choice
+        options:
+          - stable
+          - nightly
+
+permissions:
+  contents: read
+
+jobs:
+  setup:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    permissions: {}
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      resolved-ref: ${{ steps.resolve-ref.outputs.resolved-ref }}
+    steps:
+      - name: Resolve greatest blockheight branch
+        # Branch names encode the version triple:
+        #   $(gnostr --blockheight)/$(gnostr --weeble)/$(gnostr --wobble)/...
+        # "auto" picks the numerically greatest triple (blockheight first,
+        # then weeble, then wobble). git ls-remote needs no checkout.
+        if: inputs.ref == 'auto'
+        id: resolve-ref
+        shell: bash
+        env:
+          REPO: ${{ github.repository }}
+        run: |
+          # Capture the full sorted list before taking the first line:
+          # `sort | head` trips pipefail via SIGPIPE on large ref lists.
+          lines=$(git ls-remote --heads "https://github.com/$REPO.git" 'refs/heads/[0-9]*/*/*' \
+            | awk '{print $2}' \
+            | sed 's|^refs/heads/||' \
+            | awk -F/ 'NF>=3 && $1+0==$1 && $2+0==$2 && $3+0==$3 {
+                printf "%020d %020d %020d %s\n", $1, $2, $3, $0
+              }' \
+            | sort -r) || exit 1
+          # Unquoted expansion on purpose: quoting any part of a ${var#pat}
+          # pattern makes the wildcards literal (bash semantics).
+          line=${lines%%$'\n'*}
+          best=${line#* * * }
+          if [ -z "$best" ] || [ "$best" = "$line" ]; then
+            echo "ERROR: ref=auto but no <blockheight>/<weeble>/<wobble> branch was found" >&2
+            exit 1
+          fi
+          echo "resolved-ref=$best" >> "$GITHUB_OUTPUT"
+          echo "resolved ref: $best"
+
+      - id: set-matrix
+        shell: python3 {0}
+        env:
+          SELECTED_TARGETS: ${{ inputs.targets || 'all' }}
+          SELECTED_TOOLCHAIN: ${{ inputs.toolchain || 'stable' }}
+          # workflow_dispatch booleans arrive as INPUT_<NAME>; empty (push /
+          # schedule) means every toggle defaults to on.
+          TOGGLE_LINUX_X64: ${{ inputs.linux_x64 }}
+          TOGGLE_LINUX_X64_MUSL: ${{ inputs.linux_x64_musl }}
+          TOGGLE_LINUX_ARM64: ${{ inputs.linux_arm64 }}
+          TOGGLE_LINUX_ARM64_MUSL: ${{ inputs.linux_arm64_musl }}
+          TOGGLE_WINDOWS_X64: ${{ inputs.windows_x64 }}
+          TOGGLE_MACOS_X64: ${{ inputs.macos_x64 }}
+          TOGGLE_MACOS_ARM64: ${{ inputs.macos_arm64 }}
+        run: |
+          import json
+          import os
+
+          all_targets = [
+              {"build": "linux-x64", "os": "ubuntu-latest", "target": "x86_64-unknown-linux-gnu", "native": True, "features": ""},
+              {"build": "linux-x64-musl", "os": "ubuntu-latest", "target": "x86_64-unknown-linux-musl", "native": False, "features": "vendor-openssl"},
+              {"build": "linux-arm64", "os": "ubuntu-latest", "target": "aarch64-unknown-linux-gnu", "native": False, "features": "vendor-openssl"},
+              {"build": "linux-arm64-musl", "os": "ubuntu-latest", "target": "aarch64-unknown-linux-musl", "native": False, "features": "vendor-openssl"},
+              {"build": "windows-x64", "os": "windows-latest", "target": "x86_64-pc-windows-msvc", "native": True, "features": ""},
+              {"build": "macos-x64", "os": "macos-15-intel", "target": "x86_64-apple-darwin", "native": True, "features": ""},
+              {"build": "macos-arm64", "os": "macos-latest", "target": "aarch64-apple-darwin", "native": True, "features": ""},
+          ]
+
+          selected = (os.environ["SELECTED_TARGETS"] or "all").strip().lower()
+          toolchain = os.environ["SELECTED_TOOLCHAIN"] or "stable"
+          if selected not in ("", "all"):
+              # Comma/space-separated multi-select, e.g. "linux-x64,windows-x64".
+              # Keep all_targets order, dedupe, and reject unknown names.
+              requested = [t for t in selected.replace(",", " ").split() if t]
+              known = {t["build"] for t in all_targets}
+              unknown = sorted(set(requested) - known)
+              if unknown:
+                  raise SystemExit(
+                      f"unknown target(s): {', '.join(unknown)}; "
+                      f"valid targets: {', '.join(sorted(known))} (or 'all')"
+                  )
+              wanted = set(requested)
+              targets = [t for t in all_targets if t["build"] in wanted]
+          else:
+              # Note: on push/tag events the toggle env vars are set to the
+              # EMPTY STRING (inputs.* is unset outside workflow_dispatch),
+              # and an empty toggle means the default: build the target.
+              targets = [
+                  target
+                  for target in all_targets
+                  if os.environ.get(
+                      f"TOGGLE_{target['build'].replace('-', '_').upper()}", "true"
+                  ) in ("", "true")
+              ]
+
+          if not targets:
+              raise SystemExit("no targets selected: enable at least one target toggle or list targets explicitly")
+
+          matrix = {
+              "build": [target["build"] for target in targets],
+              "include": [{**target, "toolchain": toolchain} for target in targets],
+          }
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write(f"matrix={json.dumps(matrix)}\n")
+
+  build-artifacts:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    needs: setup
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    strategy:
+      # Let every target finish: green targets save their caches and a re-run
+      # then only rebuilds the red ones (actions/cache saves with
+      # post-if: success(), so failed jobs never clobber a good cache).
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.setup.outputs.matrix) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 50
+          # resolved-ref is set when the dispatch asked for ref=auto
+          # (greatest blockheight/weeble/wobble branch); otherwise the
+          # explicit ref, then the triggering event's SHA.
+          ref: ${{ needs.setup.outputs.resolved-ref || inputs.ref || github.event.workflow_run.head_sha || github.sha }}
+          submodules: recursive
+
+      - name: Set build name
+        uses: ./.github/actions/set-build-name
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          target: ${{ matrix.target }}
+
+      - name: Fetch tags
+        run: git fetch --tags --force
+
+      - name: "Restore Cargo cache (factory: saves on miss)"
+        uses: ./.github/actions/cargo-cache
+        with:
+          lock-hash: ${{ hashFiles('Cargo.lock') }}
+          toolchain: ${{ matrix.toolchain }}
+          target: ${{ matrix.target }}
+          save: true
+
+      - name: Restore Rust toolchain cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.rustup/toolchains
+          # Exact-version keys are written by the save step below (dtolnay's
+          # cachekey output); here we just want the newest cached toolchain
+          # for this OS/toolchain, which rustup then updates in place.
+          key: rustup-${{ runner.os }}-${{ runner.arch }}-${{ matrix.toolchain }}-none
+          restore-keys: |
+            rustup-${{ runner.os }}-${{ runner.arch }}-${{ matrix.toolchain }}-
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        id: rust-toolchain
+        with:
+          toolchain: ${{ matrix.toolchain }}
+
+      - name: Save Rust toolchain cache
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.rustup/toolchains
+          key: rustup-${{ runner.os }}-${{ runner.arch }}-${{ matrix.toolchain }}-${{ steps.rust-toolchain.outputs.cachekey }}
+          # Immutable once written; concurrent matrix jobs with the same
+          # toolchain race and the losers warn-and-skip. Never clobbers a
+          # good entry because the key is content-addressed by rustc itself.
+
+      - name: Setup OpenSSL and Perl for Windows
+        if: runner.os == 'Windows'
+        uses: ./.github/actions/setup-openssl-perl-windows
+
+      - name: Set up MSVC developer command prompt
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Prefer MSVC linker on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          # Remove Git Bash paths that ship a conflicting link.exe (GNU coreutils).
+          $pathEntries = $env:PATH -split ';' | Where-Object {
+              $_ -and ($_ -notmatch '(?i)\\Git\\(usr|mingw64)\\bin\\?$')
+          }
+          "PATH=$($pathEntries -join ';')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+          # Pin the MSVC linker so cargo never resolves Git's link.exe.
+          $link = $null
+          $vcTools = $env:VCToolsInstallDir
+          if ($vcTools) {
+              $candidate = Join-Path $vcTools "bin\Hostx64\x64\link.exe"
+              if (Test-Path $candidate) { $link = $candidate }
+          }
+          if (-not $link) {
+              $candidates = Get-Item "C:\Program Files\Microsoft Visual Studio\2022\*\VC\Tools\MSVC\*\bin\Hostx64\x64\link.exe" -ErrorAction SilentlyContinue
+              if ($candidates) { $link = $candidates[-1].FullName }
+          }
+          if (-not $link) {
+              Write-Error "Could not find MSVC link.exe"
+              exit 1
+          }
+          "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER=$link" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+          # Ensure the matching MSVC import-lib directory is on LIB so the linker
+          # can find msvcp140.lib and friends for C++ dependencies.
+          $libDir = Join-Path $vcTools "lib\x64"
+          if (Test-Path $libDir) {
+              $existingLib = $env:LIB
+              if ($existingLib) {
+                  "LIB=$libDir;$existingLib" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+              } else {
+                  "LIB=$libDir" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+              }
+          }
+
+          # Do not set RUSTFLAGS here; spaces in the MSVC path are not reliably
+          # parsed by Cargo's shell-word splitter on Windows. The per-target
+          # linker env var is sufficient and avoids argument-splitting errors.
+
+      - name: Diagnose msvcp140.lib location (temporary)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          # TEMPORARY diagnostic for the VS18 (VS 2026) image rollout: the
+          # release link fails with LNK1181 msvcp140.lib even though LIB
+          # lists the 14.51 toolset dir. Print where the lib actually is.
+          Write-Host "VCToolsInstallDir=$env:VCToolsInstallDir"
+          Write-Host "--- msvcp* under toolset lib\x64 ---"
+          Get-ChildItem "$( $env:VCToolsInstallDir )lib\x64" -Filter "msvcp*" -ErrorAction SilentlyContinue | ForEach-Object FullName
+          Write-Host "--- msvcp* anywhere under the VS root (bounded depth) ---"
+          $vsRoot = Split-Path (Split-Path (Split-Path $env:VCToolsInstallDir -Parent) -Parent) -Parent
+          Get-ChildItem $vsRoot -Recurse -Depth 5 -Filter "msvcp140.lib" -ErrorAction SilentlyContinue | ForEach-Object FullName
+          Write-Host "--- Shared redist dirs ---"
+          Get-ChildItem "C:\Program Files\Microsoft Visual Studio\Shared" -Recurse -Depth 5 -Filter "msvcp140.lib" -ErrorAction SilentlyContinue | ForEach-Object FullName
+          Get-ChildItem "C:\Program Files (x86)\Microsoft Visual Studio\Shared" -Recurse -Depth 5 -Filter "msvcp140.lib" -ErrorAction SilentlyContinue | ForEach-Object FullName
+
+      - name: Install cross
+        if: runner.os == 'Linux'
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cross
+
+      - name: Install sccache
+        uses: taiki-e/install-action@v2
+        with:
+          tool: sccache
+
+      - name: Enable sccache (native builds only)
+        if: matrix.native == true
+        shell: bash
+        run: |
+          # sccache's GHA backend stores each rustc invocation in the
+          # Actions cache AS THE BUILD RUNS, so every crate that compiles
+          # is cached even when the job later fails — no post-hoc snapshot
+          # loop needed. Native jobs only: RUSTC_WRAPPER must not leak
+          # into cross containers (no sccache binary inside them).
+          # CARGO_INCREMENTAL is incompatible with compiler caching.
+          {
+            echo "RUSTC_WRAPPER=sccache"
+            echo "SCCACHE_GHA_ENABLED=true"
+            echo "CARGO_INCREMENTAL=0"
+          } >> "$GITHUB_ENV"
+
+      - name: Set Clang environment variables
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          if command -v llvm-config >/dev/null 2>&1; then
+            lib_dir="$(llvm-config --libdir)"
+          else
+            so_path="$(find /usr /usr/local -name 'libclang.so*' 2>/dev/null | sort -V | tail -n 1)"
+            lib_dir="$(dirname "$so_path")"
+          fi
+
+          if [ -n "${lib_dir:-}" ] && [ -d "$lib_dir" ]; then
+            clang_resource_dir="$(clang -print-resource-dir)"
+            gcc_include_dir="$(gcc -print-file-name=include)"
+            echo "LIBCLANG_PATH=$lib_dir" >> "$GITHUB_ENV"
+            echo "BINDGEN_EXTRA_CLANG_ARGS=-I${clang_resource_dir}/include -isystem ${gcc_include_dir}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Set musl cross compiler for C build scripts
+        if: runner.os == 'Linux' && contains(matrix.target, '-musl')
+        shell: bash
+        run: |
+          case "${{ matrix.target }}" in
+            x86_64-unknown-linux-musl)
+              # cross-rs :main images install the toolchain as
+              # /x-tools/<triple>/bin/<triple>-gcc; the short
+              # x86_64-linux-musl-gcc name does not exist there.
+              echo "CC_x86_64_unknown_linux_musl=x86_64-unknown-linux-musl-gcc" >> "$GITHUB_ENV"
+              echo "CXX_x86_64_unknown_linux_musl=x86_64-unknown-linux-musl-g++" >> "$GITHUB_ENV"
+              ;;
+            aarch64-unknown-linux-musl)
+              echo "CC_aarch64_unknown_linux_musl=aarch64-unknown-linux-musl-gcc" >> "$GITHUB_ENV"
+              echo "CXX_aarch64_unknown_linux_musl=aarch64-unknown-linux-musl-g++" >> "$GITHUB_ENV"
+              ;;
+          esac
+
+      - name: Force-include <cstdint> for rocksdb on GCC >= 14
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          # rocksdb 8.10 headers use uint64_t/int64_t without #include
+          # <cstdint>; GCC >= 14 no longer pulls it in transitively
+          # (ubuntu-latest now ships GCC 15, the cross images g++ 14).
+          # cc-rs reads CXXFLAGS_<triple>; Cross.toml passes these through
+          # into the cross containers.
+          triple="${{ matrix.target }}"
+          echo "CXXFLAGS_${triple//-/_}=-include cstdint" >> "$GITHUB_ENV"
+
+      - name: Restore patched aarch64-musl std cache
+        if: runner.os == 'Linux' && matrix.target == 'aarch64-unknown-linux-musl'
+        id: musl-std-cache
+        uses: actions/cache/restore@v4
+        with:
+          # The std download (~120MB) and the sigsetjmp repack below are
+          # both deterministic for a given rustc, so cache the whole
+          # rustlib dir for the target. Keyed by the toolchain cachekey
+          # plus a script-generation marker; bump the marker when
+          # patch-musl-sigsetjmp.sh changes.
+          path: ~/.rustup/toolchains/${{ matrix.toolchain }}-x86_64-unknown-linux-gnu/lib/rustlib/aarch64-unknown-linux-musl
+          key: rustlib-aarch64-unknown-linux-musl-${{ matrix.toolchain }}-${{ steps.rust-toolchain.outputs.cachekey }}-sigsetjmp1
+          restore-keys: |
+            rustlib-aarch64-unknown-linux-musl-${{ matrix.toolchain }}-
+
+      - name: Patch musl sigsetjmp long-branch (aarch64-musl only)
+        if: runner.os == 'Linux' && matrix.target == 'aarch64-unknown-linux-musl'
+        shell: bash
+        run: |
+          # rust's self-contained musl libc.a has an unfixed aarch64 quirk:
+          # sigsetjmp reaches setjmp via CBZ (+-1MB), and large static
+          # binaries place them further apart, failing the final link with
+          # "relocation truncated to fit: R_AARCH64_CONDBR19". Repack the
+          # archive with an equivalent CBNZ+B sequence (+-128MB) before
+          # cross mounts the rustup sysroot into the build container.
+          # Idempotent: a no-op when the restored cache is already patched.
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq binutils-aarch64-linux-gnu
+          # The toolchain action installs with --profile minimal and no extra
+          # targets, so the aarch64-musl std (and its self-contained libc.a)
+          # is missing until we add it here on the x86_64 host. Near-instant
+          # when the rustlib dir was restored from cache above.
+          rustup target add aarch64-unknown-linux-musl
+          ./scripts/patch-musl-sigsetjmp.sh
+
+      - name: Save patched aarch64-musl std cache
+        if: runner.os == 'Linux' && matrix.target == 'aarch64-unknown-linux-musl' && steps.musl-std-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.rustup/toolchains/${{ matrix.toolchain }}-x86_64-unknown-linux-gnu/lib/rustlib/aarch64-unknown-linux-musl
+          key: rustlib-aarch64-unknown-linux-musl-${{ matrix.toolchain }}-${{ steps.rust-toolchain.outputs.cachekey }}-sigsetjmp1
+
+      - name: Enable layer cache for custom cross images
+        if: runner.os == 'Linux' && (contains(matrix.target, '-musl') || matrix.target == 'aarch64-unknown-linux-gnu')
+        shell: bash
+        run: |
+          # Cross.toml ships custom Dockerfiles for the musl targets and
+          # aarch64-gnu; cross 0.2.5 re-runs `docker build` for them on
+          # every job (no image-exists check). cross passes CROSS_BUILD_OPTS
+          # through to that build, so wire the buildx GHA cache backend in
+          # with a per-target scope: the apt layers then persist across
+          # runs instead of re-running apt-get update/install each time.
+          {
+            echo "CROSS_BUILD_OPTS=--cache-from type=gha,scope=cross-${{ matrix.target }} --cache-to type=gha,mode=max,scope=cross-${{ matrix.target }}"
+          } >> "$GITHUB_ENV"
+
+      - name: Build release binary
+        shell: bash
+        run: |
+          args=(
+            --target "${{ matrix.target }}"
+            --verbose
+          )
+
+          if [ -n "${{ matrix.features }}" ]; then
+            args+=(--features "${{ matrix.features }}")
+          fi
+
+          ./scripts/cross.sh "${args[@]}"
+
+      - name: Bundle release
+        shell: bash
+        run: |
+          mkdir -p "$BUILD_NAME"
+          cp README.md LICENSE "$BUILD_NAME/"
+
+          exe_suffix=""
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            exe_suffix=".exe"
+          fi
+
+          cp "target/${{ matrix.target }}/release/git-remote-blossom${exe_suffix}" "$BUILD_NAME/"
+
+      - name: Smoke test
+        if: matrix.native == true
+        shell: bash
+        run: |
+          exe_suffix=""
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            exe_suffix=".exe"
+          fi
+
+          bin="$BUILD_NAME/git-remote-blossom${exe_suffix}"
+          test -x "$bin" && echo "ok: $bin"
+          # git-remote-blossom prints usage to stderr and exits 1 without
+          # args, so ignore its exit code and just verify it runs and the
+          # usage line names the binary.
+          output="$("$bin" 2>&1 || true)"
+          grep -q "git-remote-blossom" <<<"$output"
+          head -n 1 <<<"$output"
+
+      - name: Upload asset
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.BUILD_NAME }}
+          path: ${{ env.BUILD_NAME }}
+
+  # Debug-profile cache writer. The release factory only warms
+  # target/<triple>/release, but ci.yml, gnostr-test-matrix.yml and other
+  # consumers build with cargo's default debug profile into ./target/debug,
+  # which a release cache never helps. Build the workspace test binaries
+  # once per push to master (caches are only readable across workflows when
+  # created on the default branch) so ephemeral runners restore a warm
+  # target/debug. Runs in parallel with build-artifacts and never gates
+  # publishing.
+  cache-debug:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      CARGO_INCREMENTAL: "0"
+      RUSTC_WRAPPER: sccache
+      SCCACHE_GHA_ENABLED: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "Restore+save Cargo cache (factory: debug profile)"
+        uses: ./.github/actions/cargo-cache
+        with:
+          lock-hash: ${{ hashFiles('Cargo.lock') }}
+          profile: debug
+          save: true
+
+      - name: Restore Rust toolchain cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.rustup/toolchains
+          key: rustup-${{ runner.os }}-${{ runner.arch }}-stable-none
+          restore-keys: |
+            rustup-${{ runner.os }}-${{ runner.arch }}-stable-
+
+      - uses: dtolnay/rust-toolchain@stable
+        id: rust-toolchain
+
+      - name: Install sccache
+        uses: taiki-e/install-action@v2
+        with:
+          tool: sccache
+
+      - name: Save Rust toolchain cache
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.rustup/toolchains
+          key: rustup-${{ runner.os }}-${{ runner.arch }}-stable-${{ steps.rust-toolchain.outputs.cachekey }}
+
+      - name: Force-include <cstdint> for rocksdb on GCC >= 14
+        shell: bash
+        run: |
+          # Same workaround as the release matrix: rocksdb 8.10 headers miss
+          # <cstdint>, which GCC >= 14 (ubuntu-latest) no longer provides
+          # transitively.
+          echo "CXXFLAGS_x86_64_unknown_linux_gnu=-include cstdint" >> "$GITHUB_ENV"
+
+      - name: Build workspace tests (debug)
+        shell: bash
+        run: cargo build --workspace --tests
+
+  publish-ghcr-images:
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
+    needs: build-artifacts
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: ghcr.io/gnostr-org/gnostr
+            file: docker/Dockerfile.gnostr
+          - image: ghcr.io/gnostr-org/gnostr-chat
+            file: docker/Dockerfile.gnostr-chat
+          - image: ghcr.io/gnostr-org/gnostr-node
+            file: docker/Dockerfile.gnostr-node
+          - image: ghcr.io/gnostr-org/blossom-server
+            file: docker/Dockerfile.blossom-server
+          - image: ghcr.io/gnostr-org/blossom-git
+            file: docker/Dockerfile.blossom-git
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 50
+          ref: ${{ inputs.ref || github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.file }}
+          platforms: linux/amd64,linux/arm64
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: |
+            ${{ matrix.image }}:latest
+            ${{ matrix.image }}:${{ github.event.workflow_run.head_sha || github.sha }}
