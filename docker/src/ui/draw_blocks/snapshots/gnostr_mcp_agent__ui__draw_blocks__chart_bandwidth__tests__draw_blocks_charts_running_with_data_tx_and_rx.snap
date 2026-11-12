@@ -1,0 +1,14 @@
+---
+source: src/ui/draw_blocks/chart_bandwidth.rs
+expression: setup.terminal.backend()
+---
+"╭─── rx: 566.00 kb/s tx: 56.60 kb/s ───╮"
+"│           │        •                 │"
+"│           │      ••                  │"
+"│           │     ••                   │"
+"│566.00 kb/s│    ••                    │"
+"│           │   •                      │"
+"│56.60 kb/s │  ••                      │"
+"│           │••    •••                 │"
+"│           │••••••                    │"
+"╰──────────────────────────────────────╯"

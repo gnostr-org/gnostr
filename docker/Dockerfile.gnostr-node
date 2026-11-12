@@ -1,0 +1,51 @@
+FROM rust:latest AS builder
+WORKDIR /usr/src/app
+COPY . .
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    golang-go \
+    clang \
+    cmake \
+    libclang-dev \
+    libgit2-dev \
+    libssl-dev \
+    llvm-dev \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/* \
+    && LIBCLANG_SO=$(find /usr -name 'libclang.so' 2>/dev/null | head -1 || \
+         find /usr -name 'libclang*.so*' 2>/dev/null | sort -V | tail -n 1) \
+    && { [ -n "$LIBCLANG_SO" ] || { echo "ERROR: could not find libclang.so" >&2; exit 1; }; } \
+    && mkdir -p /usr/local/lib \
+    && ln -sf "$LIBCLANG_SO" /usr/local/lib/libclang.so
+ENV LIBCLANG_PATH=/usr/local/lib
+RUN cargo build -p gnostr-bins --release
+RUN cargo install blossom-server@0.5.6 --locked
+
+FROM ubuntu:24.04
+RUN apt-get update && apt-get install -y \
+    libssl3 \
+    libgit2-dev \
+    ca-certificates \
+    curl \
+    git \
+    openssh-server \
+    && rm -rf /var/lib/apt/lists/*
+RUN mkdir /var/run/sshd
+COPY --from=builder /usr/src/app/target/release/gnostr-server /usr/local/bin/
+COPY --from=builder /usr/src/app/target/release/gnostr-shell /usr/local/bin/
+COPY --from=builder /usr/src/app/target/release/git-remote-gnostr-node /usr/local/bin/
+COPY --from=builder /usr/local/cargo/bin/blossom-server /usr/local/bin/
+RUN useradd -m -s /usr/local/bin/gnostr-shell git && mkdir -p /home/git/.ssh
+RUN test -x /usr/local/bin/gnostr-server && \
+    test -x /usr/local/bin/gnostr-shell && \
+    test -x /usr/local/bin/git-remote-gnostr-node && \
+    test -x /usr/local/bin/blossom-server
+EXPOSE 3000 22
+RUN cat > /start.sh <<'EOF'
+#!/bin/bash
+set -e
+/usr/sbin/sshd
+gnostr-server --bind 0.0.0.0:3000 --data-dir /data "$@"
+EOF
+RUN chmod +x /start.sh
+ENTRYPOINT ["/start.sh"]

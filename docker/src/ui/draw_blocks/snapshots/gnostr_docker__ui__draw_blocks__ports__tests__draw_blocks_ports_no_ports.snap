@@ -1,0 +1,12 @@
+---
+source: docker/src/ui/draw_blocks/ports.rs
+expression: setup.terminal.backend()
+---
+"╭────────── ports ───────────╮"
+"│          no ports          │"
+"│                            │"
+"│                            │"
+"│                            │"
+"│                            │"
+"│                            │"
+"╰────────────────────────────╯"

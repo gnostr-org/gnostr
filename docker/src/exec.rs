@@ -1,0 +1,355 @@
+use std::{
+    io::{Read, Write},
+    sync::{Arc, atomic::AtomicBool, mpsc::Sender},
+};
+
+use bollard::{
+    Docker,
+    exec::{CreateExecOptions, ResizeExecOptions, StartExecOptions, StartExecResults},
+};
+use crossterm::terminal::enable_raw_mode;
+use futures_util::StreamExt;
+use parking_lot::Mutex;
+use ratatui::layout::Size;
+use tokio::{
+    fs::File,
+    io::{AsyncReadExt, AsyncWriteExt},
+};
+use tokio_util::sync::CancellationToken;
+
+use crate::{
+    app_data::{AppData, ContainerId, RunningState, State},
+    app_error::AppError,
+};
+
+/// TTY location
+const TTY: &str = "/dev/tty";
+
+/// This will be the start of a docker exec message if one is unable to actually exec into the container
+const OCI_ERROR: &str = "OCI runtime exec failed";
+
+/// Set the cursor position on the screen to (0,0)
+const CURSOR_POS: &str = "\x1B[J\x1B[H";
+
+/// This needs to be written to stdout when exiting the exec mode, else the input handler thread gets confused,
+/// see https://sw.kovidgoyal.net/kitty/keyboard-protocol/#progressive-enhancement
+const KEYBOARD_PROTO: &str = "\x1B[?u\x1B[c";
+
+mod command {
+    pub const DOCKER: &str = "docker";
+    pub const EXEC: &str = "exec";
+    pub const IT: &str = "-it";
+}
+
+// STILL BROKEN
+/// Currently known byte output after writing KEYBOARD_PROTO to stdout
+/// valid arm:    [91, 63, 54, 49, 59, 54, 59, 55, 59, 50, 50, 59, 50, 51, 59, 50, 52, 59, 50, 56, 59, 51, 50, 59,52, 50] => [?61;6;7;22;23;24;28;32;2
+/// valid x86:    [91, 63, 49, 59, 50, 99] => [?1;2c
+/// valid x86_v2: [91, 63, 48, 117, 27, 91, 63, 49, 59, 50, 99] => [?0u ESC[?1;2c
+/// invalid x86:  [91, 63, 49, 59, 48, 99] => [?1;0c
+enum ByteOutput {
+    Arm,
+    X86_1,
+    X86_2,
+}
+
+impl ByteOutput {
+    const fn len(&self) -> usize {
+        match self {
+            Self::Arm => 26,
+            Self::X86_1 => 6,
+            Self::X86_2 => 11,
+        }
+    }
+    const fn last(&self) -> &[u8] {
+        match self {
+            Self::Arm => &[50],
+            Self::X86_1 | Self::X86_2 => &[99],
+        }
+    }
+}
+
+/// Check the output from tty to see if it matches known sequence.
+/// At the moment we only need to check the length and end digit, as x86 valid and invalid match in these two regards
+fn byte_sequence_valid(bytes: &[u8]) -> bool {
+    [ByteOutput::Arm, ByteOutput::X86_1, ByteOutput::X86_2]
+        .iter()
+        .any(|i| bytes.len() == i.len() && bytes.ends_with(i.last()))
+}
+
+/// Check if tty is able to be written to, aka not windows
+pub fn tty_readable() -> bool {
+    std::fs::OpenOptions::new()
+        .read(true)
+        .write(false)
+        .open(TTY)
+        .is_ok()
+}
+
+struct AsyncTTY {
+    rx: std::sync::mpsc::Receiver<u8>,
+}
+
+impl AsyncTTY {
+    /// Use an async timeout to read data from the file, and send to the "main" thread
+    async fn read_loop(mut f: File, tx: Sender<u8>) {
+        loop {
+            let mut buf = [0];
+            if tokio::time::timeout(std::time::Duration::from_millis(10), f.read_exact(&mut buf))
+                .await
+                .is_ok()
+                && tx.send(buf[0]).is_err()
+            {
+                break;
+            }
+        }
+    }
+
+    /// Async tty reading, spawned into its own tokio thread
+    fn get(cancel_token: &CancellationToken) -> Option<Self> {
+        if tty_readable() {
+            let (tx, rx) = std::sync::mpsc::channel();
+            let cancel_token = cancel_token.to_owned();
+            tokio::spawn(async move {
+                if let Ok(f) = tokio::fs::File::open(TTY).await {
+                    tokio::select! {
+                    () = cancel_token.cancelled() => (),
+                    () = Self::read_loop(f, tx) => cancel_token.cancel(),
+                    }
+                }
+            });
+            Some(Self { rx })
+        } else {
+            None
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum ExecMode {
+    // use Bollard Rust library
+    Internal((Arc<ContainerId>, Arc<Docker>, String)),
+    // use the external `docker-cli`
+    External(Arc<ContainerId>, String),
+}
+
+impl ExecMode {
+    /// Test if we can exec into the selected container, first via the Internal methods, then by the External
+    /// If the container is oxker, it will always return None
+    pub async fn new(app_data: &Arc<Mutex<AppData>>, docker: &Arc<Docker>) -> Option<Self> {
+        let is_oxker = app_data.lock().is_oxker();
+        if is_oxker {
+            return None;
+        }
+
+        let use_cli = app_data.lock().config.use_cli;
+        let exec_shell = app_data.lock().config.exec_command.clone();
+        let container = app_data.lock().get_selected_container_id_state_name();
+
+        if let Some((id, state, _)) = container
+            && [
+                State::Running(RunningState::Healthy),
+                State::Running(RunningState::Unhealthy),
+            ]
+            .contains(&state)
+        {
+            if tty_readable()
+                && !use_cli
+                && let Ok(exec) = docker
+                    .create_exec(
+                        id.get(),
+                        CreateExecOptions {
+                            attach_stdout: Some(true),
+                            attach_stderr: Some(true),
+                            cmd: Some(vec!["sh".to_owned(), "-c".to_owned(), "true".to_owned()]),
+                            ..Default::default()
+                        },
+                    )
+                    .await
+                && docker.start_exec(&exec.id, None).await.is_ok()
+            {
+                return Some(Self::Internal((Arc::new(id), Arc::clone(docker), exec_shell.clone())));
+            }
+
+            if let Ok(output) = std::process::Command::new(command::DOCKER)
+                .args([command::EXEC, id.get(), "sh", "-c", "true"])
+                .output()
+                && let Ok(output) = String::from_utf8(output.stdout)
+                && !output.starts_with(OCI_ERROR)
+            {
+                return Some(Self::External(Arc::new(id), exec_shell.clone()));
+            }
+        }
+        None
+    }
+
+    /// exec into the container using the external docker cli, the result it just piped into oxker
+    fn exec_external(id: &ContainerId, shell: &str) {
+        let mut stdout = std::io::stdout();
+        stdout.write_all(CURSOR_POS.as_bytes()).ok();
+        if let Ok(mut child) = std::process::Command::new(command::DOCKER)
+            .args([command::EXEC, command::IT, id.get(), shell])
+            .stdin(std::process::Stdio::inherit())
+            .stdout(std::process::Stdio::inherit())
+            .stderr(std::process::Stdio::inherit())
+            .spawn()
+        {
+            child.wait().ok();
+            if child.kill().is_err() {
+                std::process::exit(1)
+            }
+        }
+    }
+
+    /// Exec into the container via the Bollard library, stdout & stdin on different threads
+    /// Have to deal with strange output once dropped, hence the use of internal_cleanup() method
+    async fn exec_internal(
+        &self,
+        id: &ContainerId,
+        docker: &Arc<Docker>,
+        shell: &str,
+        terminal_size: Option<Size>,
+    ) -> Result<(), AppError> {
+        let cancel_token = CancellationToken::new();
+
+        if let Ok(exec_result) = docker
+            .create_exec(
+                id.get(),
+                CreateExecOptions {
+                    attach_stdout: Some(true),
+                    attach_stderr: Some(true),
+                    attach_stdin: Some(true),
+                    tty: Some(true),
+                    cmd: Some(vec![shell.to_owned()]),
+                    ..Default::default()
+                },
+            )
+            .await
+        {
+            match docker
+                .start_exec(
+                    &exec_result.id,
+                    Some(StartExecOptions {
+                        detach: false,
+                        ..Default::default()
+                    }),
+                )
+                .await
+            {
+                Ok(StartExecResults::Attached {
+                    mut output,
+                    mut input,
+                }) => {
+                    if let Some(tty) = AsyncTTY::get(&cancel_token) {
+                        tokio::spawn(async move {
+                            enable_raw_mode().ok();
+                            let mut stdout = std::io::stdout();
+                            stdout.write_all(CURSOR_POS.as_bytes()).ok();
+                            stdout.flush().ok();
+                            while let Some(Ok(x)) = output.next().await {
+                                stdout.write_all(&x.into_bytes()).ok();
+                                stdout.flush().ok();
+                            }
+                            cancel_token.cancel();
+                        });
+
+                        if let Some(terminal_size) = terminal_size {
+                            docker
+                                .resize_exec(
+                                    &exec_result.id,
+                                    ResizeExecOptions {
+                                        height: terminal_size.height,
+                                        width: terminal_size.width,
+                                    },
+                                )
+                                .await
+                                .ok();
+                        }
+
+                        while let Ok(x) = tty.rx.recv() {
+                            input.write_all(&[x]).await.ok();
+                        }
+                        self.internal_cleanup()?;
+                    }
+                }
+                _ => {
+                    return Err(AppError::Terminal);
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /// This is the fix for key pressed not being handled correctly on quit
+    /// It writes a special message to the stdout, and then listens out for a valid response
+    /// afterwhich it's assumes that we're completely done with TTY
+    // TODO eventually use async channels here!
+    fn internal_cleanup(&self) -> Result<(), AppError> {
+        match self {
+            Self::External(_, _) => Ok(()),
+            Self::Internal(_) => {
+                let waiting = Arc::new(AtomicBool::new(true));
+                let waiting_thread = Arc::clone(&waiting);
+
+                let tty_ready = Arc::new(AtomicBool::new(false));
+                let tty_ready_thread = Arc::clone(&tty_ready);
+
+                std::thread::spawn(move || {
+                    let mut bytes = Vec::with_capacity(26);
+                    while waiting_thread.load(std::sync::atomic::Ordering::SeqCst) {
+                        let mut buf = [0];
+                        if let Ok(mut f) = std::fs::File::open(TTY) {
+                            tty_ready_thread.store(true, std::sync::atomic::Ordering::SeqCst);
+
+                            if f.read_exact(&mut buf).is_err() {
+                                waiting_thread.store(false, std::sync::atomic::Ordering::SeqCst);
+                            }
+
+                            bytes.push(buf[0]);
+                            if byte_sequence_valid(&bytes) {
+                                waiting_thread.store(false, std::sync::atomic::Ordering::SeqCst);
+                            }
+                        } else {
+                            tty_ready_thread.store(true, std::sync::atomic::Ordering::SeqCst);
+                            waiting_thread.store(false, std::sync::atomic::Ordering::SeqCst);
+                        }
+                    }
+                });
+
+                let start = std::time::Instant::now();
+                while tty_ready.load(std::sync::atomic::Ordering::SeqCst) {
+                    if start.elapsed().as_millis() > 1500 {
+                        return Err(AppError::Terminal);
+                    }
+                    std::thread::sleep(std::time::Duration::from_millis(10));
+                }
+
+                let mut stdout = std::io::stdout();
+                stdout.write_all(KEYBOARD_PROTO.as_bytes()).ok();
+                stdout.flush().ok();
+
+                let start = std::time::Instant::now();
+                while waiting.load(std::sync::atomic::Ordering::SeqCst) {
+                    if start.elapsed().as_millis() > 15_000 {
+                        return Err(AppError::Terminal);
+                    }
+                    std::thread::sleep(std::time::Duration::from_millis(10));
+                }
+                Ok(())
+            }
+        }
+    }
+
+    pub async fn run(&self, tty_size: Option<Size>) -> Result<(), AppError> {
+        match self {
+            Self::External(id, shell) => {
+                Self::exec_external(id, shell);
+                Ok(())
+            }
+
+            Self::Internal((id, docker, shell)) => {
+                self.exec_internal(id, docker, shell, tty_size).await
+            }
+        }
+    }
+}

@@ -1,0 +1,17 @@
+FROM rust:latest AS build
+WORKDIR /app
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    golang-go \
+    clang \
+    libclang-dev \
+    llvm-dev \
+    pkg-config \
+    librocksdb-dev \
+    && rm -rf /var/lib/apt/lists/*
+COPY . .
+RUN cargo build --release -j4
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y ca-certificates librocksdb-dev && rm -rf /var/lib/apt/lists/*
+COPY --from=build /app/target/release/gnostr /usr/local/bin/gnostr
+ENTRYPOINT ["gnostr"]

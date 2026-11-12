@@ -1,0 +1,24 @@
+# Build a shell-enabled variant of the GitHub MCP server image.
+# Usage:
+#   docker build -f Dockerfile.mcp -t github-mcp-server:shell .
+#   GITHUB_MCP_IMAGE=github-mcp-server:shell cargo run -- tools
+
+FROM busybox:stable-musl AS busybox
+
+# Generate shell completion from the server binary.
+FROM ghcr.io/github/github-mcp-server:latest AS server
+FROM busybox:stable-musl AS builder
+COPY --from=server /server/github-mcp-server /github-mcp-server
+RUN /github-mcp-server completion bash > /github-mcp-server-completion.bash
+
+FROM ghcr.io/github/github-mcp-server:latest
+
+# Bring in a minimal shell so `exec` works in the TUI.
+COPY --from=busybox /bin/busybox /bin/busybox
+COPY --from=busybox /bin/sh /bin/sh
+
+# Make the server binary available on PATH for interactive use.
+COPY --from=server /server/github-mcp-server /usr/local/bin/github-mcp-server
+
+# Install bash completion (if bash is present).
+COPY --from=builder /github-mcp-server-completion.bash /etc/bash_completion.d/github-mcp-server

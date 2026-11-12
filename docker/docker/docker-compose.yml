@@ -1,0 +1,58 @@
+
+networks:
+  oxker-example-net:
+    name: oxker-examaple-net
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: postgres
+    environment: 
+     - POSTGRES_PASSWORD=never_use_this_password_in_production
+    ipc: private
+    restart: always
+    shm_size: 256MB
+    networks:
+      - oxker-example-net
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+  redis:
+    image: redis:latest
+    container_name: redis
+    ipc: private
+    restart: always
+    networks:
+      - oxker-example-net
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+  rabbitmq:
+    image: rabbitmq:3
+    container_name: rabbitmq
+    ipc: private
+    restart: always
+    networks:
+      - oxker-example-net
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+  some_container:
+    container_name: some_container
+    image: some_container
+    build:
+      context: .
+      dockerfile: Dockerfile.unhealthy
+    ipc: private
+    restart: always
+    networks:
+      - oxker-example-net
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+
+

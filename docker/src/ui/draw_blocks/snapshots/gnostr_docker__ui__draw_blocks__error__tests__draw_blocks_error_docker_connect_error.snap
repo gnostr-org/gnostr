@@ -1,0 +1,15 @@
+---
+source: docker/src/ui/draw_blocks/error.rs
+expression: setup.terminal.backend()
+---
+"                                                  "
+"╭──────────────────── Error ─────────────────────╮"
+"│                                                │"
+"│         Unable to access docker daemon         │"
+"│                                                │"
+"│  gnostr-docker::v0.00.000 closing in 04 seconds│"
+"│                                                │"
+"│                ( q ) quit oxker                │"
+"│                                                │"
+"╰────────────────────────────────────────────────╯"
+"                                                  "
