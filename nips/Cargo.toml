@@ -1,0 +1,44 @@
+[package]
+name = "nips" #gnostr-nips
+version = "973442.1842.47355"
+edition = "2021"
+authors = [
+    "randymcmillan <randymcmillan@protonmail.com>",
+    "The nostr-protocol/nips Contributors",
+]
+repository = "https://github.com/gnostr-org/gnostr.git"
+description = "nips: a nostr-protocol/nips server"
+license = "MIT"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+axum = { workspace = true }
+bytes = { workspace = true }
+clap = { workspace = true }
+crossterm = { workspace = true }
+filetreelist = { workspace = true }
+futures = { workspace = true }
+gnostr-asyncgit = { workspace = true, features = ["tui", "vendor-openssl"] }
+gnostr-relay = { workspace = true }
+gnostr-types = { workspace = true }
+include_dir = { workspace = true, features = ["glob", "metadata"] }
+mime_guess = { workspace = true }
+portable-pty = "0.8.1"
+pulldown-cmark = { workspace = true }
+ratatui = { workspace = true, features = ["macros", "crossterm"] }
+rust-embed = { workspace = true, features = [
+    "axum",
+    "debug-embed",
+    "include-exclude",
+] }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+termimad = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+tokio-tungstenite = { workspace = true }
+tower = { workspace = true, features = ["full"] }
+tower-http = { workspace = true, features = ["full"] }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true, features = ["env-filter"] }
