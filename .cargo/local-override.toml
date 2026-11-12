@@ -1,0 +1,34 @@
+[build]
+target-dir = "./target-local-override"
+
+[alias]
+chk = "check --target-dir ./target-local-override/check"
+tst = "test --target-dir ./target-local-override/test"
+xtask = "run --package xtask --"
+
+# Linux cross-compilation targets using Mold
+# brew install mold (linux only)
+[target.aarch64-unknown-linux-gnu]
+linker = "aarch64-linux-gnu-gcc"
+# rustflags = ["-C", "link-arg=-fuse-ld=mold"]
+
+[target.arm-unknown-linux-gnueabihf]
+linker = "arm-linux-gnueabihf-gcc"
+# rustflags = ["-C", "link-arg=-fuse-ld=mold"]
+
+[target.armv7-unknown-linux-gnueabihf]
+linker = "arm-linux-gnueabihf-gcc"
+# rustflags = ["-C", "link-arg=-fuse-ld=mold"]
+
+
+# lld linker
+# brew install lld
+[target.aarch64-apple-darwin]
+rustflags = ["-C", "link-arg=-fuse-ld=lld"]
+## or
+#rustflags = ["-C", "link-arg=-fuse-ld=/opt/homebrew/bin/lld"]
+
+[target.x86_64-apple-darwin]
+rustflags = ["-C", "link-arg=-fuse-ld=lld"]
+## or
+#rustflags = ["-C", "link-arg=-fuse-ld=/opt/homebrew/bin/lld"]
