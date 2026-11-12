@@ -1,0 +1,90 @@
+# Repository Configuration for gnostr-git-web
+# This file defines repository metadata and display settings
+
+# Basic repository information
+name = "gnostr"
+description = "A Nostr-based Git implementation with decentralized version control"
+homepage = "https://github.com/gnostr-org/gnostr"
+readme = "README.md"
+
+# Repository owner/maintainer
+[owner]
+name = "Gnostr Team"
+email = "team@gnostr.org"
+url = "https://github.com/gnostr-org"
+
+# Branch configuration
+[branch]
+# Default branch to display
+default = "main"
+# Branches to hide from web interface (optional)
+hidden = ["gh-pages", "draft"]
+
+# Display settings
+[display]
+# Maximum number of commits to show per page
+max_commits = 50
+# Show file size in human readable format
+human_file_size = true
+# Syntax highlighting theme
+syntax_theme = "github-dark"
+# Show commit time in relative format
+relative_time = true
+
+# Git operations
+[git]
+# Enable/disable specific git operations
+enable_logs = true
+enable_branch_switching = true
+enable_commit_details = true
+# Default number of commits to fetch
+default_log_depth = 100
+
+# Web interface settings
+[web]
+# Page title format (variables: {repo_name}, {branch})
+title_format = "{repo_name} - {branch}"
+# Show repository statistics
+show_stats = true
+# Enable RSS/Atom feeds
+enable_feeds = true
+# Cache duration in seconds
+cache_duration = 300
+
+# Security and access
+[access]
+# Anonymous access (true/false)
+allow_anonymous = true
+# Required permissions (read, write, admin)
+required_permissions = ["read"]
+# Rate limiting (requests per minute)
+rate_limit = 60
+
+# Integration settings
+[features]
+# Enable Nostr integration
+nostr_integration = true
+# Enable GitHub compatibility mode
+github_compat = true
+# Enable real-time updates
+real_time = false
+
+# Advanced options
+[advanced]
+# Custom CSS file (optional)
+custom_css = "statics/css/custom.css"
+# Custom JavaScript file (optional)  
+custom_js = "statics/js/custom.js"
+# Repository language detection
+detect_language = true
+# Show line numbers in code view
+show_line_numbers = true
+
+# Development settings
+[development]
+# Enable debug mode
+debug = false
+# Log level (error, warn, info, debug)
+log_level = "info"
+# Auto-refresh interval in seconds
+auto_refresh = 30

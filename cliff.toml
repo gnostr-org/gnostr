@@ -1,0 +1,49 @@
+# cliff.toml
+
+[changelog]
+# The body of the changelog, formatted using Jinja2 templates.
+# Groups commits by type and then lists them with git-log-style formatting.
+body = """
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group }}
+{% for commit in commits %}
+* {{ commit.message }} ({{ commit.id | truncate(length=7, end="") }})
+{% endfor %}
+
+{% endfor %}
+"""
+
+[git]
+# Use Conventional Commits specification for parsing commits.
+conventional_commits = true
+
+# Filter out commits that are not part of the conventional commit format.
+filter_unconventional = true
+
+# Process commits starting from the latest tag.
+# This is useful for generating changelogs for new releases.
+# Set to false to include all commits.
+latest_tag_only = false
+
+# Do not include merge commits in the changelog.
+filter_merges = true
+
+# Define the commit parsers for grouping.
+commit_parsers = [
+    { message = "^feat", group = "Features" },
+    { message = "^fix", group = "Bug Fixes" },
+    { message = "^doc", group = "Documentation" },
+    { message = "^style", group = "Styling" },
+    { message = "^refactor", group = "Refactoring" },
+    { message = "^perf", group = "Performance" },
+    { message = "^test", group = "Testing" },
+    { message = "^chore", group = "Chores" },
+    { message = "^build", group = "Build System" },
+    { message = "^ci", group = "Continuous Integration" },
+]
+
+# Sort commits chronologically.
+sort_commits = "oldest"
+
+# Tag pattern to identify version tags.
+tag_pattern = "v[0-9]*"

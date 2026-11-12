@@ -1,0 +1,156 @@
+default:
+  just --choose
+
+help:
+  @make help
+
+rm_cargo_lock:
+  @make rm_cargo_lock
+
+all:
+  @make all
+
+bin:
+  @make bin
+
+cargo-help:
+  @make cargo-help
+
+cargo-release-all:
+  @make cargo-release-all
+
+cargo-clean-release:
+  @make cargo-clean-release
+
+cargo-publish-all:
+  @make cargo-publish-all
+
+cargo-install-bins:
+  @make cargo-install-bins
+
+cargo-build:
+  @make cargo-build
+
+cargo-install:
+  @make cargo-install
+
+cargo-sort:
+  @make cargo-sort
+
+cargo-build-release:
+  @make cargo-build-release
+
+cargo-check:
+  @make cargo-check
+
+cargo-bench:
+  @make cargo-bench
+
+cargo-test:
+  @make cargo-test
+
+cargo-test--ignored:
+  @make cargo-test--ignored
+
+cargo-test-workspace:
+  @make cargo-test-workspace
+
+test:
+  @make test
+
+cargo-test-nightly:
+  @make cargo-test-nightly
+
+cargo-test-nightly-workspace:
+  @make cargo-test-nightly-workspace
+
+cargo-test-types-nip_three_four:
+  @make cargo-test-types-nip_three_four
+
+cargo-clippy-workspace:
+  @make cargo-clippy-workspace
+
+cargo-clippy-fix-workspace:
+  @make cargo-clippy-fix-workspace
+
+clippy:
+  @make clippy
+
+cargo-report:
+  @make cargo-report
+
+cargo-run:
+  @make cargo-run
+
+cargo-git-cliff-changelog:
+  @make cargo-git-cliff-changelog
+
+dep-graph:
+  @make dep-graph
+
+gnostr-chat:
+  @make gnostr-chat
+
+fetch-by-id:
+  @make fetch-by-id
+
+fetch-by-kind-and-author:
+  @make fetch-by-kind-and-author
+
+gnostr-note-debug:
+  @make gnostr-note-debug
+
+gnostr-note-trace:
+  @make gnostr-note-trace
+
+post_event:
+  @make post_event
+
+post_from_files:
+  @make post_from_files
+
+broadcast_event_list:
+  @make broadcast_event_list
+
+nip_thirty_four_requests:
+  @make nip_thirty_four_requests
+
+plan-dist-manifest:
+  @make plan-dist-manifest
+
+docker:
+  @make docker
+
+docker-tui:
+  @make docker-tui
+
+docker-chat:
+  @make docker-chat
+
+docker-shared:
+  @make docker-shared
+
+gh-act-run-all:
+  @make gh-act-run-all
+
+gnostr-test-matrix:
+  @make gnostr-test-matrix
+
+gnostr-test-macos:
+  @make gnostr-test-macos
+
+gnostr-test-macos-intel:
+  @make gnostr-test-macos-intel
+
+act-cargo-cross-setup:
+  @make act-cargo-cross-setup
+
+act-cargo-cross:
+  @make act-cargo-cross
+
+act-gnostr-act:
+  @make act-gnostr-act
+
+script-list:
+  @make script-list
+

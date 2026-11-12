@@ -1,0 +1,4 @@
+name = "gnostr-gnit-server"
+public = true
+members = ["gnostr", "gnostr-user"]
+failed_push_message = "Issues and patches can be emailed to admin@gnostr.org"
