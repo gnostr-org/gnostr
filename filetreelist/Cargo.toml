@@ -1,0 +1,17 @@
+[package]
+name = "gnostr-filetreelist"
+version = "973442.1842.47355"
+authors = ["gnostr <admin@gnostr.org>", "extrawurst <mail@rusticorn.com>"]
+edition = "2021"
+description = "filetree abstraction based on a sorted path list, supports key based navigation events, folding, scrolling and more"
+repository = "https://github.com/gnostr-org/gnostr"
+readme = "README.md"
+license = "MIT"
+categories = ["command-line-utilities"]
+keywords = ["gui", "cli", "terminal", "ui", "tui"]
+
+[dependencies]
+thiserror = "1.0"
+
+[dev-dependencies]
+pretty_assertions = "1.4"
