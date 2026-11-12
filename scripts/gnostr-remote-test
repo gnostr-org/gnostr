@@ -1,0 +1,204 @@
+#!/usr/bin/env bash
+set -x
+
+RELAY_CSV_URL="https://raw.githubusercontent.com/permissionlesstech/bitchat/refs/heads/main/relays/online_relays_gps.csv"
+CRAWLER_API_URL="http://127.0.0.1:3000"
+DEFAULT_FALLBACK_RELAYS=(
+  "wss://relay.damus.io"
+  "wss://nos.lol"
+)
+
+# Normalize a relay URL: trim whitespace, strip scheme/leading slashes and the
+# default :443 port, drop empty/localhost entries, then prepend wss://.
+normalize_relay_url() {
+  sed -E \
+    -e 's/^[[:space:]]+//' \
+    -e 's/[[:space:]]+$//' \
+    -e 's/^(wss?:|https?:)//' \
+    -e 's/^\/+//' \
+    -e 's/:443$//' \
+    -e 's/\/$//' \
+    -e '/^$/d' \
+    -e '/^localhost/d' \
+    -e '/^127\./d' \
+    -e 's/^/wss:\/\//'
+}
+
+# Fetch a list of candidate relays. Prefer the local gnostr crawler API; fall
+# back to the public CSV if the crawler is not running.
+fetch_relay_list() {
+  { set +x; } 2>/dev/null
+
+  local raw
+  # /relays.txt returns space-separated URLs, easier to parse than JSON.
+  raw=$(curl -fsSL "${CRAWLER_API_URL}/relays.txt" 2>/dev/null)
+  if [[ -n "$raw" ]]; then
+    set -x
+    printf '%s\n' "$raw" | tr ' ' '\n' | normalize_relay_url
+    return 0
+  fi
+
+  raw=$(curl -fsSL "$RELAY_CSV_URL" 2>/dev/null) || {
+    set -x
+    return 1
+  }
+
+  set -x
+  printf '%s\n' "$raw" | tail -n +2 | cut -d, -f1 | normalize_relay_url
+}
+
+# Pick N random relays from the available relay list plus the hard-coded
+# fallback relays.
+pick_relays() {
+  { set +x; } 2>/dev/null
+  local csv_count=${1:-3}
+  local relays
+  relays=$(fetch_relay_list)
+
+  # Always start with the fallback relays so we have known-good endpoints.
+  local selected
+  selected=$(printf '%s\n' "${DEFAULT_FALLBACK_RELAYS[@]}")
+
+  if [[ -n "$relays" ]]; then
+    # Shuffle and take the requested count of CSV relays.
+    local csv_selected=""
+    if command -v shuf >/dev/null 2>&1; then
+      csv_selected=$(printf '%s\n' "$relays" | shuf -n "$csv_count")
+    elif command -v sort >/dev/null 2>&1 && sort --help 2>&1 | grep -q -- '-R'; then
+      csv_selected=$(printf '%s\n' "$relays" | sort -R | head -n "$csv_count")
+    else
+      local total
+      total=$(printf '%s\n' "$relays" | wc -l | tr -d ' ')
+      local i
+      for ((i = 0; i < csv_count; i++)); do
+        local idx=$((RANDOM % total + 1))
+        csv_selected=$(printf '%s\n%s\n' "$csv_selected" "$(printf '%s\n' "$relays" | sed -n "${idx}p")")
+      done
+      csv_selected=$(printf '%s\n' "$csv_selected" | sed '/^$/d')
+    fi
+    selected=$(printf '%s\n%s\n' "$selected" "$csv_selected")
+  fi
+
+  set -x
+  printf '%s\n' "$selected" | sed '/^$/d'
+}
+
+# Fetch an event by id, trying each provided relay until one returns it.
+# Retries once after a short delay to give relays time to propagate the event.
+fetch_event_by_id() {
+  { set +x; } 2>/dev/null
+  local id=$1
+  shift
+  local relays=("$@")
+  local attempt relay output
+  for attempt in 1 2; do
+    for relay in "${relays[@]}"; do
+      output=$($gnostr fetch-by-id -i "$id" -r "$relay" 2>/dev/null)
+      if [[ -n "$output" ]]; then
+        set -x
+        printf '%s\n' "$output"
+        return 0
+      fi
+    done
+    [[ "$attempt" == "1" ]] && sleep 3
+  done
+  set -x
+  return 1
+}
+
+# Build -r <relay> arguments for gnostr.
+build_relay_args() {
+  local args=()
+  local relay
+  for relay in "$@"; do
+    args+=("-r" "$relay")
+  done
+  printf '%s\n' "${args[@]}"
+}
+
+echo "gnostr-remote-test file name: $0"
+echo "--- System Information ---"
+echo "Hostname: $(hostname)"
+echo "OS/Kernel: $(uname -a)"
+if [[ "$(uname -s)" == "Linux" ]]; then
+  echo "CPU Model: $(grep -m 1 'model name' /proc/cpuinfo 2>/dev/null | cut -d: -f2 | sed 's/^[ \t]*//')"
+  echo "Total Memory: $(free -h 2>/dev/null | awk '/^Mem:/ {print $2}')"
+else
+  echo "CPU Model: $(sysctl -n machdep.cpu.brand_string 2>/dev/null || echo 'unknown')"
+  echo "Total Memory: $(sysctl -n hw.memsize 2>/dev/null | awk '{printf "%.0f MiB\n", $1/1024/1024}')"
+fi
+echo "Current User: $(whoami)"
+echo "Current Directory: $(pwd)"
+echo ""
+echo "--- Script Information ---"
+echo "Script PID: $$"
+echo "hello, gnostr-remote-test!"
+
+gnostr="${GNOSTR_BIN:-./target/debug/gnostr}"
+export gnostr
+
+if [[ ! -x "$gnostr" ]]; then
+  echo "gnostr binary not found or not executable: $gnostr" >&2
+  exit 1
+fi
+
+if [[ -n "${1:-}" ]]; then
+  NSEC=$1
+else
+  NSEC=$($gnostr generate-keypair --print-hex 2>/dev/null \
+    | sed -n 's/.*"private_key":"\([^"]*\)".*/\1/p')
+  if [[ -z "$NSEC" ]]; then
+    echo "Failed to generate keypair" >&2
+    exit 1
+  fi
+fi
+
+if [[ -n "${2:-}" ]]; then
+  mapfile -t RELAYS < <(printf '%s\n' "$2")
+else
+  mapfile -t RELAYS < <(pick_relays 1)
+fi
+echo "Using relays: ${RELAYS[*]}"
+
+mapfile -t RELAY_ARGS < <(build_relay_args "${RELAYS[@]}")
+
+export EVENT1=$($gnostr --nsec "$NSEC" "${RELAY_ARGS[@]}" custom-event -k 30617 -c "" \
+  -t "a|30617" -t "d|gnostr" -t "name|gnostr" -t "description|a git+nostr workflow utilty" \
+  -t "web|git.gnostr.org" -t "clone|git.gnostr.org" \
+  -t "relays|wss://relay.damus.io, wss://relay.gnostr.org" -t "r|<earliest_unique_commit>" \
+  -t "maintainers|gnostr <admin@gnostr.org>" \
+  -t "t|this_is_a_test_PoC_of_adistributed_decentralized_CI_service" \
+  -t "weeble|$($gnostr --weeble)" -t "blockheight|$($gnostr --blockheight)" \
+  -t "wobble|$($gnostr --wobble)")
+EVENT1_ID=$($gnostr bech32-to-any "$EVENT1" --raw)
+
+echo "$EVENT1_ID"
+fetch_event_by_id "$EVENT1_ID" "${RELAYS[@]}"
+
+echo
+sleep 2
+
+export EVENT2=$($gnostr --nsec "$NSEC" "${RELAY_ARGS[@]}" custom-event -k 1 \
+  -c "#gnostr distributed/decentralized CI EVENT! REF:https://nostr.band/?q=$EVENT1_ID" \
+  -t "a|30617" -t "d|gnostr" -t "name|gnostr" -t "description|a git+nostr workflow utilty" \
+  -t "web|git.gnostr.org" -t "clone|git.gnostr.org" \
+  -t "relays|wss://relay.damus.io, wss://relay.gnostr.org" -t "r|<earliest_unique_commit>" \
+  -t "maintainers|gnostr <admin@gnostr.org>" \
+  -t "t|this_is_a_test_PoC_of_adistributed_decentralized_CI_service" \
+  -t "weeble|$($gnostr --weeble)" -t "blockheight|$($gnostr --blockheight)" \
+  -t "wobble|$($gnostr --wobble)")
+export EVENT2_ID=$($gnostr bech32-to-any "$EVENT2" --raw)
+fetch_event_by_id "$EVENT2_ID" "${RELAYS[@]}"
+
+echo
+sleep 2
+
+# Give the relays time to make EVENT2 available before reacting.
+sleep 2
+
+$gnostr --nsec "$($gnostr privkey-to-bech32 "$NSEC")" "${RELAY_ARGS[@]}" react -e "$EVENT1_ID" --reaction "$EVENT2_ID"
+$gnostr --nsec "$($gnostr privkey-to-bech32 "$NSEC")" "${RELAY_ARGS[@]}" react -e "$EVENT2_ID" --reaction "$EVENT1_ID"
+
+# a known event 8bd85322d47f896c1cc4b20887b08513a0c6065b997debe7f4e87cc949ee7686 to test
+$gnostr --nsec "$NSEC" "${RELAY_ARGS[@]}" react -e 8bd85322d47f896c1cc4b20887b08513a0c6065b997debe7f4e87cc949ee7686 -r "$EVENT1_ID"
+$gnostr --nsec "$NSEC" "${RELAY_ARGS[@]}" react -e 8bd85322d47f896c1cc4b20887b08513a0c6065b997debe7f4e87cc949ee7686 -r "$EVENT2_ID"

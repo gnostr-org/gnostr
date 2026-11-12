@@ -1,0 +1,222 @@
+#!/usr/bin/env bash
+# Smoke test for `gnostr chat --oneshot`.
+#
+# Starts a headless chat peer, sends one or more oneshot messages to it, and
+# asserts that every message is received.  Passes unknown `gnostr chat` flags
+# through to both the receiver and the senders.
+#
+# Usage:
+#   ./scripts/gnostr-chat-one-shot.sh [OPTIONS] [message ...]
+#
+# Options:
+#   --topic TOPIC          Chat topic (default: gnostr-oneshot-smoke-<timestamp>)
+#   --receiver-name NAME   Name for the headless receiver (default: receiver)
+#   --sender-name NAME     Base name for senders (default: sender)
+#   --messages M1,M2,...   Comma-separated messages (alternative to positional args)
+#   --listen               Start a headless receiver and wait for Ctrl+C
+#   --help                 Show this help
+#
+# Examples:
+#   ./scripts/gnostr-chat-one-shot.sh
+#   ./scripts/gnostr-chat-one-shot.sh --topic my-topic "hello" "world"
+#   ./scripts/gnostr-chat-one-shot.sh --topic dev --name copilot --messages "one,two,three"
+#   ./scripts/gnostr-chat-one-shot.sh --listen --topic my-topic
+
+set -euo pipefail
+
+GNOSTR="${GNOSTR:-./target/release/gnostr}"
+TOPIC=""
+RECEIVER_NAME="receiver"
+SENDER_NAME="sender"
+MESSAGES=""
+LISTEN=false
+PASSTHROUGH_FLAGS=()
+
+usage() {
+    sed -n '/^# /,/^# /p' "$0" | sed 's/^# //'
+    exit "${1:-0}"
+}
+
+# Known `gnostr chat` flags.  Boolean flags are passed through without a value;
+# value flags consume the next argument.
+BOOLEAN_FLAGS=(
+    --disable-cli-spinners
+    --info
+    --debug
+    --trace
+)
+VALUE_FLAGS=(
+    -n --nsec
+    -p --password
+    --name
+    --hash
+    --gitdir
+    --tab
+)
+
+is_boolean_flag() {
+    local f
+    for f in "${BOOLEAN_FLAGS[@]}"; do
+        [[ "$1" == "$f" ]] && return 0
+    done
+    return 1
+}
+
+is_value_flag() {
+    local f
+    for f in "${VALUE_FLAGS[@]}"; do
+        [[ "$1" == "$f" ]] && return 0
+    done
+    return 1
+}
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --help|-h)
+            usage 0
+            ;;
+        --topic)
+            TOPIC="$2"
+            shift 2
+            ;;
+        --receiver-name)
+            RECEIVER_NAME="$2"
+            shift 2
+            ;;
+        --sender-name)
+            SENDER_NAME="$2"
+            shift 2
+            ;;
+        --messages)
+            MESSAGES="$2"
+            shift 2
+            ;;
+        --listen)
+            LISTEN=true
+            shift
+            ;;
+        --)
+            shift
+            break
+            ;;
+        --*|-n|-p)
+            if is_boolean_flag "$1"; then
+                PASSTHROUGH_FLAGS+=("$1")
+                shift
+            elif is_value_flag "$1"; then
+                if [[ $# -lt 2 ]]; then
+                    echo "error: missing value for flag $1" >&2
+                    usage 1
+                fi
+                PASSTHROUGH_FLAGS+=("$1" "$2")
+                shift 2
+            else
+                echo "error: unknown flag $1" >&2
+                usage 1
+            fi
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+# Positional arguments are messages.
+if [[ $# -gt 0 ]]; then
+    MESSAGES="$(printf '%s,' "$@")"
+    MESSAGES="${MESSAGES%,}"
+fi
+
+# Default messages.
+if [[ -z "${MESSAGES}" ]]; then
+    MESSAGES="hello first,hello second"
+fi
+
+# Default topic.
+if [[ -z "${TOPIC}" ]]; then
+    TOPIC="gnostr-oneshot-smoke-$(date +%s)"
+fi
+
+IFS=',' read -ra MSG_ARRAY <<< "${MESSAGES}"
+
+RECEIVER_LOG="$(mktemp)"
+SENDER_LOGS=()
+
+cleanup() {
+    if [[ -n "${RECEIVER_PID:-}" ]]; then
+        kill "${RECEIVER_PID}" 2>/dev/null || true
+        wait "${RECEIVER_PID}" 2>/dev/null || true
+    fi
+    rm -f "${RECEIVER_LOG}" "${SENDER_LOGS[@]}" \
+        "${TMPDIR:-/tmp}/gnostr-chat-oneshot-${TOPIC}.json"
+}
+trap cleanup EXIT
+
+if [[ ! -x "${GNOSTR}" ]]; then
+    echo "error: ${GNOSTR} not found or not executable" >&2
+    echo "run: cargo build --release --bin gnostr" >&2
+    exit 1
+fi
+
+echo "==> starting headless receiver on topic ${TOPIC}"
+
+if [[ "${LISTEN}" == true ]]; then
+    echo "==> listening mode: press Ctrl+C to stop"
+    echo "    send messages with:"
+    echo "    ${GNOSTR} chat --topic ${TOPIC} --name <sender> --oneshot \"<message>\""
+    "${GNOSTR}" chat --headless --topic "${TOPIC}" --name "${RECEIVER_NAME}" "${PASSTHROUGH_FLAGS[@]}"
+    exit 0
+fi
+
+"${GNOSTR}" chat --headless --topic "${TOPIC}" --name "${RECEIVER_NAME}" "${PASSTHROUGH_FLAGS[@]}" >"${RECEIVER_LOG}" 2>&1 &
+RECEIVER_PID=$!
+
+# Wait for the receiver to begin listening (debug builds can take 5-10 s).
+RECEIVER_WAIT_SECS=30
+for _ in $(seq 1 "${RECEIVER_WAIT_SECS}"); do
+    if grep -q "Local node is listening" "${RECEIVER_LOG}" 2>/dev/null; then
+        break
+    fi
+    sleep 1
+done
+
+if ! grep -q "Local node is listening" "${RECEIVER_LOG}" 2>/dev/null; then
+    echo "error: receiver did not start listening within ${RECEIVER_WAIT_SECS}s" >&2
+    cat "${RECEIVER_LOG}" >&2
+    exit 1
+fi
+
+for i in "${!MSG_ARRAY[@]}"; do
+    msg="${MSG_ARRAY[$i]}"
+    sender_name="${SENDER_NAME}-$((i + 1))"
+    log="$(mktemp)"
+    SENDER_LOGS+=("${log}")
+    echo "==> sending oneshot $((i + 1))/${#MSG_ARRAY[@]}: ${msg}"
+    "${GNOSTR}" chat --topic "${TOPIC}" --name "${sender_name}" --oneshot "${msg}" "${PASSTHROUGH_FLAGS[@]}" >"${log}" 2>&1
+done
+
+# Give the receiver a moment to print the inbound messages.
+sleep 1
+
+echo "==> receiver log tail:"
+tail -n 40 "${RECEIVER_LOG}"
+
+for log in "${SENDER_LOGS[@]}"; do
+    echo "==> sender log:"
+    cat "${log}"
+done
+
+MISSING=0
+for msg in "${MSG_ARRAY[@]}"; do
+    if ! grep -qF "${msg}" "${RECEIVER_LOG}"; then
+        echo "FAIL: receiver did not get '${msg}'" >&2
+        MISSING=1
+    fi
+done
+
+if [[ "${MISSING}" -eq 0 ]]; then
+    echo "PASS: all ${#MSG_ARRAY[@]} oneshot message(s) were received"
+    exit 0
+else
+    exit 1
+fi

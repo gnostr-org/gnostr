@@ -1,0 +1,491 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+BASH_VERSION_CURRENT="${BASH_VERSION:-unknown}"
+BASH_MAJOR="${BASH_VERSINFO[0]:-0}"
+BASH_MINOR="${BASH_VERSINFO[1]:-0}"
+if ! bash -n "${BASH_SOURCE[0]}"; then
+  exit 1
+fi
+
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+REPO_ROOT=$(cd "${SCRIPT_DIR}/.." && pwd)
+
+PROFILE="release"
+PACKAGE="gnostr-bins"
+BIN_MODE="--bins"
+LOCKED=true
+ALL_FEATURES=false
+NO_DEFAULT_FEATURES=false
+FEATURES=""
+DRY_RUN=false
+LIST_ONLY=false
+VERBOSE=false
+FORCE_BROKEN_CROSS=${GNOSTR_CROSS_FORCE:-false}
+INTERACTIVE=false
+INSTALL_TARGETS=auto
+TOOLCHAIN="${RUSTUP_TOOLCHAIN:-}"
+MANAGED_RUSTC=""
+# shellcheck source=scripts/lib/script-ui.sh
+source "$SCRIPT_DIR/lib/script-ui.sh"
+
+HOST_TRIPLE=""
+HOST_OS=$(uname -s)
+HOST_ARCH=$(uname -m)
+CROSS_VERSION=$(cross --version 2>/dev/null | awk 'NR==1 { print $2 }' || true)
+
+declare -a REQUESTED_TARGETS=()
+declare -a SKIPPED_TARGETS=()
+declare -a FAILED_TARGETS=()
+
+TARGET_MATRIX=(
+  "linux-x64|x86_64-unknown-linux-gnu|cargo"
+  "linux-x64-musl|x86_64-unknown-linux-musl|cross"
+  "linux-arm64|aarch64-unknown-linux-gnu|cross"
+  "linux-arm64-musl|aarch64-unknown-linux-musl|cross"
+  "windows-x64|x86_64-pc-windows-msvc|cargo"
+  "macos-x64|x86_64-apple-darwin|cargo"
+  "macos-arm64|aarch64-apple-darwin|cargo"
+)
+
+log() {
+  printf '[cross.sh] %s\n' "$*"
+}
+
+warn() {
+  printf '[cross.sh] WARN: %s\n' "$*" >&2
+}
+
+die() {
+  printf '[cross.sh] ERROR: %s\n' "$*" >&2
+  exit 1
+}
+
+usage() {
+  cat <<EOF
+Usage: $0 [OPTIONS]
+
+Build the repo across the targets this workspace already knows about from
+Cross.toml and .github/workflows/build-artifact.yml. Linux cross targets use
+the Docker-backed images configured in Cross.toml.
+
+Options:
+  --target NAME|TRIPLE   Build only the named CI target or Rust target triple.
+                         Repeat to select multiple targets.
+  --skip NAME|TRIPLE     Skip the named CI target or Rust target triple.
+                         Repeat to skip multiple targets.
+  --profile NAME         Cargo profile to use (default: release).
+  --toolchain NAME       Use this rustup toolchain for target installation and Cargo.
+  --package NAME         Cargo package to build (default: gnostr-bins).
+  --workspace            Build the full workspace instead of one package.
+  --all-features         Enable all cargo features.
+  --no-default-features  Disable default cargo features.
+  --features LIST        Comma-separated cargo features to enable.
+  --unlocked             Do not pass --locked.
+  --verbose              Pass --verbose to cargo/cross.
+  --force-broken-cross   Attempt known-broken Apple Silicon cross targets anyway.
+  --list                 List the targets this host can attempt, then exit.
+  --interactive          Select available targets, package, and profile.
+  --install-targets      Install missing Rust targets without prompting.
+  --no-install-targets   Report missing targets without installing them.
+  --dry-run              Print commands without executing them.
+  --help                 Show this help.
+
+Examples:
+  $0
+  $0 --profile dist --target linux-arm64 --target linux-arm64-musl
+  $0 --workspace --all-features --dry-run
+  $0 --package gnostr-bins --features chat,p2p,blossom --dry-run
+
+Missing native targets prompt for installation in a terminal or --interactive
+mode. Non-interactive CI keeps automatic installation. Dry runs never install.
+Native builds use rustup's Cargo and rustc together, even if Homebrew Rust is
+earlier in PATH. The toolchain defaults to the repository's active toolchain.
+EOF
+}
+
+normalize_target_name() {
+  local value="$1"
+  local entry name triple tool
+  for entry in "${TARGET_MATRIX[@]}"; do
+    IFS='|' read -r name triple tool <<<"$entry"
+    if [[ "$value" == "$name" || "$value" == "$triple" ]]; then
+      printf '%s|%s|%s\n' "$name" "$triple" "$tool"
+      return 0
+    fi
+  done
+  return 1
+}
+
+cross_available() {
+  command -v cross >/dev/null 2>&1 && container_runtime_available
+}
+
+container_runtime_available() {
+  command -v docker >/dev/null 2>&1 || command -v podman >/dev/null 2>&1
+}
+
+cross_known_broken_for_host() {
+  local triple="$1"
+  local tool="$2"
+
+  [[ "$tool" == "cross" ]] || return 1
+  [[ "$FORCE_BROKEN_CROSS" == "true" || "$FORCE_BROKEN_CROSS" == "1" ]] && return 1
+
+  case "$HOST_TRIPLE:$CROSS_VERSION:$triple" in
+    aarch64-apple-darwin:0.2.5:aarch64-unknown-linux-gnu|\
+    aarch64-apple-darwin:0.2.5:aarch64-unknown-linux-musl|\
+    aarch64-apple-darwin:0.2.5:x86_64-unknown-linux-musl)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+host_can_attempt() {
+  local triple="$1"
+  local tool="$2"
+
+  case "$triple" in
+    aarch64-apple-darwin|x86_64-apple-darwin)
+      [[ "$HOST_OS" == "Darwin" ]]
+      ;;
+    x86_64-pc-windows-msvc)
+      [[ "$HOST_OS" == MINGW* || "$HOST_OS" == MSYS* || "$HOST_OS" == CYGWIN* || "$HOST_OS" == "Windows_NT" ]]
+      ;;
+    x86_64-unknown-linux-gnu)
+      [[ "$HOST_OS" == "Linux" || "$HOST_TRIPLE" == "$triple" ]]
+      ;;
+    x86_64-unknown-linux-musl|aarch64-unknown-linux-gnu|aarch64-unknown-linux-musl)
+      if [[ "$tool" == "cross" ]]; then
+        cross_available
+      else
+        [[ "$HOST_TRIPLE" == "$triple" ]]
+      fi
+      ;;
+    *)
+      [[ "$HOST_TRIPLE" == "$triple" ]]
+      ;;
+  esac
+}
+
+ensure_rust_target() {
+  local triple="$1" installed
+
+  if ! installed="$(rustup target list --installed --toolchain "$TOOLCHAIN")"; then
+    warn "could not inspect installed Rust targets; check your active rustup toolchain"
+    return 1
+  fi
+
+  if ! grep -Fxq "$triple" <<<"$installed"; then
+    if [[ "$INSTALL_TARGETS" == false ]]; then
+      warn "missing Rust target $triple (core/std unavailable). Run: rustup target add $triple --toolchain $TOOLCHAIN; or rerun with --install-targets"
+      return 1
+    fi
+    if [[ "$DRY_RUN" == true ]]; then
+      log "would run: rustup target add $triple --toolchain $TOOLCHAIN"
+    else
+      if [[ "$INSTALL_TARGETS" == auto ]] &&
+        [[ "$INTERACTIVE" == true || -t 0 ]]; then
+        ui_confirm "Rust target $triple is missing for $TOOLCHAIN (core/std unavailable). Run rustup target add $triple --toolchain $TOOLCHAIN?"
+      fi
+      log "installing rust target: $triple"
+      if ! rustup target add "$triple" --toolchain "$TOOLCHAIN"; then
+        warn "failed to install $triple; no build will be attempted. Retry: rustup target add $triple --toolchain $TOOLCHAIN"
+        return 1
+      fi
+    fi
+  fi
+}
+
+run_build() {
+  local name="$1"
+  local triple="$2"
+  local tool="$3"
+  local -a cmd
+
+  if [[ "$tool" == cargo ]]; then
+    ensure_rust_target "$triple" || return 1
+    cmd=(env "RUSTC=$MANAGED_RUSTC" rustup run "$TOOLCHAIN" cargo build)
+  else
+    cmd=(cross "+$TOOLCHAIN" build)
+  fi
+
+  cmd+=(--target "$triple")
+
+  if [[ "$PROFILE" == "release" ]]; then
+    cmd+=(--release)
+  else
+    cmd+=(--profile "$PROFILE")
+  fi
+
+  if [[ "$LOCKED" == true ]]; then
+    cmd+=(--locked)
+  fi
+
+  if [[ "$VERBOSE" == true ]]; then
+    cmd+=(--verbose)
+  fi
+
+  if [[ "$PACKAGE" == "__workspace__" ]]; then
+    cmd+=(--workspace)
+  else
+    cmd+=(-p "$PACKAGE")
+  fi
+
+  if [[ "$BIN_MODE" != "" ]]; then
+    cmd+=("$BIN_MODE")
+  fi
+
+  if [[ "$ALL_FEATURES" == true ]]; then
+    cmd+=(--all-features)
+  fi
+
+  if [[ "$NO_DEFAULT_FEATURES" == true ]]; then
+    cmd+=(--no-default-features)
+  fi
+
+  if [[ -n "$FEATURES" ]]; then
+    cmd+=(--features "$FEATURES")
+  fi
+
+  log "building $name ($triple) via $tool (toolchain=$TOOLCHAIN)"
+  if [[ "$DRY_RUN" == true ]]; then
+    printf '  %q' "${cmd[@]}"
+    printf '\n'
+  else
+    (
+      cd "$REPO_ROOT"
+      "${cmd[@]}"
+    )
+  fi
+}
+
+parse_args() {
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --interactive|-i)
+        INTERACTIVE=true
+        shift
+        ;;
+      --install-targets)
+        INSTALL_TARGETS=true
+        shift
+        ;;
+      --no-install-targets)
+        INSTALL_TARGETS=false
+        shift
+        ;;
+      --target)
+        [[ $# -ge 2 ]] || die "--target requires a value"
+        REQUESTED_TARGETS+=("$2")
+        shift 2
+        ;;
+      --skip)
+        [[ $# -ge 2 ]] || die "--skip requires a value"
+        SKIPPED_TARGETS+=("$2")
+        shift 2
+        ;;
+      --profile)
+        [[ $# -ge 2 ]] || die "--profile requires a value"
+        PROFILE="$2"
+        shift 2
+        ;;
+      --toolchain)
+        [[ $# -ge 2 ]] || die "--toolchain requires a value"
+        TOOLCHAIN="$2"
+        shift 2
+        ;;
+      --package)
+        [[ $# -ge 2 ]] || die "--package requires a value"
+        PACKAGE="$2"
+        shift 2
+        ;;
+      --workspace)
+        PACKAGE="__workspace__"
+        shift
+        ;;
+      --all-features)
+        ALL_FEATURES=true
+        shift
+        ;;
+      --no-default-features)
+        NO_DEFAULT_FEATURES=true
+        shift
+        ;;
+      --features)
+        [[ $# -ge 2 ]] || die "--features requires a value"
+        FEATURES="$2"
+        shift 2
+        ;;
+      --unlocked)
+        LOCKED=false
+        shift
+        ;;
+      --verbose)
+        VERBOSE=true
+        shift
+        ;;
+      --force-broken-cross)
+        FORCE_BROKEN_CROSS=true
+        shift
+        ;;
+      --dry-run)
+        DRY_RUN=true
+        shift
+        ;;
+      --list)
+        LIST_ONLY=true
+        shift
+        ;;
+      --help|-h)
+        usage
+        exit 0
+        ;;
+      *)
+        die "unknown option: $1"
+        ;;
+    esac
+  done
+}
+
+should_skip() {
+  local name="$1"
+  local triple="$2"
+  local skip
+  if [[ -z "${SKIPPED_TARGETS[*]-}" ]]; then
+    return 1
+  fi
+  for skip in "${SKIPPED_TARGETS[@]}"; do
+    if [[ "$skip" == "$name" || "$skip" == "$triple" ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+collect_targets() {
+  local entry normalized
+  local -a selected=()
+
+  if [[ -z "${REQUESTED_TARGETS[*]-}" ]]; then
+    for entry in "${TARGET_MATRIX[@]}"; do
+      selected+=("$entry")
+    done
+  else
+    local requested
+    for requested in "${REQUESTED_TARGETS[@]}"; do
+      normalized=$(normalize_target_name "$requested") || die "unknown target: $requested"
+      selected+=("$normalized")
+    done
+  fi
+
+  printf '%s\n' "${selected[@]}"
+}
+
+main() {
+  parse_args "$@"
+
+  local active_toolchain
+  if [[ -z "$TOOLCHAIN" ]]; then
+    active_toolchain="$(cd "$REPO_ROOT" && rustup show active-toolchain)" ||
+      die "could not resolve the repository's active rustup toolchain"
+    TOOLCHAIN="${active_toolchain%% *}"
+  fi
+  [[ -n "$TOOLCHAIN" ]] || die "no rustup toolchain selected"
+  MANAGED_RUSTC="$(cd "$REPO_ROOT" && rustup which --toolchain "$TOOLCHAIN" rustc)" ||
+    die "toolchain $TOOLCHAIN is unavailable; run rustup toolchain install $TOOLCHAIN"
+  HOST_TRIPLE="$(rustup run "$TOOLCHAIN" rustc -vV | awk '/^host: / { print $2 }')" ||
+    die "could not inspect rustc for $TOOLCHAIN"
+  [[ -n "$HOST_TRIPLE" ]] || die "rustc did not report a host triple"
+  # cross composes "<toolchain>-<host>" itself; hand it the bare channel or
+  # rustup rejects the doubled name (e.g. stable-x86_64-...-x86_64-...).
+  case "$TOOLCHAIN" in
+    *-"$HOST_TRIPLE")
+      TOOLCHAIN="${TOOLCHAIN%-"$HOST_TRIPLE"}"
+      log "normalized toolchain for cross: $TOOLCHAIN"
+      ;;
+  esac
+
+  if [[ "$INTERACTIVE" == true && "$LIST_ONLY" != true ]]; then
+    local choices=() candidate name triple tool
+    while IFS= read -r candidate; do
+      IFS='|' read -r name triple tool <<<"$candidate"
+      if ! should_skip "$name" "$triple" && host_can_attempt "$triple" "$tool" &&
+        ! cross_known_broken_for_host "$triple" "$tool"; then
+        choices+=("$candidate")
+      fi
+    done < <(collect_targets)
+    ui_select "Build targets: name / triple / tool" ${choices[@]+"${choices[@]}"}
+    REQUESTED_TARGETS=()
+    for candidate in "${UI_SELECTED[@]}"; do
+      REQUESTED_TARGETS+=("${candidate%%|*}")
+    done
+    ui_prompt "Package (__workspace__ builds all workspace members)" "$PACKAGE"
+    PACKAGE="$UI_VALUE"
+    ui_prompt "Cargo profile" "$PROFILE"
+    PROFILE="$UI_VALUE"
+    ui_prompt "Features (comma-separated)" "$FEATURES"
+    FEATURES="$UI_VALUE"
+    ui_confirm "Build ${#REQUESTED_TARGETS[@]} targets for $PACKAGE with profile $PROFILE (dry-run=$DRY_RUN)?"
+  fi
+
+  log "host: $HOST_TRIPLE ($HOST_OS/$HOST_ARCH)"
+  if [[ -n "$CROSS_VERSION" ]]; then
+    log "cross: $CROSS_VERSION"
+  fi
+
+  local entry name triple tool
+  local attempted=0
+
+  while IFS= read -r entry <&3; do
+    [[ -n "$entry" ]] || continue
+    IFS='|' read -r name triple tool <<<"$entry"
+
+    if should_skip "$name" "$triple"; then
+      log "skipping $name ($triple): requested"
+      continue
+    fi
+
+    if ! host_can_attempt "$triple" "$tool"; then
+      warn "skipping $name ($triple): unsupported from this host or missing 'cross'/'docker'"
+      continue
+    fi
+
+    if cross_known_broken_for_host "$triple" "$tool"; then
+      warn "skipping $name ($triple): cross $CROSS_VERSION is known broken on $HOST_TRIPLE for this target; upgrade cross or rerun with GNOSTR_CROSS_FORCE=1 / --force-broken-cross"
+      continue
+    fi
+
+    if [[ "$LIST_ONLY" == true ]]; then
+      printf '%s\t%s\t%s\n' "$name" "$triple" "$tool"
+      continue
+    fi
+
+    if run_build "$name" "$triple" "$tool"; then
+      attempted=$((attempted + 1))
+    else
+      FAILED_TARGETS+=("$name|$triple")
+      warn "build failed for $name ($triple)"
+    fi
+  done 3< <(collect_targets)
+
+  if [[ "$LIST_ONLY" == true ]]; then
+    exit 0
+  fi
+
+  if [[ $attempted -eq 0 ]]; then
+    die "no buildable targets selected for this host"
+  fi
+
+  if [[ -n "${FAILED_TARGETS[*]-}" ]]; then
+    warn "failed target(s): ${FAILED_TARGETS[*]}"
+    exit 1
+  fi
+
+  log "completed $attempted target(s)"
+}
+
+main "$@"
