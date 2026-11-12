@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>
+    {% block title %}
+    gnostr.org
+    {% endblock %}
+    </title>
+    <aside>
+    {%- block subnav %}{% endblock %}
+    </aside>
+    <link rel="stylesheet" type="text/css" href="/style-{{ crate::GLOBAL_CSS_HASH }}.css" />
+    {%- block head -%}{%- endblock %}
+  </head>
+  <body>
+        <!-- Notice type="module" is mandatory for modern CDN usage -->
+  <script type="module">
+    import { createHelia } from "https://cdn.jsdelivr.net/npm/helia@latest/+esm";
+    import { unixfs } from "https://cdn.jsdelivr.net/npm/@helia/unixfs@latest/+esm";
+
+    async function start() {
+      // Keep Helia running so the browser node and gnostr-web (Kubo) can talk.
+      let helia = null;
+      try {
+        helia = await createHelia();
+        console.log("Helia Node:", helia);
+      } catch (e) {
+        console.error("Failed to start Helia:", e);
+      }
+
+      // Check Kubo availability (graceful degradation).
+      let status = null;
+      try {
+        const r = await fetch("/api/ipfs/status");
+        if (r.ok) status = await r.json();
+      } catch (e) {}
+      const healthEl = document.getElementById("ipfs-health-body");
+      if (!status || !status.enabled) {
+        if (healthEl) healthEl.textContent = "IPFS disabled";
+        return;
+      }
+
+      const gatewayUrl = status.gateway || "";
+
+      // Collect repository rows and publish a snapshot of each repo to IPFS.
+      const rows = Array.from(document.querySelectorAll("table.repositories tbody tr"));
+      const rowRefs = [];
+      for (const row of rows) {
+        const link = row.querySelector("td a");
+        if (!link) continue;
+        const repoRef = (link.getAttribute("href") || link.textContent || "").trim();
+        if (!repoRef) continue;
+        rowRefs.push({ row, link, repoRef });
+      }
+
+      const manifestEntries = [];
+      await Promise.all(
+        rowRefs.map(async (entry) => {
+          let cid = null;
+          try {
+            const res = await fetch(
+              `/api/ipfs/publish-repo?path=${encodeURIComponent(entry.repoRef)}`,
+              { method: "POST" },
+            );
+            if (res.ok) {
+              const data = await res.json();
+              cid = data.cid || null;
+            }
+          } catch (e) {
+            console.error("Failed to publish repo snapshot", entry.repoRef, e);
+          }
+          if (!cid) return;
+
+          manifestEntries.push({ repo: entry.repoRef, cid });
+          const nameCell = entry.link.parentElement;
+          if (nameCell && !nameCell.querySelector(".repo-cid")) {
+            const cidEl = document.createElement("a");
+            cidEl.className = "repo-cid";
+            cidEl.style.fontSize = "0.75rem";
+            cidEl.style.opacity = "0.7";
+            cidEl.style.display = "block";
+            cidEl.textContent = `IPFS: ${cid}`;
+            cidEl.href = gatewayUrl ? `${gatewayUrl}/ipfs/${cid}/` : "#";
+            cidEl.target = "_blank";
+            cidEl.rel = "noopener noreferrer";
+            nameCell.appendChild(cidEl);
+          }
+          // Warm the snapshot through the axum /ipfs proxy.
+          fetch(`/ipfs/${cid}/`).catch(() => {});
+        }),
+      );
+
+      // Publish manifest to Kubo too.
+      try {
+        await fetch("/api/ipfs/manifest", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ repos: manifestEntries }),
+        });
+      } catch (e) {
+        console.debug("Could not publish manifest to Kubo", e);
+      }
+
+      // Also keep the existing cid-manifest endpoint in sync.
+      try {
+        await fetch("/api/cid-manifest", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ repos: manifestEntries }),
+        });
+      } catch (e) {
+        console.debug("Could not publish manifest", e);
+      }
+
+      // Health + peers (behind the <details> toggle).
+      try {
+        const peersRes = await fetch("/api/ipfs/peers");
+        const peers = peersRes.ok ? await peersRes.json() : { peers: [] };
+        if (healthEl) {
+          healthEl.textContent = `gateway: ${gatewayUrl}\npeers: ${(peers.peers || []).length}`;
+        }
+      } catch (e) {
+        if (healthEl) healthEl.textContent = `gateway: ${gatewayUrl}`;
+      }
+
+      if (helia) {
+        console.log("Helia node ready; Kubo gateway:", gatewayUrl);
+      }
+    }
+
+    start();
+  </script>
+    <header>
+      <h1>
+        <a href="/" class="no-hover" style="text-decoration: none">
+          <img src="/gnostr-{{ crate::GNOSTR_SVG_HASH.get().unwrap() }}.svg" alt="gnostr" width="128" height="128" style="vertical-align: middle" />
+        </a>
+        {% block header -%}gnostr.org{%- endblock %}
+      </h1>
+    </header>
+      <div>{%- block subnav %}{% endblock %}</div>
+    {%- block nav -%}
+    <nav>
+      <div>
+        <a href="/" class="active">gnostr</a>
+      </div>
+        <div class="grow"></div>
+        <div>{%- block extra_nav_links %}{% endblock %}</div>
+    </nav>
+    {%- endblock -%}
+    <main>{%- block content %}{% endblock -%}</main>
+    <div class="grow"></div>
+    <footer>
+      <a href="https://github.com/gnostr-org/gnostr" target="_blank">gnostr.org</a> v{{ crate::CRATE_VERSION }} at {{
+      time::OffsetDateTime::now_utc()|format_time }} in {{
+      "{:?}"|format(crate::layers::logger::REQ_TIMESTAMP.get().elapsed()) }}
+    </footer>
+    <details id="ipfs-health" style="font-size:0.75rem;margin:0.5rem 0;">
+      <summary>IPFS health</summary>
+      <pre id="ipfs-health-body" style="white-space:pre-wrap;"></pre>
+    </details>
+    {%- block scripts -%}{%- endblock %}
+  </body>
+</html>
