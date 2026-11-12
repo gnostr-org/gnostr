@@ -1,0 +1,1044 @@
+// Package writable implements FUSE filesystem types shared by the
+// mutable /mfs and /ipns mounts. Both mounts expose MFS directories
+// as writable POSIX filesystems; the only differences are how the
+// root is created and how xattr names are published.
+//
+//go:build (linux || darwin || freebsd) && !nofuse
+
+package writable
+
+import (
+	"context"
+	"errors"
+	"io"
+	"os"
+	"sync"
+	"sync/atomic"
+	"syscall"
+	"time"
+
+	"github.com/hanwen/go-fuse/v2/fs"
+	"github.com/hanwen/go-fuse/v2/fuse"
+
+	bstore "github.com/ipfs/boxo/blockstore"
+	"github.com/ipfs/boxo/files"
+	dag "github.com/ipfs/boxo/ipld/merkledag"
+	ft "github.com/ipfs/boxo/ipld/unixfs"
+	uio "github.com/ipfs/boxo/ipld/unixfs/io"
+	"github.com/ipfs/boxo/mfs"
+	ipld "github.com/ipfs/go-ipld-format"
+	logging "github.com/ipfs/go-log/v2"
+	fusemnt "github.com/ipfs/kubo/fuse/mount"
+)
+
+var log = logging.Logger("fuse/writable")
+
+// Config controls write-side behavior for writable mounts.
+type Config struct {
+	StoreMtime bool            // persist mtime on create and open-for-write
+	StoreMode  bool            // persist mode on chmod
+	DAG        ipld.DAGService // required: read-only opens use it to bypass MFS desclock
+	// RepoPath is the on-disk path of the IPFS repo (e.g. ~/.ipfs).
+	// Statfs calls syscall.Statfs on this path so that the FUSE mount
+	// reports how much free space is left on the volume that stores
+	// MFS data. Without it tools like macOS Finder see zero free space
+	// and refuse to copy files.
+	RepoPath string
+	// Blksize is the preferred I/O size advertised via st_blksize on
+	// every stat. Callers should derive it from Import.UnixFSChunker via
+	// fusemnt.BlksizeFromChunker so the hint matches the chunker MFS
+	// will use for writes. If zero, NewDir writes fusemnt.DefaultBlksize
+	// into this field in place, so fillAttr on every inode can read
+	// cfg.Blksize without a nil-check on each stat.
+	Blksize uint32
+	// GCLocker, when set, is used to take the pin lock around each mutation
+	// so a concurrent `ipfs repo gc` cannot collect blocks a write has added
+	// to the blockstore but not yet linked into the persisted MFS root. This
+	// gives FUSE writes the same protection the `ipfs files` commands have.
+	// nil disables the locking (e.g. tests). See ipfs/kubo#6113.
+	GCLocker bstore.GCLocker
+
+	// MountCtx is the lifetime context of the FUSE mount. A file descriptor
+	// returned by Open or Create outlives the FUSE operation that created it,
+	// so writes through it are bound to this context (cancelled on unmount)
+	// instead of the per-operation context, which the kernel cancels once the
+	// operation returns. nil falls back to context.Background (e.g. tests).
+	MountCtx context.Context
+
+	// inodes numbers the entries of the mount this Config belongs to. One
+	// table serves every directory of a mount, including the several roots
+	// the /ipns mount creates, so that two entries never share a number.
+	// NewDir fills it in. See inodeTable.
+	inodes *inodeTable
+}
+
+// openContext returns the context to bind a long-lived file descriptor's
+// writes to: the mount context if set, otherwise context.Background.
+func (c *Config) openContext() context.Context {
+	if c.MountCtx != nil {
+		return c.MountCtx
+	}
+	return context.Background()
+}
+
+// pinLock takes the pin lock if a GCLocker is configured and returns a
+// function that releases it; both are no-ops when GCLocker is nil. Hold it
+// across a whole mutation (including its flush) with `defer cfg.pinLock(ctx)()`.
+func (c *Config) pinLock(ctx context.Context) func() {
+	if c.GCLocker == nil {
+		return func() {}
+	}
+	unlocker := c.GCLocker.PinLock(ctx)
+	return func() { unlocker.Unlock(ctx) }
+}
+
+// NewDir creates a Dir node backed by the given MFS directory.
+// cfg.DAG is required: read-only file opens build a DagReader directly
+// from it to avoid MFS's desclock (see FileInode.Open). Passing a nil
+// DAG would silently re-introduce the rsync --inplace deadlock, so we
+// fail loudly at construction time instead.
+func NewDir(d *mfs.Directory, cfg *Config) *Dir {
+	if cfg == nil || cfg.DAG == nil {
+		panic("fuse/writable: Config.DAG is required")
+	}
+	// Tests and callers that don't plumb Import.UnixFSChunker leave
+	// Blksize zero; fall back to the FUSE default so stat advertises a
+	// usable st_blksize. See Config.Blksize for why we mutate in place.
+	if cfg.Blksize == 0 {
+		cfg.Blksize = fusemnt.DefaultBlksize
+	}
+	// The /ipns mount calls NewDir once per key, all sharing one Config, so
+	// the table has to be created once and then left alone.
+	cfg.InitInodes()
+	return newDir(d, cfg)
+}
+
+// Dir is the FUSE adapter for MFS directories.
+//
+// The MFS handle is held in an atomic because a rename replaces it: see
+// rebind. Reads of it are serialized by nothing else, and the FUSE server
+// dispatches every request in its own goroutine.
+type Dir struct {
+	fs.Inode
+	mfsDir atomic.Pointer[mfs.Directory]
+	Cfg    *Config
+}
+
+func newDir(md *mfs.Directory, cfg *Config) *Dir {
+	d := &Dir{Cfg: cfg}
+	d.mfsDir.Store(md)
+	return d
+}
+
+// MFSDir returns the MFS directory this node currently stands for.
+func (d *Dir) MFSDir() *mfs.Directory { return d.mfsDir.Load() }
+
+// rebind points this node at another MFS directory. A rename gives the entry
+// a new *mfs.Directory, and the node the kernel keeps has to follow it; see
+// Dir.Rename.
+func (d *Dir) rebind(md *mfs.Directory) { d.mfsDir.Store(md) }
+
+// childIno returns the inode number to report for the named entry of this
+// directory. See inodeTable for why the numbers cannot be left to go-fuse.
+func (d *Dir) childIno(name string) uint64 {
+	return d.Cfg.inodes.get(d.StableAttr().Ino, name)
+}
+
+// childAttr describes the named entry of this directory to go-fuse. mode
+// carries the file type bits only (0 means a regular file).
+func (d *Dir) childAttr(name string, mode uint32) fs.StableAttr {
+	return d.Cfg.inodes.stable(d.StableAttr().Ino, name, mode)
+}
+
+// dropChildIno retires the inode number of an entry that is no longer in this
+// directory, so that a later entry of the same name is numbered separately.
+func (d *Dir) dropChildIno(name string) {
+	d.Cfg.inodes.drop(d.StableAttr().Ino, name)
+}
+
+// moveChildIno carries the inode number of this directory's entry over to the
+// name it is being renamed to, and retires the number of whatever that name
+// held before.
+func (d *Dir) moveChildIno(oldName string, target *Dir, newName string) {
+	d.Cfg.inodes.move(d.StableAttr().Ino, oldName, target.StableAttr().Ino, newName)
+}
+
+// fillAttr fills stat attributes for a directory. Blocks and Blksize
+// are set explicitly because go-fuse's setBlocks otherwise auto-fills
+// them from Size with a 4 KiB page-based fallback. For directories
+// Size is 0, so the fallback yields st_blocks=0, which some tools
+// (dedup scanners, file managers) treat as "unsupported".
+func (d *Dir) fillAttr(a *fuse.Attr) {
+	a.Mode = uint32(fusemnt.DefaultDirModeRW.Perm())
+	a.Nlink = fusemnt.Nlink
+	a.Blocks = 1
+	a.Blksize = d.Cfg.Blksize
+	if m, err := d.MFSDir().Mode(); err == nil && m != 0 {
+		a.Mode = files.ModePermsToUnixPerms(m)
+	}
+	if t, err := d.MFSDir().ModTime(); err == nil && !t.IsZero() {
+		a.SetTimes(nil, &t, nil)
+	}
+}
+
+func (d *Dir) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
+	d.fillAttr(&out.Attr)
+	return 0
+}
+
+// Statfs reports disk-space statistics for the underlying filesystem.
+// macOS Finder checks free space before copying; without this it
+// reports "not enough free space" because go-fuse returns zeroed stats.
+func (d *Dir) Statfs(_ context.Context, out *fuse.StatfsOut) syscall.Errno {
+	if d.Cfg.RepoPath == "" {
+		return 0
+	}
+	var s syscall.Statfs_t
+	if err := syscall.Statfs(d.Cfg.RepoPath, &s); err != nil {
+		return fs.ToErrno(err)
+	}
+	out.FromStatfsT(&s)
+	return 0
+}
+
+// Setattr handles chmod and mtime changes on directories.
+// Tools like tar and rsync set directory timestamps after extraction.
+//
+// Mode and mtime are stored as UnixFS optional metadata.
+// The UnixFS spec supports all 12 permission bits, but boxo's MFS
+// layer exposes only the lower 9 (ugo-rwx); setuid/setgid/sticky
+// are silently dropped. FUSE mounts are always nosuid so these
+// bits would have no execution effect anyway.
+// See https://specs.ipfs.tech/unixfs/#dag-pb-optional-metadata
+func (d *Dir) Setattr(ctx context.Context, _ fs.FileHandle, in *fuse.SetAttrIn, out *fuse.AttrOut) syscall.Errno {
+	defer d.Cfg.pinLock(ctx)()
+	if mode, ok := in.GetMode(); ok && d.Cfg.StoreMode {
+		if err := d.MFSDir().SetMode(files.UnixPermsToModePerms(mode)); err != nil {
+			return fs.ToErrno(err)
+		}
+	}
+	if mtime, ok := in.GetMTime(); ok && d.Cfg.StoreMtime {
+		if err := d.MFSDir().SetModTime(mtime); err != nil {
+			return fs.ToErrno(err)
+		}
+	}
+	d.fillAttr(&out.Attr)
+	return 0
+}
+
+func (d *Dir) Lookup(ctx context.Context, name string, out *fuse.EntryOut) (*fs.Inode, syscall.Errno) {
+	mfsNode, err := d.MFSDir().Child(name)
+	if err != nil {
+		return nil, syscall.ENOENT
+	}
+
+	switch mfsNode.Type() {
+	case mfs.TDir:
+		child := newDir(mfsNode.(*mfs.Directory), d.Cfg)
+		child.fillAttr(&out.Attr)
+		return d.NewInode(ctx, child, d.childAttr(name, syscall.S_IFDIR)), 0
+	case mfs.TFile:
+		mfsFile := mfsNode.(*mfs.File)
+		if target := SymlinkTarget(mfsFile); target != "" {
+			child := newSymlink(target, mfsFile, d.Cfg)
+			child.fillAttr(&out.Attr)
+			return d.NewInode(ctx, child, d.childAttr(name, syscall.S_IFLNK)), 0
+		}
+		child := newFileInode(mfsFile, d.Cfg)
+		child.fillAttr(&out.Attr)
+		return d.NewInode(ctx, child, d.childAttr(name, 0)), 0
+	default:
+		log.Errorf("unexpected MFS node type %d under directory", mfsNode.Type())
+		return nil, syscall.EIO
+	}
+}
+
+func (d *Dir) Readdir(ctx context.Context) (fs.DirStream, syscall.Errno) {
+	nodes, err := d.MFSDir().List(ctx)
+	if err != nil {
+		return nil, fs.ToErrno(err)
+	}
+
+	entries := make([]fuse.DirEntry, len(nodes))
+	for i, node := range nodes {
+		var mode uint32
+		switch {
+		case node.Type == int(mfs.TDir):
+			mode = syscall.S_IFDIR
+		case node.Type == int(mfs.TFile):
+			// MFS represents symlinks as TFile; check the DAG node.
+			if child, err := d.MFSDir().Child(node.Name); err == nil {
+				if f, ok := child.(*mfs.File); ok && SymlinkTarget(f) != "" {
+					mode = syscall.S_IFLNK
+				}
+			}
+		}
+		// Ino must match what Lookup reports for the same name, or d_ino
+		// from getdents disagrees with st_ino from stat and tools that
+		// trust the cheaper of the two (ls -i, find) see two identities
+		// for one file.
+		entries[i] = fuse.DirEntry{Name: node.Name, Mode: mode, Ino: d.childIno(node.Name)}
+	}
+	return fs.NewListDirStream(entries), 0
+}
+
+// Mkdir creates a new directory under d.
+//
+// TODO: boxo's mfs.Directory.Mkdir(name string) accepts no mode
+// argument, so the caller's mode is silently dropped here. Tools
+// that mkdir then chown without a follow-up chmod (some tar/rsync
+// flows) see the default 0755 instead of the requested mode.
+// Fixing this requires a boxo MFS API change.
+func (d *Dir) Mkdir(ctx context.Context, name string, _ uint32, out *fuse.EntryOut) (*fs.Inode, syscall.Errno) {
+	defer d.Cfg.pinLock(ctx)()
+	mfsDir, err := d.MFSDir().Mkdir(name)
+	if err != nil {
+		return nil, fs.ToErrno(err)
+	}
+	child := newDir(mfsDir, d.Cfg)
+	// Fill the response attrs so the kernel doesn't cache zero values
+	// until AttrTimeout expires. Matches Dir.Create and FileInode.Setattr.
+	child.fillAttr(&out.Attr)
+	return d.NewInode(ctx, child, d.childAttr(name, syscall.S_IFDIR)), 0
+}
+
+func (d *Dir) Unlink(ctx context.Context, name string) syscall.Errno {
+	defer d.Cfg.pinLock(ctx)()
+	if err := d.MFSDir().Unlink(name); err != nil {
+		return fs.ToErrno(err)
+	}
+	d.dropChildIno(name)
+	return fs.ToErrno(d.MFSDir().Flush())
+}
+
+func (d *Dir) Rmdir(ctx context.Context, name string) syscall.Errno {
+	defer d.Cfg.pinLock(ctx)()
+	child, err := d.MFSDir().Child(name)
+	if err != nil {
+		return fs.ToErrno(err)
+	}
+	target, ok := child.(*mfs.Directory)
+	if !ok {
+		return syscall.ENOTDIR
+	}
+
+	children, err := target.ListNames(ctx)
+	if err != nil {
+		return fs.ToErrno(err)
+	}
+	if len(children) > 0 {
+		return syscall.ENOTEMPTY
+	}
+
+	if err := d.MFSDir().Unlink(name); err != nil {
+		return fs.ToErrno(err)
+	}
+	d.dropChildIno(name)
+	return fs.ToErrno(d.MFSDir().Flush())
+}
+
+// Rename moves an entry across MFS directories.
+//
+// TODO: this is not atomic. The source is unlinked before the
+// destination is added, so any failure between the two steps loses
+// the source entry. Making it atomic requires changes to MFS rename
+// semantics (boxo/mfs does not currently expose an atomic rename).
+func (d *Dir) Rename(ctx context.Context, oldName string, newParent fs.InodeEmbedder, newName string, _ uint32) syscall.Errno {
+	defer d.Cfg.pinLock(ctx)()
+	child, err := d.MFSDir().Child(oldName)
+	if err != nil {
+		return fs.ToErrno(err)
+	}
+
+	nd, err := child.GetNode()
+	if err != nil {
+		return fs.ToErrno(err)
+	}
+
+	// Refuse a destination we cannot write to before touching MFS. The /ipns
+	// root is not a Dir, so `mv /ipns/<key>/f /ipns/f` lands here, and
+	// unlinking the source first would delete it with nowhere to put it.
+	targetDir, ok := newParent.EmbeddedInode().Operations().(*Dir)
+	if !ok {
+		return syscall.EINVAL
+	}
+
+	// A rename may only replace a directory when that directory is empty.
+	// MFS removes a directory and everything under it without complaint, so
+	// without this `mv -T src dst` would take the whole of dst with it. The
+	// kernel refuses the mismatched pairs (a directory onto a file, a file
+	// onto a directory) before the request reaches us; it cannot know whether
+	// the destination is empty, because only MFS can answer that.
+	if dst, err := targetDir.MFSDir().Child(newName); err == nil {
+		if dstDir, ok := dst.(*mfs.Directory); ok {
+			names, err := dstDir.ListNames(ctx)
+			if err != nil {
+				return fs.ToErrno(err)
+			}
+			if len(names) > 0 {
+				return syscall.ENOTEMPTY
+			}
+		}
+	}
+
+	// Unlink the source first. For same-directory renames, this clears
+	// the old name from the directory's entry cache before AddChild
+	// repopulates it with the new name. Without this ordering, Flush
+	// would sync the stale cache entry back into the DAG.
+	if err := d.MFSDir().Unlink(oldName); err != nil {
+		return fs.ToErrno(err)
+	}
+
+	if err := targetDir.MFSDir().Unlink(newName); err != nil && !errors.Is(err, os.ErrNotExist) {
+		return fs.ToErrno(err)
+	}
+
+	// The entry keeps its inode number: a rename moves a file, it does not
+	// replace it, and programs that track a file by identity have to see the
+	// same one afterwards. Whatever the new name held before is gone and
+	// gives its number up. Both names are absent from MFS at this point, so
+	// a lookup racing with the rename gets ENOENT rather than either number.
+	d.moveChildIno(oldName, targetDir, newName)
+
+	if err := targetDir.MFSDir().AddChild(newName, nd); err != nil {
+		return fs.ToErrno(err)
+	}
+
+	// Flush the destination before the source. AddChild only updates the
+	// target directory in memory, so without this the new link is lost if the
+	// daemon stops before something else flushes it; flushing it first means
+	// an interrupted rename leaves the entry under both names rather than
+	// under neither.
+	if targetDir.MFSDir() != d.MFSDir() {
+		if err := targetDir.MFSDir().Flush(); err != nil {
+			return fs.ToErrno(err)
+		}
+	}
+
+	if err := d.MFSDir().Flush(); err != nil {
+		return fs.ToErrno(err)
+	}
+
+	// go-fuse moves the node the kernel already has to the new name once we
+	// return (rawBridge.Rename calls MvChild), and that node still holds the
+	// MFS handle unlinked above. MFS marks such a handle gone: a write
+	// through it is accepted and then dropped, and a directory flush through
+	// it re-adds the name the rename moved away from. Point the node at the
+	// entry that exists now, for as long as the kernel keeps using it.
+	rebindMovedChild(d.GetChild(oldName), targetDir, newName)
+	return 0
+}
+
+// rebindMovedChild points a renamed node at the MFS entry now living under
+// its new name. moved is the node the kernel is about to carry over, or nil
+// when it never looked the old name up and so has nothing to carry.
+func rebindMovedChild(moved *fs.Inode, targetDir *Dir, newName string) {
+	if moved == nil {
+		return
+	}
+	fresh, err := targetDir.MFSDir().Child(newName)
+	if err != nil {
+		log.Errorf("rename: reading back %q: %s", newName, err)
+		return
+	}
+	switch ops := moved.Operations().(type) {
+	case *Dir:
+		md, ok := fresh.(*mfs.Directory)
+		if !ok {
+			return
+		}
+		ops.rebind(md)
+		// Whatever the kernel looked up underneath this directory holds a
+		// handle that hangs off the one it was reached through, so a write
+		// to a file already opened under the old name would bubble up into
+		// the directory that is gone. Follow them down; the kernel only
+		// keeps what it has been asked for, so this walks a live subtree,
+		// not the whole tree.
+		for name, child := range moved.Children() {
+			rebindMovedChild(child, ops, name)
+		}
+	case *FileInode:
+		if mf, ok := fresh.(*mfs.File); ok {
+			ops.rebind(mf)
+		}
+	case *Symlink:
+		if mf, ok := fresh.(*mfs.File); ok {
+			ops.rebind(mf)
+		}
+	}
+}
+
+func (d *Dir) Create(ctx context.Context, name string, flags uint32, _ uint32, out *fuse.EntryOut) (*fs.Inode, fs.FileHandle, uint32, syscall.Errno) {
+	defer d.Cfg.pinLock(ctx)()
+	node := dag.NodeWithData(ft.FilePBData(nil, 0))
+	if err := node.SetCidBuilder(d.MFSDir().GetCidBuilder()); err != nil {
+		return nil, nil, 0, fs.ToErrno(err)
+	}
+
+	if err := d.MFSDir().AddChild(name, node); err != nil {
+		return nil, nil, 0, fs.ToErrno(err)
+	}
+
+	if err := d.MFSDir().Flush(); err != nil {
+		return nil, nil, 0, fs.ToErrno(err)
+	}
+
+	mfsNode, err := d.MFSDir().Child(name)
+	if err != nil {
+		return nil, nil, 0, fs.ToErrno(err)
+	}
+	if d.Cfg.StoreMtime {
+		if err := mfsNode.SetModTime(time.Now()); err != nil {
+			return nil, nil, 0, fs.ToErrno(err)
+		}
+	}
+
+	mfsFile, ok := mfsNode.(*mfs.File)
+	if !ok {
+		return nil, nil, 0, syscall.EIO
+	}
+	fileInode := newFileInode(mfsFile, d.Cfg)
+
+	accessMode := flags & syscall.O_ACCMODE
+	fd, err := mfsFile.Open(d.Cfg.openContext(), mfs.Flags{
+		Read:  accessMode == syscall.O_RDONLY || accessMode == syscall.O_RDWR,
+		Write: accessMode == syscall.O_WRONLY || accessMode == syscall.O_RDWR,
+		Sync:  true,
+	})
+	if err != nil {
+		return nil, nil, 0, fs.ToErrno(err)
+	}
+
+	// Fill the response attrs so the kernel doesn't cache zero values
+	// (mode 0, size 0) for the new inode until AttrTimeout expires.
+	// fstat on the open file handle returned to the caller hits this
+	// cache, so leaving it empty makes f.Stat() report mode 0 right
+	// after open. Matches FileInode.Setattr and Dir.Mkdir.
+	fileInode.fillAttr(&out.Attr)
+
+	inode := d.NewInode(ctx, fileInode, d.childAttr(name, 0))
+	return inode, &FileHandle{inode: inode, fd: fd, cfg: d.Cfg}, 0, 0
+}
+
+func (d *Dir) Listxattr(_ context.Context, dest []byte) (uint32, syscall.Errno) {
+	data := []byte(fusemnt.XattrCID + "\x00")
+	if len(dest) == 0 {
+		return uint32(len(data)), 0
+	}
+	if len(dest) < len(data) {
+		return 0, syscall.ERANGE
+	}
+	return uint32(copy(dest, data)), 0
+}
+
+func (d *Dir) Getxattr(_ context.Context, attr string, dest []byte) (uint32, syscall.Errno) {
+	if attr == fusemnt.XattrCIDDeprecated {
+		log.Errorf("xattr %q is deprecated, use %q instead", fusemnt.XattrCIDDeprecated, fusemnt.XattrCID)
+		attr = fusemnt.XattrCID
+	}
+	if attr != fusemnt.XattrCID {
+		return 0, fs.ENOATTR
+	}
+	nd, err := d.MFSDir().GetNode()
+	if err != nil {
+		return 0, fs.ToErrno(err)
+	}
+	data := []byte(nd.Cid().String())
+	if len(dest) == 0 {
+		return uint32(len(data)), 0
+	}
+	if len(dest) < len(data) {
+		return 0, syscall.ERANGE
+	}
+	return uint32(copy(dest, data)), 0
+}
+
+// Symlink creates a new symlink in this directory.
+func (d *Dir) Symlink(ctx context.Context, target, name string, out *fuse.EntryOut) (*fs.Inode, syscall.Errno) {
+	defer d.Cfg.pinLock(ctx)()
+	data, err := ft.SymlinkData(target)
+	if err != nil {
+		return nil, fs.ToErrno(err)
+	}
+	nd := dag.NodeWithData(data)
+	if err := nd.SetCidBuilder(d.MFSDir().GetCidBuilder()); err != nil {
+		return nil, fs.ToErrno(err)
+	}
+	if err := d.MFSDir().AddChild(name, nd); err != nil {
+		return nil, fs.ToErrno(err)
+	}
+	if err := d.MFSDir().Flush(); err != nil {
+		return nil, fs.ToErrno(err)
+	}
+
+	// Retrieve the mfs.File so Setattr can persist mtime.
+	mfsNode, err := d.MFSDir().Child(name)
+	if err != nil {
+		return nil, fs.ToErrno(err)
+	}
+	mfsFile, _ := mfsNode.(*mfs.File)
+
+	sym := newSymlink(target, mfsFile, d.Cfg)
+	sym.fillAttr(&out.Attr)
+	return d.NewInode(ctx, sym, d.childAttr(name, syscall.S_IFLNK)), 0
+}
+
+// FileInode is the FUSE adapter for MFS file inodes.
+type FileInode struct {
+	fs.Inode
+	mfsFile atomic.Pointer[mfs.File]
+	Cfg     *Config
+}
+
+func newFileInode(mf *mfs.File, cfg *Config) *FileInode {
+	fi := &FileInode{Cfg: cfg}
+	fi.mfsFile.Store(mf)
+	return fi
+}
+
+// MFSFile returns the MFS file this node currently stands for.
+func (fi *FileInode) MFSFile() *mfs.File { return fi.mfsFile.Load() }
+
+// rebind points this node at another MFS file. See Dir.Rename.
+func (fi *FileInode) rebind(mf *mfs.File) { fi.mfsFile.Store(mf) }
+
+func (fi *FileInode) fillAttr(a *fuse.Attr) {
+	size, _ := fi.MFSFile().Size()
+	a.Nlink = fusemnt.Nlink
+	a.Size = uint64(size)
+	a.Blocks = fusemnt.SizeToStatBlocks(a.Size)
+	a.Blksize = fi.Cfg.Blksize
+	a.Mode = uint32(fusemnt.DefaultFileModeRW.Perm())
+	if m, err := fi.MFSFile().Mode(); err == nil && m != 0 {
+		a.Mode = files.ModePermsToUnixPerms(m)
+	}
+	if t, _ := fi.MFSFile().ModTime(); !t.IsZero() {
+		a.SetTimes(nil, &t, nil)
+	}
+}
+
+func (fi *FileInode) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
+	fi.fillAttr(&out.Attr)
+	return 0
+}
+
+func (fi *FileInode) Open(ctx context.Context, flags uint32) (fs.FileHandle, uint32, syscall.Errno) {
+	accessMode := flags & syscall.O_ACCMODE
+
+	// Read-only opens bypass MFS's desclock by creating a DagReader
+	// directly from the current DAG node. MFS holds desclock.RLock
+	// for the lifetime of a read descriptor, which blocks any
+	// concurrent write open on the same file (desclock.Lock). Tools
+	// like rsync --inplace open the destination for reading and
+	// writing simultaneously, deadlocking on MFS's lock. Creating
+	// a DagReader here avoids the lock entirely: the reader gets a
+	// snapshot of the file at open time, and writers proceed through
+	// MFS independently. Cfg.DAG is required by NewDir.
+	if accessMode == syscall.O_RDONLY {
+		nd, err := fi.MFSFile().GetNode()
+		if err != nil {
+			return nil, 0, fs.ToErrno(err)
+		}
+		r, err := uio.NewDagReader(ctx, nd, fi.Cfg.DAG)
+		if err != nil {
+			return nil, 0, fusemnt.ReadErrno(err)
+		}
+		return &roFileHandle{r: r}, fuse.FOPEN_KEEP_CACHE, 0
+	}
+
+	mfsFlags := mfs.Flags{
+		Read:  accessMode == syscall.O_RDONLY || accessMode == syscall.O_RDWR,
+		Write: accessMode == syscall.O_WRONLY || accessMode == syscall.O_RDWR,
+		Sync:  true,
+	}
+	fd, err := fi.MFSFile().Open(fi.Cfg.openContext(), mfsFlags)
+	if err != nil {
+		return nil, 0, fs.ToErrno(err)
+	}
+
+	if flags&syscall.O_TRUNC != 0 {
+		if !mfsFlags.Write {
+			fd.Close()
+			log.Error("tried to open a readonly file with truncate")
+			return nil, 0, syscall.ENOTSUP
+		}
+		if err := fd.Truncate(0); err != nil {
+			fd.Close()
+			return nil, 0, fs.ToErrno(err)
+		}
+	}
+	// O_APPEND is handled in FileHandle.Write by seeking to end.
+
+	if mfsFlags.Write && fi.Cfg.StoreMtime {
+		if err := fi.MFSFile().SetModTime(time.Now()); err != nil {
+			fd.Close()
+			return nil, 0, fs.ToErrno(err)
+		}
+	}
+
+	return &FileHandle{inode: fi.EmbeddedInode(), fd: fd, cfg: fi.Cfg, appendMode: flags&syscall.O_APPEND != 0}, 0, 0
+}
+
+// Setattr handles chmod, mtime changes (touch), and ftruncate.
+//
+// Mode and mtime are stored as UnixFS optional metadata.
+// The UnixFS spec supports all 12 permission bits, but boxo's MFS
+// layer exposes only the lower 9 (ugo-rwx); setuid/setgid/sticky
+// are silently dropped. FUSE mounts are always nosuid so these
+// bits would have no execution effect anyway.
+// See https://specs.ipfs.tech/unixfs/#dag-pb-optional-metadata
+//
+// With hanwen/go-fuse, the kernel passes the open file handle (fh) when
+// the caller uses ftruncate(fd, size). This lets us truncate through
+// the existing write descriptor without opening a second one. For
+// truncate(path, size) without a handle, a temporary descriptor is
+// opened; this may block if another writer holds MFS's desclock.
+func (fi *FileInode) Setattr(ctx context.Context, fh fs.FileHandle, in *fuse.SetAttrIn, out *fuse.AttrOut) syscall.Errno {
+	defer fi.Cfg.pinLock(ctx)()
+	if sz, ok := in.GetSize(); ok {
+		if f, ok := fh.(*FileHandle); ok {
+			// ftruncate(fd, size): use the existing write descriptor.
+			f.mu.Lock()
+			err := f.fd.Truncate(int64(sz))
+			f.mu.Unlock()
+			if err != nil {
+				return fs.ToErrno(err)
+			}
+		} else {
+			// truncate(path, size) without an open file descriptor.
+			// Open a temporary write descriptor, truncate, flush, and
+			// close. This may block if another writer holds MFS's
+			// desclock; the FUSE kernel timeout (30s) bounds the wait.
+			// This descriptor is transient (truncate, flush, close below),
+			// so the per-operation context bounds it.
+			fd, err := fi.MFSFile().Open(ctx, mfs.Flags{Write: true, Sync: true})
+			if err != nil {
+				return fs.ToErrno(err)
+			}
+			if err := fd.Truncate(int64(sz)); err != nil {
+				fd.Close()
+				return fs.ToErrno(err)
+			}
+			if err := fd.Flush(); err != nil {
+				fd.Close()
+				return fs.ToErrno(err)
+			}
+			if err := fd.Close(); err != nil {
+				return fs.ToErrno(err)
+			}
+		}
+	}
+	if mode, ok := in.GetMode(); ok && fi.Cfg.StoreMode {
+		if err := fi.MFSFile().SetMode(files.UnixPermsToModePerms(mode)); err != nil {
+			return fs.ToErrno(err)
+		}
+	}
+	if mtime, ok := in.GetMTime(); ok && fi.Cfg.StoreMtime {
+		if err := fi.MFSFile().SetModTime(mtime); err != nil {
+			return fs.ToErrno(err)
+		}
+	}
+	// Fill the response attrs so the kernel doesn't cache stale zero
+	// values until AttrTimeout expires. Matches Dir.Setattr behavior.
+	fi.fillAttr(&out.Attr)
+	return 0
+}
+
+func (fi *FileInode) Listxattr(_ context.Context, dest []byte) (uint32, syscall.Errno) {
+	data := []byte(fusemnt.XattrCID + "\x00")
+	if len(dest) == 0 {
+		return uint32(len(data)), 0
+	}
+	if len(dest) < len(data) {
+		return 0, syscall.ERANGE
+	}
+	return uint32(copy(dest, data)), 0
+}
+
+func (fi *FileInode) Getxattr(_ context.Context, attr string, dest []byte) (uint32, syscall.Errno) {
+	if attr == fusemnt.XattrCIDDeprecated {
+		log.Errorf("xattr %q is deprecated, use %q instead", fusemnt.XattrCIDDeprecated, fusemnt.XattrCID)
+		attr = fusemnt.XattrCID
+	}
+	if attr != fusemnt.XattrCID {
+		return 0, fs.ENOATTR
+	}
+	nd, err := fi.MFSFile().GetNode()
+	if err != nil {
+		return 0, fs.ToErrno(err)
+	}
+	data := []byte(nd.Cid().String())
+	if len(dest) == 0 {
+		return uint32(len(data)), 0
+	}
+	if len(dest) < len(data) {
+		return 0, syscall.ERANGE
+	}
+	return uint32(copy(dest, data)), 0
+}
+
+// FileHandle wraps an MFS file descriptor for FUSE operations.
+// All methods are serialized by mu because the FUSE server dispatches
+// each request in its own goroutine and the underlying DagModifier
+// is not safe for concurrent use.
+type FileHandle struct {
+	inode      *fs.Inode // back-pointer for kernel cache invalidation
+	fd         mfs.FileDescriptor
+	cfg        *Config // for the pin lock on commit (Flush/Fsync/Release)
+	mu         sync.Mutex
+	appendMode bool // O_APPEND: writes always go to end of file
+}
+
+func (fh *FileHandle) Read(ctx context.Context, dest []byte, off int64) (fuse.ReadResult, syscall.Errno) {
+	fh.mu.Lock()
+	defer fh.mu.Unlock()
+
+	if _, err := fh.fd.Seek(off, io.SeekStart); err != nil {
+		return nil, fs.ToErrno(err)
+	}
+
+	size, err := fh.fd.Size()
+	if err != nil {
+		return nil, fs.ToErrno(err)
+	}
+
+	n := min(len(dest), int(size-off))
+	if n <= 0 {
+		return fuse.ReadResultData(nil), 0
+	}
+	got, err := fh.fd.CtxReadFull(ctx, dest[:n])
+	if err != nil {
+		return nil, fusemnt.ReadErrno(err)
+	}
+	return fuse.ReadResultData(dest[:got]), 0
+}
+
+func (fh *FileHandle) Write(_ context.Context, data []byte, off int64) (uint32, syscall.Errno) {
+	fh.mu.Lock()
+	defer fh.mu.Unlock()
+
+	if fh.appendMode {
+		// O_APPEND: the kernel may send offset 0, but POSIX says
+		// writes must go to the end of the file.
+		if _, err := fh.fd.Seek(0, io.SeekEnd); err != nil {
+			return 0, fs.ToErrno(err)
+		}
+		n, err := fh.fd.Write(data)
+		if err != nil {
+			return 0, fs.ToErrno(err)
+		}
+		return uint32(n), 0
+	}
+
+	n, err := fh.fd.WriteAt(data, off)
+	if err != nil {
+		return 0, fs.ToErrno(err)
+	}
+	return uint32(n), 0
+}
+
+// Flush persists buffered writes to the DAG and invalidates the
+// kernel's cached attrs so the next stat sees the updated size.
+//
+// ctx does not gate the flush itself: the MFS flush cannot be safely
+// canceled mid-operation, and abandoning it would leak a background
+// goroutine that races with the subsequent Release. It is passed to
+// the pin lock like the other handlers.
+//
+// Cache invalidation happens here (in addition to Release) because
+// the kernel calls Flush synchronously inside close() but sends
+// Release asynchronously after close() returns. Without this, a
+// stat() immediately after close() could see stale cached attrs.
+func (fh *FileHandle) Flush(ctx context.Context) syscall.Errno {
+	defer fh.cfg.pinLock(ctx)()
+	fh.mu.Lock()
+	defer fh.mu.Unlock()
+
+	err := fh.fd.Flush()
+	if fh.inode != nil {
+		_ = fh.inode.NotifyContent(0, 0)
+	}
+	return fs.ToErrno(err)
+}
+
+// Release closes the descriptor and invalidates the kernel's cached
+// content and attrs so readers opening the same path see the new data.
+// Invalidation happens here (not in Flush) because fd.Close commits
+// the final DAG node; Flush alone may not have the final size yet.
+func (fh *FileHandle) Release(ctx context.Context) syscall.Errno {
+	defer fh.cfg.pinLock(ctx)()
+	fh.mu.Lock()
+	defer fh.mu.Unlock()
+
+	err := fh.fd.Close()
+	if fh.inode != nil {
+		_ = fh.inode.NotifyContent(0, 0)
+	}
+	return fs.ToErrno(err)
+}
+
+// Fsync flushes the write buffer through the open file descriptor and
+// invalidates the kernel's cached attrs and content for this inode.
+// Editors (vim, emacs) and databases call fsync after writing to
+// ensure data reaches persistent storage; a fresh reader on the same
+// path must see the synced bytes immediately, not the size the kernel
+// cached from the initial Create response.
+func (fh *FileHandle) Fsync(ctx context.Context, _ uint32) syscall.Errno {
+	defer fh.cfg.pinLock(ctx)()
+	fh.mu.Lock()
+	defer fh.mu.Unlock()
+
+	err := fh.fd.Flush()
+	if fh.inode != nil {
+		_ = fh.inode.NotifyContent(0, 0)
+	}
+	return fs.ToErrno(err)
+}
+
+// Symlink is the FUSE adapter for UnixFS TSymlink nodes on writable mounts.
+// Target is resolved once at Lookup/Create time and never changes
+// (POSIX symlinks are immutable; changing the target requires unlink + symlink).
+type Symlink struct {
+	fs.Inode
+	Target  string
+	mfsFile atomic.Pointer[mfs.File] // backing MFS node for mtime persistence
+	Cfg     *Config
+}
+
+func newSymlink(target string, mf *mfs.File, cfg *Config) *Symlink {
+	s := &Symlink{Target: target, Cfg: cfg}
+	s.mfsFile.Store(mf)
+	return s
+}
+
+// MFSFile returns the MFS file this symlink currently stands for. It is nil
+// when the entry was created without one.
+func (s *Symlink) MFSFile() *mfs.File { return s.mfsFile.Load() }
+
+// rebind points this symlink at another MFS file. See Dir.Rename.
+func (s *Symlink) rebind(mf *mfs.File) { s.mfsFile.Store(mf) }
+
+func (s *Symlink) Readlink(_ context.Context) ([]byte, syscall.Errno) {
+	return []byte(s.Target), 0
+}
+
+func (s *Symlink) fillAttr(a *fuse.Attr) {
+	a.Mode = uint32(fusemnt.SymlinkMode.Perm())
+	a.Nlink = fusemnt.Nlink
+	a.Size = uint64(len(s.Target))
+	a.Blocks = fusemnt.SizeToStatBlocks(a.Size)
+	a.Blksize = s.Cfg.Blksize
+	if s.MFSFile() != nil {
+		if t, err := s.MFSFile().ModTime(); err == nil && !t.IsZero() {
+			a.SetTimes(nil, &t, nil)
+		}
+	}
+}
+
+func (s *Symlink) Getattr(_ context.Context, _ fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
+	s.fillAttr(&out.Attr)
+	return 0
+}
+
+// Setattr handles mtime changes on symlinks.
+// Tools like rsync call lutimes on symlinks after creating them and
+// treat ENOTSUP as an error. Every major FUSE filesystem (gocryptfs,
+// rclone, sshfs, s3fs) implements Setattr on symlinks for this reason.
+//
+// Mode is always 0777 per POSIX convention (access control uses the
+// target's mode), so chmod requests are silently accepted but not stored.
+func (s *Symlink) Setattr(_ context.Context, _ fs.FileHandle, in *fuse.SetAttrIn, out *fuse.AttrOut) syscall.Errno {
+	if s.MFSFile() != nil {
+		if mtime, ok := in.GetMTime(); ok && s.Cfg.StoreMtime {
+			if err := s.MFSFile().SetModTime(mtime); err != nil {
+				return fs.ToErrno(err)
+			}
+		}
+	}
+	s.fillAttr(&out.Attr)
+	return 0
+}
+
+// roFileHandle is a read-only file handle backed by a DagReader.
+// Used for O_RDONLY opens to bypass MFS's desclock (see FileInode.Open).
+type roFileHandle struct {
+	r  uio.DagReader
+	mu sync.Mutex
+}
+
+func (fh *roFileHandle) Read(ctx context.Context, dest []byte, off int64) (fuse.ReadResult, syscall.Errno) {
+	fh.mu.Lock()
+	defer fh.mu.Unlock()
+
+	if _, err := fh.r.Seek(off, io.SeekStart); err != nil {
+		return nil, fs.ToErrno(err)
+	}
+	n, err := fh.r.CtxReadFull(ctx, dest)
+	switch err {
+	case nil, io.EOF, io.ErrUnexpectedEOF:
+	default:
+		return nil, fusemnt.ReadErrno(err)
+	}
+	return fuse.ReadResultData(dest[:n]), 0
+}
+
+func (fh *roFileHandle) Release(_ context.Context) syscall.Errno {
+	fh.mu.Lock()
+	defer fh.mu.Unlock()
+
+	return fs.ToErrno(fh.r.Close())
+}
+
+// SymlinkTarget extracts the symlink target from an MFS file, or
+// returns "" if the file is not a TSymlink node. MFS represents
+// symlinks as *mfs.File, so the DAG node's UnixFS type must be checked.
+func SymlinkTarget(f *mfs.File) string {
+	nd, err := f.GetNode()
+	if err != nil {
+		return ""
+	}
+	fsn, err := ft.ExtractFSNode(nd)
+	if err != nil {
+		return ""
+	}
+	if fsn.Type() != ft.TSymlink {
+		return ""
+	}
+	return string(fsn.Data())
+}
+
+// Interface compliance checks.
+var (
+	_ fs.NodeGetattrer   = (*Dir)(nil)
+	_ fs.NodeStatfser    = (*Dir)(nil)
+	_ fs.NodeSetattrer   = (*Dir)(nil)
+	_ fs.NodeLookuper    = (*Dir)(nil)
+	_ fs.NodeReaddirer   = (*Dir)(nil)
+	_ fs.NodeMkdirer     = (*Dir)(nil)
+	_ fs.NodeUnlinker    = (*Dir)(nil)
+	_ fs.NodeRmdirer     = (*Dir)(nil)
+	_ fs.NodeRenamer     = (*Dir)(nil)
+	_ fs.NodeCreater     = (*Dir)(nil)
+	_ fs.NodeSymlinker   = (*Dir)(nil)
+	_ fs.NodeGetxattrer  = (*Dir)(nil)
+	_ fs.NodeListxattrer = (*Dir)(nil)
+
+	_ fs.NodeGetattrer   = (*FileInode)(nil)
+	_ fs.NodeOpener      = (*FileInode)(nil)
+	_ fs.NodeSetattrer   = (*FileInode)(nil)
+	_ fs.NodeGetxattrer  = (*FileInode)(nil)
+	_ fs.NodeListxattrer = (*FileInode)(nil)
+
+	_ fs.NodeGetattrer  = (*Symlink)(nil)
+	_ fs.NodeSetattrer  = (*Symlink)(nil)
+	_ fs.NodeReadlinker = (*Symlink)(nil)
+
+	_ fs.FileReader   = (*FileHandle)(nil)
+	_ fs.FileWriter   = (*FileHandle)(nil)
+	_ fs.FileFlusher  = (*FileHandle)(nil)
+	_ fs.FileReleaser = (*FileHandle)(nil)
+	_ fs.FileFsyncer  = (*FileHandle)(nil)
+
+	_ fs.FileReader   = (*roFileHandle)(nil)
+	_ fs.FileReleaser = (*roFileHandle)(nil)
+)

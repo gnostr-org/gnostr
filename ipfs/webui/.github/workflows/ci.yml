@@ -1,0 +1,294 @@
+name: ci
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    tags:
+      - '*'
+  pull_request:
+    branches:
+      - main
+
+env:
+  XDG_CACHE_HOME: ${{ github.workspace }}/.cache
+
+jobs:
+  build:
+    name: build
+    uses: ./.github/workflows/build.yml
+
+  test-unit:
+    name: 'test:unit'
+    uses: ./.github/workflows/test-unit.yml
+    secrets: inherit
+
+  publishPreview:
+    name: publish preview
+    needs: build
+    if: github.actor != 'dependabot[bot]'
+    environment: Deploy
+    runs-on: ubuntu-latest
+    outputs:
+      cid: ${{ steps.car.outputs.cid }}
+      car-artifact-name: ${{ steps.car.outputs.car-artifact-name }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Cache build output
+        uses: actions/cache@v5
+        id: build-cache
+        with:
+          path: build
+          # Build hash should be based on runner.os, src files, and dependencies used.
+          key: ${{ runner.os }}-build-${{ hashFiles('package.json', 'package-lock.json', 'public', 'src/**', '*.js', '*.ts') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ hashFiles('package.json', 'package-lock.json', 'public', 'src/**', '*.js', '*.ts') }}
+
+      - name: Fix DNS resolver
+        run: |
+          # fix resolv - DNS provided by Github is unreliable for DNSLik/dnsaddr
+          sudo sed -i -e 's/nameserver 127.0.0.*/nameserver 1.1.1.1/g' /etc/resolv.conf
+
+      # the CAR file is the canonical build output: uploaded as a run artifact here,
+      # attached to the GitHub Release by the release job, and consumed by
+      # deploy-release.yml
+      - name: Merkleize build/ into a CAR file
+        id: car
+        uses: ipfs/ipfs-deploy-action@a18ef08993e485391c5879770d9bc9f1143653ce # v2.0.0
+        with:
+          path-to-deploy: build
+          car-file-name: ipfs-webui_${{ github.sha }}.car
+          # keep the historical CID recipe (`ipfs add --cid-version 1`) rather than
+          # the action's modern default profile, so the CID is unchanged by this switch
+          cid-profile: ''
+          ipfs-add-options: '--cid-version 1'
+          github-token: ${{ github.token }}
+
+      - uses: ipfs/download-ipfs-distribution-action@v2
+        if: github.repository == 'ipfs/ipfs-webui' && github.ref == 'refs/heads/main'
+        with:
+          name: ipfs-cluster-ctl
+
+      # best-effort availability on the public IPFS network; the CAR artifact and
+      # release asset are the canonical copies, so a cluster outage must never
+      # block dev publishing or releases
+      - name: Pin to ipfs-websites.collab.ipfscluster.io
+        # only pin for main commits
+        if: github.repository == 'ipfs/ipfs-webui' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        timeout-minutes: 5 # pin should takes a few seconds, 5 min is a hard ceiling
+        run: |
+          echo "Avoid doing initial upload to am6-1 node with experimental pebble datastore"
+          echo '127.0.0.1 collab-cluster-am6-1.cluster.dwebops.net' | sudo tee -a /etc/hosts
+
+          # run in a loop and retry until GA timeout-minutes hits
+          attempt=1
+          while true; do
+            echo "Attempt #$attempt"
+
+            # pinning <100MiB file should not take more than few seconds
+            timeout 1m ipfs-cluster-ctl --enc=json \
+                --host "${CLUSTER_HOST}" \
+                --basic-auth "${CLUSTER_USER}:${CLUSTER_PASSWORD}" \
+                add --format car --local \
+                --name "${PIN_NAME}" \
+                ipfs-webui_${{ github.sha }}.car && {
+                  echo "Pin succeeded on attempt #$attempt"
+                  exit 0
+                }
+
+                echo "Attempt #$attempt failed, retrying in 2 seconds..."
+                attempt=$((attempt + 1))
+                # if first attept failed, retry with debug enabled
+                if [[ $counter -eq 2 ]]; then
+                  export GOLOG_LOG_LEVEL='debug'
+                fi
+                sleep 2
+          done
+        env:
+          CLUSTER_HOST: "/dnsaddr/ipfs-websites.collab.ipfscluster.io"
+          CLUSTER_USER: ${{ secrets.CLUSTER_USER }}
+          CLUSTER_PASSWORD: ${{ secrets.CLUSTER_PASSWORD }}
+          PIN_NAME: "ipfs-webui@${{ github.sha }}"
+
+      # dnslink-dnsimple requires go
+      - uses: actions/setup-go@v6
+        if: github.repository == 'ipfs/ipfs-webui' && github.ref == 'refs/heads/main'
+        with:
+          go-version-file: '.tool-versions'
+
+      - name: Set up dnslink updater
+        if: github.repository == 'ipfs/ipfs-webui' && github.ref == 'refs/heads/main'
+        run: go install github.com/ipfs/dnslink-dnsimple@v0.1.0
+
+      # dev dnslink is updated on each main branch update
+      - run: dnslink-dnsimple --domain ipfs.tech --record _dnslink.dev.webui --link /ipfs/${{ steps.car.outputs.cid }}
+        if: github.repository == 'ipfs/ipfs-webui' && github.ref == 'refs/heads/main'
+        env:
+          DNSIMPLE_TOKEN: ${{ secrets.DNSIMPLE_TOKEN }}
+
+      # dev HTTP hosting: mirror build/ to the repo behind https://dev.webui.ipfs.io (GitHub Pages).
+      # force_orphan keeps that repo at a single commit; cname is required on every push because
+      # the orphan rewrite would otherwise drop the CNAME file that stores the custom domain.
+      - name: Publish build to ipfs/dev.webui.ipfs.io
+        if: github.repository == 'ipfs/ipfs-webui' && github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0
+        with:
+          deploy_key: ${{ secrets.DEV_WEBUI_PAGES_DEPLOY_KEY }}
+          external_repository: ipfs/dev.webui.ipfs.io
+          publish_branch: gh-pages
+          publish_dir: ./build
+          cname: dev.webui.ipfs.io
+          force_orphan: true
+          full_commit_message: 'ipfs-webui@${{ github.sha }} /ipfs/${{ steps.car.outputs.cid }}'
+
+  test-e2e:
+    name: 'test:e2e'
+    uses: ./.github/workflows/test-e2e.yml
+    secrets: inherit
+
+  test-storybook:
+    name: 'test:storybook'
+    uses: ./.github/workflows/test-storybook.yml
+    secrets: inherit
+
+  # consolidated lint job: eslint, typecheck, depcheck
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: '.tool-versions'
+          cache: 'npm'
+
+      - name: Cache node_modules
+        uses: actions/cache@v5
+        id: npm-cache
+        with:
+          path: node_modules
+          key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json', 'patches/**', '.tool-versions') }}
+          restore-keys: |
+            npm-${{ runner.os }}-
+
+      - name: Install dependencies
+        if: steps.npm-cache.outputs.cache-hit != 'true'
+        run: npm ci --prefer-offline --no-audit --progress=false
+
+      - name: ESLint
+        id: eslint
+        run: npm run eslint
+        continue-on-error: true
+
+      - name: TypeCheck
+        id: typecheck
+        uses: gozala/typescript-error-reporter-action@v1.0.9
+        continue-on-error: true
+        with:
+          project: tsconfig.json
+
+      - name: TypeCheck (userland)
+        id: typecheck-userland
+        run: npm run typecheck
+        continue-on-error: true
+
+      - name: DepCheck
+        id: depcheck
+        run: npm run dep-check
+        continue-on-error: true
+
+      - name: Check for failures
+        if: steps.eslint.outcome == 'failure' || steps.typecheck.outcome == 'failure' || steps.typecheck-userland.outcome == 'failure' || steps.depcheck.outcome == 'failure'
+        run: |
+          echo "Lint failures detected:"
+          echo "  eslint: ${{ steps.eslint.outcome }}"
+          echo "  typecheck: ${{ steps.typecheck.outcome }}"
+          echo "  typecheck-userland: ${{ steps.typecheck-userland.outcome }}"
+          echo "  depcheck: ${{ steps.depcheck.outcome }}"
+          exit 1
+
+  # creates a GitHub Release with changelog and CAR file when ci.yml is manually
+  # dispatched on main. Publishing the release triggers deploy-release.yml, which
+  # deploys webui.ipfs.io (GitHub Pages) and updates the production dnslink, so a
+  # failed or skipped release never changes what users see. The release commit
+  # itself lands with [skip ci] and triggers nothing.
+  release:
+    name: 'Run semantic release'
+    runs-on: ubuntu-latest
+    needs: [build, publishPreview, lint, test-e2e, test-unit, test-storybook]
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Cache bigger downloads
+        uses: actions/cache@v5
+        id: cache
+        with:
+          path: ${{ github.workspace }}/.cache
+          key: ${{ runner.os }}-${{ hashFiles('package.json', 'package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ hashFiles('package.json', 'package-lock.json') }}
+            ${{ runner.os }}-
+
+      - name: Cache build dir
+        uses: actions/cache@v5
+        id: build-cache
+        with:
+          path: build
+          key: ${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-${{ github.sha }}
+
+      # This is needed for custom-release-notes-generator.js to inject the CID in the release notes
+      - name: Write CID to tmp file
+        run: |
+          echo ${{ needs.publishPreview.outputs.cid }} > .cid
+
+      - name: Setup node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: '.tool-versions'
+          cache: 'npm'
+
+      - name: Cache node_modules
+        uses: actions/cache@v5
+        id: npm-cache
+        with:
+          path: node_modules
+          key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json', 'patches/**', '.tool-versions') }}
+          restore-keys: |
+            npm-${{ runner.os }}-
+
+      - name: Install dependencies
+        if: steps.npm-cache.outputs.cache-hit != 'true'
+        run: npm ci --prefer-offline --no-audit --progress=false
+
+      - name: Download CAR artifact
+        uses: actions/download-artifact@v7
+        with:
+          name: ${{ needs.publishPreview.outputs.car-artifact-name }}
+
+      - name: Dry-run semantic release
+        if: github.ref != 'refs/heads/main'
+        run: |
+          git config user.name "ipfs-gui-bot"
+          git config user.email "108953096+ipfs-gui-bot@users.noreply.github.com"
+          npx semantic-release --ci --dry-run -b ${{ github.ref }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      # Update the version (npm version [major|minor|patch])
+      - name: Run semantic release
+        if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
+        run: |
+          git config user.name "ipfs-gui-bot"
+          git config user.email "108953096+ipfs-gui-bot@users.noreply.github.com"
+          npx semantic-release --ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
