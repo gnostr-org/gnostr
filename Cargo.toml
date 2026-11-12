@@ -80,7 +80,6 @@ members = [
     "tui",
     "types",
     "web",
-    "xcode/connectivity/rust",
 ]
 exclude = ["vendor/**"]
 
