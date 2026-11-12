@@ -1,0 +1,25 @@
+---
+source: src/gitui/tests/branch.rs
+expression: ctx.redact_buffer()
+---
+▌Branches                                                                       |
+▌  main                                                                         |
+▌* merged                                                                       |
+▌  unmerged                                                                     |
+                                                                                |
+ Remote origin                                                                  |
+   origin/HEAD                                                                  |
+   origin/main                                                                  |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+────────────────────────────────────────────────────────────────────────────────|
+$ git checkout merged                                                           |
+Switched to branch 'merged'                                                     |
+styles_hash: a0f9f5f991757004

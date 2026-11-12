@@ -1,0 +1,26 @@
+---
+source: asyncgit/src/lib/tui/git/tests/log.rs
+assertion_line: 48
+expression: ctx.redact_buffer()
+---
+▌6c08cf7 add second commit                                                      |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+styles_hash: 48d19316a51368e3

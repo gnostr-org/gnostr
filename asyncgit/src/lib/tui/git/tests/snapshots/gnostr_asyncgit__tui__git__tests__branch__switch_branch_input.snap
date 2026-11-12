@@ -1,0 +1,26 @@
+---
+source: asyncgit/src/lib/tui/git/tests/branch.rs
+assertion_line: 24
+expression: ctx.redact_buffer()
+---
+▌Branches                                                                       |
+▌  main                                                                         |
+▌* merged                                                                       |
+▌  unmerged                                                                     |
+                                                                                |
+ Remote origin                                                                  |
+   origin/HEAD                                                                  |
+   origin/main                                                                  |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+────────────────────────────────────────────────────────────────────────────────|
+$ git checkout merged                                                           |
+Switched to branch 'merged'                                                     |
+styles_hash: a0f9f5f991757004

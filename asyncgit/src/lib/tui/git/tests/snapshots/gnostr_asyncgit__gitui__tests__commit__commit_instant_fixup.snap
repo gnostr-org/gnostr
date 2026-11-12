@@ -1,0 +1,25 @@
+---
+source: src/gitui/tests/commit.rs
+expression: ctx.redact_buffer()
+---
+ On branch main                                                                 |
+                                                                                |
+ Recent commits                                                                 |
+ 108474f main modify instant_fixup.txt                                          |
+▌f05ea1d add instant_fixup.txt                                                  |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+────────────────────────────────────────────────────────────────────────────────|
+$ git commit --fixup b6eadadbf0b746c00135b317fab80d9801c2d7bb                   |
+[main aa71b64] fixup! modify instant_fixup.txt                                  |
+ Author: Author Name <author@email.com>                                         |
+ 1 file changed, 1 insertion(+), 1 deletion(-)                                  |
+$ git rebase -i -q --autostash --keep-empty --autosquash b6eadadbf0b746c00135b31|
+styles_hash: 775b3fc3b27812e8

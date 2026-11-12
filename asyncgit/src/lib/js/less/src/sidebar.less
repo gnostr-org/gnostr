@@ -1,0 +1,343 @@
+/*************************************************
+* ---- Sidebar ----
+*/
+
+.w2ui-sidebar {
+    position: relative;
+    cursor: default;
+    overflow: hidden;
+    background-color: #fbfbfb;
+    .box-sizing(border-box);
+
+    * {
+        .box-sizing;
+    }
+
+    > div {
+        position: absolute;
+        overflow: hidden;
+    }
+
+    .w2ui-sidebar-top {
+        position: absolute;
+        z-index: 2;
+        top: 0px;
+        left: 0px;
+        right: 0px;
+
+        .w2ui-flat-left, .w2ui-flat-right {
+            position: absolute;
+            right: 2px;
+            top: 2px;
+            height: 24px;
+            padding: 5px;
+            border-radius: 2px;
+            background-size: 16px 12px;
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-color: #fbfbfb;
+            &:hover {
+                background-color: #f1f1f1;
+            }
+        }
+        .w2ui-flat-left {
+            left: auto;
+            width: 25px;
+            background-image: @image-less;
+        }
+        .w2ui-flat-right {
+            left: 2px;
+            width: auto;
+            background-image: @image-more;
+        }
+    }
+
+    .w2ui-sidebar-bottom {
+        position: absolute;
+        z-index: 2;
+        bottom: 0px;
+        left: 0px;
+        right: 0px;
+    }
+
+    .w2ui-sidebar-body {
+        position: absolute;
+        z-index: 1;
+        overflow: auto;
+        top: 0px;
+        bottom: 0px;
+        left: 0px;
+        right: 0px;
+        padding: 2px 0px;
+        .user-select;
+        .w2ui-node {
+            position: relative;
+            border-radius: 4px;
+            margin: 0px 3px;
+            padding: 1px 0px;
+            border: 1px solid transparent;
+            .w2ui-node-text{
+                color: black;
+                text-shadow: 0px 0px 0px #fff;
+                pointer-events: none;
+                &:hover {
+                    color: inherit;
+                }
+            }
+            .w2ui-node-image > span {
+                color: #737485;
+            }
+
+            .w2ui-node-handle {
+                display: inline-block;
+                padding: 0px;
+                margin: 0px;
+                height: 100%;
+                position: absolute;
+            }
+
+            &:hover {
+                background-color: #f1f1f1;
+            }
+
+            // font icon default
+            .w2ui-node-image {
+                width: 22px;
+                text-align: center;
+                pointer-events: none;
+                > span {
+                    color: #888;
+                }
+            }
+
+            &.w2ui-disabled,
+            &.w2ui-disabled:hover {
+                background: transparent;
+
+                .w2ui-node-text,
+                .w2ui-node-image,
+                .w2ui-node-image > span {
+                    .opacity(0.4);
+                    color: black;
+                    text-shadow: 0px 0px 0px #fff;
+                }
+            }
+
+            // hide badges when editing nodes
+            &.w2ui-editing .w2ui-node-badge {
+                display: none;
+            }
+
+            &.w2ui-reorder-empty {
+                border: 1px dashed silver;
+                background-color: #fbfcfe;
+            }
+            &.w2ui-ghost {
+                position: absolute;
+                z-index: 999999;
+                pointer-events: none;
+                width: calc(100% - 4px);
+                opacity: 0.8;
+                background-color: #f3f3f3;
+                border-top: 1px dotted silver;
+                border-bottom: 1px dotted silver;
+                > * {
+                    pointer-events: none;
+                }
+            }
+
+            // enable pointer events for all inputs inside node
+            input, button {
+                pointer-events: auto;
+            }
+        }
+
+        .w2ui-ghost-line {
+            position: absolute;
+            z-index: 999999;
+            pointer-events: none;
+            width: calc(100% - 4px);
+            background-color: #82a6ff;
+            height: 2px;
+        }
+
+        .w2ui-selected,
+        .w2ui-selected:hover {
+            background-color: #f3f5ff;
+            position: relative;
+            border: 1px solid #dee1ff;
+
+            .w2ui-node-text,
+            .w2ui-node-image,
+            .w2ui-node-image > span {
+                color: inherit;
+                text-shadow: 0px 0px 0px #fff;
+            }
+        }
+
+        .w2ui-selected:before {
+            content: "";
+            border: 1px dashed transparent;
+            border-radius: 4px;
+            position: absolute;
+            top: -1px;
+            bottom: -1px;
+            left: -1px;
+            right: -1px;
+            pointer-events: none;
+        }
+
+        .w2ui-node-text {
+            white-space: nowrap;
+            padding: 5px 0px 5px 3px;
+            margin: 1px 0px 1px 22px;
+            position: relative;
+            z-index: 1;
+            font-size: 12px;
+            &.no-icon {
+                margin-left: 0px;
+            }
+        }
+
+        .w2ui-node-group {
+            white-space: nowrap;
+            overflow: hidden;
+            padding: 10px 0px 10px 10px;
+            margin: 0px;
+            cursor: default;
+            color: #6a5e88;
+            background-color: transparent;
+
+            :nth-child(1) {
+                /* show / hide link */
+                margin-right: 10px;
+                float: right;
+                color: transparent;
+            }
+
+            :nth-child(2) {
+                /* title text */
+                font-weight: normal;
+                text-transform: uppercase;
+            }
+        }
+
+        .w2ui-node-sub {
+            overflow: hidden;
+            .w2ui-reorder-empty-sub {
+                border: 1px dashed silver;
+                background-color: #fbfcfe;
+                height: calc(100% - 4px);
+                margin: 2px 4px;
+            }
+        }
+
+        .w2ui-node-data {
+            padding: 2px;
+
+            .w2ui-node-image {
+                padding: 4px 0px 0px 0px;
+                float: left;
+                // for font-awesome icons
+                & > span {
+                    font-size: 16px;
+                    color: #737485;
+                    text-shadow: 0px 0px 0px #fff;
+                }
+                &.w2ui-icon {
+                    margin-top: 3px;
+                }
+            }
+
+            .w2ui-node-badge {
+                display: flex;
+                flex-direction: row;
+                float: right;
+                width: auto;
+                padding: 2px;
+                margin: 3px 4px -2px 0;
+                color: #666;
+                text-shadow: 1px 1px 0px #FFF;
+                position: relative;
+                z-index: 2;
+                &.w2ui-node-count {
+                    padding: 2px 7px;
+                    border: 1px solid #F6FCF4;
+                    border-radius: 20px;
+                    box-shadow: 0px 0px 2px #474545;
+                    background-color: #F2F8F0;
+                    margin-right: 0px !important;
+                }
+            }
+
+            .w2ui-collapsed,
+            .w2ui-expanded {
+                float: right;
+                width: 15px;
+                height: 25px;
+                position: relative;
+                z-index: 2;
+                padding-left: 5px;
+                border-radius: 4px;
+                &:hover {
+                    background-color: #e1e1e1
+                }
+                &.w2ui-left-toggle {
+                    float: left;
+                    margin-left: -14px;
+                }
+                span {
+                    border-color: transparent;
+                    background-color: transparent;
+                    box-shadow: none;
+                    padding: 2px 5px;
+                    border-radius: 0px;
+                    &:after {
+                        content: "";
+                        position: absolute;
+                        border-left: 5px solid #808080;
+                        border-top: 5px solid transparent;
+                        border-bottom: 5px solid transparent;
+                        transform: rotateZ(-90deg);
+                        pointer-events: none;
+                        margin-left: -4px;
+                        margin-top: 7px;
+                    }
+                    &:hover {
+                        border-color: transparent;
+                        background-color: transparent;
+                    }
+                }
+            }
+
+            .w2ui-collapsed span:after {
+                transform: rotateZ(90deg);
+            }
+         }
+
+        // for flat sidebar
+        .w2ui-node-flat {
+            min-height: 32px;
+            margin-bottom: 4px;
+            .w2ui-node-data {
+                display: block;
+                padding: 4px 2px;
+                text-align: center;
+            }
+            .w2ui-node-image {
+                float: none;
+                text-align: center;
+                width: auto;
+                padding: 1px 0px;
+                & > span {
+                    font-size: 16px;
+                    color: #737485;
+                    text-shadow: 0px 0px 0px #fff;
+                }
+                &.w2ui-icon {
+                    width: 21px;
+                }
+            }
+        }
+     }
+}

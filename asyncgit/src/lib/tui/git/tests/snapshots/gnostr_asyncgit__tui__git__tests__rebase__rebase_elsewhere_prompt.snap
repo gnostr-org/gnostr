@@ -1,0 +1,26 @@
+---
+source: asyncgit/src/lib/tui/git/tests/rebase.rs
+assertion_line: 19
+expression: ctx.redact_buffer()
+---
+▌On branch other-branch                                                         |
+                                                                                |
+ Recent commits                                                                 |
+ b66a0bf other-branch origin/main add initial-file                              |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+────────────────────────────────────────────────────────────────────────────────|
+? Rebase onto: ›                                                                |
+styles_hash: ecb6e3980ac15247

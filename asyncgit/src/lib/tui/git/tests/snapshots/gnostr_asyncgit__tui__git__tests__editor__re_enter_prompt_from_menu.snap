@@ -1,0 +1,26 @@
+---
+source: asyncgit/src/lib/tui/git/tests/editor.rs
+assertion_line: 79
+expression: ctx.redact_buffer()
+---
+▌No branch                                                                      |
+                                                                                |
+ Recent commits                                                                 |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+────────────────────────────────────────────────────────────────────────────────|
+? Checkout: ›                                                                   |
+styles_hash: df5571974d9b5e40

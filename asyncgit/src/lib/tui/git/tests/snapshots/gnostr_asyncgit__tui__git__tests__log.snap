@@ -1,0 +1,26 @@
+---
+source: asyncgit/src/lib/tui/git/tests/mod.rs
+assertion_line: 109
+expression: ctx.redact_buffer()
+---
+▌0c2c6c3 main a-tag add secondfile                                              |
+ 223428c annotated add firstfile                                                |
+ b66a0bf origin/main add initial-file                                           |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+styles_hash: 7c34283c9cbd748b

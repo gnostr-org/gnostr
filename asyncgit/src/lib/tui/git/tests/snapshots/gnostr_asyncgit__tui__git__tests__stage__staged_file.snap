@@ -1,0 +1,26 @@
+---
+source: asyncgit/src/lib/tui/git/tests/stage.rs
+assertion_line: 10
+expression: ctx.redact_buffer()
+---
+▌No branch                                                                      |
+                                                                                |
+ Staged changes (1)                                                             |
+ added      new-file…                                                           |
+                                                                                |
+ Recent commits                                                                 |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+styles_hash: 7ea74fe89bdd4fd8

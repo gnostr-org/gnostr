@@ -1,0 +1,26 @@
+---
+source: asyncgit/src/lib/tui/git/tests/log.rs
+assertion_line: 68
+expression: ctx.redact_buffer()
+---
+▌6c08cf7 add second commit                                                      |
+ 79e63f1 add third commit                                                       |
+ b66a0bf origin/main add initial-file                                           |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+styles_hash: 99c011aa1629f1d
