@@ -1,7 +1,7 @@
 # Example consumer workflow for the ipfs-gh-pages reusable action.
 #
 # By default this tracks the action repo's current state: the newest v* tag
-# (currently v2.7.8) is auto-detected at run time, falling back to the
+# (currently v3.0.0) is auto-detected at run time, falling back to the
 # default-branch HEAD when no tag exists. Pin a specific ref instead via
 # workflow_dispatch (action_ref) or by setting REF explicitly below.
 
@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
     inputs:
       action_ref:
-        description: 'Action ref (SHA, branch, or tag e.g. v2.7.8). Empty = auto-detect newest v* tag, else default-branch HEAD.'
+        description: 'Action ref (SHA, branch, or tag e.g. v3.0.0). Empty = auto-detect newest v* tag, else default-branch HEAD.'
         required: false
         default: ''
         type: string
