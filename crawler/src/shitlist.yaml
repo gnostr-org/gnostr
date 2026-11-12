@@ -1,0 +1,3 @@
+# Default crawler shitlist.
+# Any relay URL containing one of these entries is skipped by the crawler,
+# sniper, and watch tasks. Add your own entries here or pass --shitlist <path>.
