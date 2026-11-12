@@ -1,0 +1,284 @@
+// EventBuilder - Builder pattern for creating Nostr events
+// Replaces nostr_sdk EventBuilder with local implementation
+
+use anyhow::Result;
+
+use super::{
+    Event, EventKind, EventMining, Id, ImageDimensions, KeySigner, Metadata, PreEvent, PrivateKey,
+    PublicKey, Tag, UncheckedUrl, Unixtime,
+};
+
+/// Builder for creating Nostr events
+#[derive(Debug)]
+pub struct EventBuilder {
+    kind: EventKind,
+    content: String,
+    tags: Vec<Tag>,
+    created_at: Option<Unixtime>,
+}
+
+impl EventBuilder {
+    /// Create a new event builder
+    pub fn new(kind: EventKind, content: String, tags: Vec<Tag>) -> Self {
+        Self {
+            kind,
+            content,
+            tags,
+            created_at: None,
+        }
+    }
+
+    /// Set creation time
+    pub fn created_at(mut self, created_at: Unixtime) -> Self {
+        self.created_at = Some(created_at);
+        self
+    }
+
+    /// Build and sign the event with proof of work
+    pub fn to_pow_event(self, keys: &PrivateKey, difficulty_target: u8) -> Result<Event> {
+        self.to_mined_event(keys, &EventMining::Difficulty(difficulty_target))
+    }
+
+    /// Build and sign with an independent bit difficulty or hexadecimal prefix.
+    pub fn to_mined_event(self, keys: &PrivateKey, target: &EventMining) -> Result<Event> {
+        let preevent = PreEvent {
+            pubkey: keys.public_key(),
+            created_at: self.created_at.unwrap_or_else(Unixtime::now),
+            kind: self.kind,
+            tags: self.tags,
+            content: self.content,
+        };
+
+        let signer = KeySigner::from_private_key(keys.clone(), "", 1)?;
+        Ok(target.sign(&signer, preevent)?)
+    }
+
+    /// Build and sign the event without proof of work
+    pub fn to_event(self, keys: &PrivateKey) -> Result<Event> {
+        self.to_pow_event(keys, 0)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::nostr::{Keys, get_leading_zero_bits, nip13::NIP13Event};
+
+    #[test]
+    fn event_prefix_mines_final_signed_id_without_claiming_nip13_zero_bits() {
+        let keys = Keys::parse(
+            "473a0f4c3be8a93681a267e3b1e9a7dcda1185436fe141f7749120a303721813".to_string(),
+        )
+        .unwrap();
+        let target = EventMining::prefix("FFF").unwrap();
+        assert_eq!(target, EventMining::Prefix("fff".to_string()));
+        let proof = Tag::new_tag("commit-nonce", "01-00000122");
+        let event = EventBuilder::new(
+            EventKind::TextNote,
+            "prefix".to_string(),
+            vec![proof.clone(), Event::create_nonce_tag(99, 12)],
+        )
+        .created_at(Unixtime(1_700_000_000))
+        .to_mined_event(&keys.secret_key().unwrap(), &target)
+        .unwrap();
+        event.verify(None).unwrap();
+        assert!(event.id.as_hex_string().starts_with("fff"));
+        assert_eq!(event.pow(), 0);
+        assert_eq!(event.nonce_data().unwrap().1, 0);
+        assert_eq!(
+            event.tags.iter().filter(|t| t.tagname() == "nonce").count(),
+            1
+        );
+        assert!(event.tags.contains(&proof));
+        for invalid in ["", "0xabc", "xyz", " fff", &"f".repeat(65)] {
+            assert!(EventMining::prefix(invalid).is_err());
+        }
+        assert!(
+            EventBuilder::new(EventKind::TextNote, String::new(), vec![])
+                .to_mined_event(
+                    &keys.secret_key().unwrap(),
+                    &EventMining::Prefix("no".to_string())
+                )
+                .is_err()
+        );
+    }
+
+    #[test]
+    fn event_pow_mines_requested_bits_before_signing_and_preserves_fields() {
+        let keys = Keys::parse(
+            "473a0f4c3be8a93681a267e3b1e9a7dcda1185436fe141f7749120a303721813".to_string(),
+        )
+        .unwrap();
+        let proof = Tag::new_tag("commit-nonce", "01-00000122");
+        let timestamp = Unixtime(1_700_000_000);
+        let event = EventBuilder::new(
+            EventKind::ContactList,
+            "profile follows".to_string(),
+            vec![proof.clone(), Event::create_nonce_tag(99, 1)],
+        )
+        .created_at(timestamp)
+        .to_pow_event(&keys.secret_key().unwrap(), 8)
+        .unwrap();
+        event.verify(None).unwrap();
+        assert!(get_leading_zero_bits(&event.id.0) >= 8);
+        assert_eq!(event.pow(), 8);
+        assert_eq!(event.nonce_data().unwrap().1, 8);
+        assert_eq!(
+            event
+                .tags
+                .iter()
+                .filter(|tag| tag.tagname() == "nonce")
+                .count(),
+            1
+        );
+        assert!(event.tags.contains(&proof));
+        assert_eq!(event.pubkey, keys.public_key());
+        assert_eq!(event.kind, EventKind::ContactList);
+        assert_eq!(event.content, "profile follows");
+        assert_eq!(event.created_at, timestamp);
+
+        let ordinary =
+            EventBuilder::new(EventKind::ContactList, String::new(), vec![proof.clone()])
+                .to_pow_event(&keys.secret_key().unwrap(), 0)
+                .unwrap();
+        ordinary.verify(None).unwrap();
+        assert_eq!(ordinary.tags, vec![proof]);
+        assert!(ordinary.nonce_data().is_none());
+    }
+}
+
+// Badge-related builders
+impl EventBuilder {
+    /// Create a badge definition event (NIP-58)
+    pub fn define_badge(
+        id: String,
+        name: Option<String>,
+        description: Option<String>,
+        image_url: Option<UncheckedUrl>,
+        image_size: Option<ImageDimensions>,
+        thumbnails: Vec<(UncheckedUrl, Option<ImageDimensions>)>,
+    ) -> Self {
+        let mut tags = Vec::new();
+
+        // Add identifier tag
+        tags.push(Tag::new_identifier(id));
+
+        // Add name tag
+        if let Some(name) = name {
+            tags.push(Tag::new_name(name));
+        }
+
+        // Add image tag
+        if let Some(url) = image_url {
+            if let Some(dims) = image_size {
+                tags.push(Tag::new_image(url, Some(dims.width), Some(dims.height)));
+            } else {
+                tags.push(Tag::new_image(url, None, None));
+            }
+        }
+
+        // Add thumbnail tags
+        for (thumb_url, thumb_dims) in thumbnails {
+            if let Some(dims) = thumb_dims {
+                tags.push(Tag::new_thumb(
+                    thumb_url,
+                    Some(dims.width),
+                    Some(dims.height),
+                ));
+            } else {
+                tags.push(Tag::new_thumb(thumb_url, None, None));
+            }
+        }
+
+        Self {
+            kind: EventKind::BadgeDefinition,
+            content: description.unwrap_or_default(),
+            tags,
+            created_at: None,
+        }
+    }
+
+    /// Create a badge award event (NIP-58)
+    pub fn award_badge(badge_definition_event: &Event, awarded_pubkeys: Vec<Tag>) -> Self {
+        let mut tags = Vec::new();
+
+        // Reference the badge definition
+        tags.push(Tag::new_event(
+            badge_definition_event.id,
+            None,
+            Some("a".to_string()),
+        ));
+
+        // Add awarded pubkeys
+        for pubkey_tag in awarded_pubkeys {
+            if let Ok((pk, _, _)) = pubkey_tag.parse_pubkey() {
+                tags.push(Tag::new_pubkey(pk, None, None));
+            }
+        }
+
+        Self {
+            kind: EventKind::BadgeAward,
+            content: "".to_string(),
+            tags,
+            created_at: None,
+        }
+    }
+
+    /// Create a channel creation event (NIP-28)
+    pub fn channel(metadata: &Metadata, pubkey: &PublicKey) -> Self {
+        let mut tags = Vec::new();
+
+        // Add author pubkey tag
+        tags.push(Tag::new_pubkey(*pubkey, None, None));
+
+        Self {
+            kind: EventKind::ChannelCreation,
+            content: serde_json::to_string(metadata).unwrap_or_default(),
+            tags,
+            created_at: None,
+        }
+    }
+
+    /// Create a text note event
+    pub fn text_note(content: String) -> Self {
+        Self {
+            kind: EventKind::TextNote,
+            content,
+            tags: Vec::new(),
+            created_at: None,
+        }
+    }
+
+    /// Create a reaction event
+    pub fn reaction(reacted_event_id: Id, reaction: String) -> Self {
+        let mut tags = Vec::new();
+        tags.push(Tag::new_event(
+            reacted_event_id,
+            None,
+            Some("reaction".to_string()),
+        ));
+
+        Self {
+            kind: EventKind::Reaction,
+            content: reaction,
+            tags,
+            created_at: None,
+        }
+    }
+
+    /// Create an event deletion event
+    pub fn delete_with_reason(event_ids_to_delete: Vec<Id>, reason: String) -> Self {
+        let mut tags = Vec::new();
+
+        for event_id in event_ids_to_delete {
+            tags.push(Tag::new_event(event_id, None, None));
+        }
+
+        Self {
+            kind: EventKind::EventDeletion,
+            content: reason,
+            tags,
+            created_at: None,
+        }
+    }
+}

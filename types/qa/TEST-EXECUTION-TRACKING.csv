@@ -1,0 +1,29 @@
+TestID,Module,Priority,Type,Title,Status,Notes
+TC-TYPES-001,src/ipfs.rs,P2,UNIT,Cid::as_str returns inner string,Passed,cargo test -p gnostr-types: 296 passed / 0 failed
+TC-TYPES-002,src/ipfs.rs,P2,UNIT,Cid Display delegates to inner string,Passed,cargo test -p gnostr-types: 296 passed / 0 failed
+TC-TYPES-003,src/ipfs.rs,P2,UNIT,Cid equality/ordering/hash traits behave,Passed,cargo test -p gnostr-types: 296 passed / 0 failed
+TC-TYPES-004,src/ipfs.rs,P2,UNIT,IpfsContent struct equality,Passed,cargo test -p gnostr-types: 296 passed / 0 failed
+TC-TYPES-005,src/utils/file_slice.rs,P2,UNIT,read_slice reads exact byte range,Passed,cargo test -p gnostr-types: 296 passed / 0 failed
+TC-TYPES-006,src/utils/file_slice.rs,P2,UNIT,read_slice honours offset,Passed,cargo test -p gnostr-types: 296 passed / 0 failed
+TC-TYPES-007,src/utils/file_slice.rs,P2,UNIT,read_slice past EOF returns error,Passed,cargo test -p gnostr-types: 296 passed / 0 failed
+TC-TYPES-008,src/utils/file_slice.rs,P2,UNIT,read_slice missing file returns error,Passed,cargo test -p gnostr-types: 296 passed / 0 failed
+TC-TYPES-009,src/nostr/relay_usage.rs,P2,UNIT,TryFrom<u32> accepts all 8 variants,Passed,cargo test -p gnostr-types: 296 passed / 0 failed
+TC-TYPES-010,src/nostr/relay_usage.rs,P2,UNIT,TryFrom<u32> rejects unknown bits,Passed,cargo test -p gnostr-types: 296 passed / 0 failed
+TC-TYPES-011,src/nostr/relay_usage.rs,P2,UNIT,RelayUsageSet new_empty/new_all/bits,Passed,cargo test -p gnostr-types: 296 passed / 0 failed
+TC-TYPES-012,src/nostr/relay_usage.rs,P2,UNIT,from_bits rejects unknown bits / truncate clears them,Passed,cargo test -p gnostr-types: 296 passed / 0 failed
+TC-TYPES-013,src/nostr/relay_usage.rs,P2,UNIT,is_empty/is_all/intersects/contains semantics,Passed,cargo test -p gnostr-types: 296 passed / 0 failed
+TC-TYPES-014,src/nostr/relay_usage.rs,P2,UNIT,add/has/remove_usage bit lifecycle,Passed,cargo test -p gnostr-types: 296 passed / 0 failed
+TC-TYPES-015,src/nostr/relay_list.rs,P1,UNIT,RelayListUsage marker mapping (read/write/none),Passed,cargo test -p gnostr-types: 296 passed / 0 failed
+TC-TYPES-016,src/nostr/relay_list.rs,P1,UNIT,from_event parses read/write/both/unknown/invalid,Passed,cargo test -p gnostr-types: 296 passed / 0 failed
+TC-TYPES-017,src/nostr/relay_list.rs,P1,UNIT,to_event_tags -> from_event round trip,Passed,cargo test -p gnostr-types: 296 passed / 0 failed
+TC-TYPES-018,src/nostr/nip9.rs,P0,UNIT,delete() creates kind-5 event with one e tag per id,Passed,cargo test -p gnostr-types: 296 passed / 0 failed
+TC-TYPES-019,src/nostr/nip9.rs,P0,UNIT,delete() reason/None content handling,Passed,cargo test -p gnostr-types: 296 passed / 0 failed
+TC-TYPES-020,src/nostr/nip9.rs,P0,UNIT,deletion event signature verifies,Passed,cargo test -p gnostr-types: 296 passed / 0 failed
+TC-TYPES-021,src/nostr/signer.rs,P0,SEC,EventMining::prefix accepts valid hex (case-normalized),Passed,cargo test -p gnostr-types: 296 passed / 0 failed
+TC-TYPES-022,src/nostr/signer.rs,P0,SEC,EventMining::prefix rejects empty/oversized/non-hex,Passed,cargo test -p gnostr-types: 296 passed / 0 failed
+TC-TYPES-023,src/nostr/signer.rs,P0,SEC,EventMining::Difficulty(0) signs without mining,Passed,cargo test -p gnostr-types: 296 passed / 0 failed
+TC-TYPES-024,src/blockheight.rs,P3,NET,blockheight() returns positive height (ignored),Passed,
+TC-TYPES-025,src/blockheight.rs,P2,UNIT,blockheight_status parses env var with fallback,Passed,cargo test -p gnostr-types: 296 passed / 0 failed
+TC-TYPES-026,src/blockhash.rs,P3,NET,blockhash_sync returns non-empty hash (ignored),Passed,
+TC-TYPES-027,src/weeble.rs,P3,NET,weeble_sync invariants: floored non-negative (ignored),Passed,
+TC-TYPES-028,src/wobble.rs,P3,NET,wobble_sync invariant: 0 <= wobble < blockheight (ignored),Passed,
