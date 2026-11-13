@@ -46,22 +46,22 @@ on:
       linux_x64:
         description: "Build linux-x64 (only when the Linux master switch is off)"
         required: false
-        default: true
+        default: false
         type: boolean
       linux_x64_musl:
         description: "Build linux-x64-musl (only when the Linux master switch is off)"
         required: false
-        default: true
+        default: false
         type: boolean
       linux_arm64:
         description: "Build linux-arm64 (only when the Linux master switch is off)"
         required: false
-        default: true
+        default: false
         type: boolean
       linux_arm64_musl:
         description: "Build linux-arm64-musl (only when the Linux master switch is off)"
         required: false
-        default: true
+        default: false
         type: boolean
       windows_all:
         description: "Build all Windows targets (master switch)"
@@ -71,7 +71,7 @@ on:
       windows_x64:
         description: "Build windows-x64 (only when the Windows master switch is off)"
         required: false
-        default: true
+        default: false
         type: boolean
       macos_all:
         description: "Build all macOS targets (master switch)"
@@ -81,12 +81,12 @@ on:
       macos_x64:
         description: "Build macos-x64 (only when the macOS master switch is off)"
         required: false
-        default: true
+        default: false
         type: boolean
       macos_arm64:
         description: "Build macos-arm64 (only when the macOS master switch is off)"
         required: false
-        default: true
+        default: false
         type: boolean
       toolchain:
         description: "Rust toolchain to use"
