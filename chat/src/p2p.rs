@@ -258,6 +258,17 @@ fn ensure_policy() {
         if let Ok(policy) = arduous_rt::policy_from_toml(&toml) {
             let _ = arduous_rt::set_policy(policy);
         }
+        // Keep in sync with apply_runtime_shaping in the root crate's
+        // src/lib/global_rt.rs. The thread budget arms only outside test
+        // builds there (and here): unit tests outrun any sane budget.
+        let _ = arduous_rt::allow_configured(
+            "org.gnostr/chat",
+            arduous_rt::RuntimeConfig::default()
+                .with_worker_threads(4)
+                .with_thread_name_prefix("gnostr-chat"),
+        );
+        #[cfg(not(test))]
+        let _ = arduous_rt::set_thread_quota("org.gnostr/**", 32);
     });
 }
 

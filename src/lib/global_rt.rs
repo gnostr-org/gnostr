@@ -40,6 +40,51 @@ pub(crate) fn ensure_policy() {
             }
             Err(err) => tracing::warn!("arduous_rt policy invalid: {err}"),
         }
+        apply_runtime_shaping();
+        spawn_audit_relay();
+    });
+}
+
+/// Runtime shaping applied alongside the policy: gnostr-chat's libp2p
+/// tasks ride a small dedicated pool, and the whole domain carries a
+/// thread budget as a safety rail. Kept in code because arduous_rt's
+/// `RuntimeConfig` is imperative — the TOML policy covers
+/// allow/deny/quota only.
+fn apply_runtime_shaping() {
+    let _ = arduous_rt::allow_configured(
+        "org.gnostr/chat",
+        arduous_rt::RuntimeConfig::default()
+            .with_worker_threads(4)
+            .with_thread_name_prefix("gnostr-chat"),
+    );
+    // The thread budget is a production safety rail; unit tests run
+    // hundreds of threads across parallel test runtimes, so it only
+    // arms outside test builds.
+    #[cfg(not(test))]
+    let _ = arduous_rt::set_thread_quota("org.gnostr/**", 32);
+}
+
+/// With GNOSTR_AUDIT_RELAY set, forward arduous_rt governance events to
+/// tracing::debug from a background thread. PoC-grade wiring — a
+/// production integration would drain at explicit points or bridge via a
+/// tracing layer.
+fn spawn_audit_relay() {
+    if std::env::var_os("GNOSTR_AUDIT_RELAY").is_none() {
+        return;
+    }
+    std::thread::spawn(|| {
+        let mut seen = 0usize;
+        loop {
+            let events = arduous_rt::audit_events();
+            if events.len() < seen {
+                seen = 0; // ring buffer wrapped; resync
+            }
+            for event in events.iter().skip(seen) {
+                tracing::debug!(?event, "arduous_rt governance event");
+            }
+            seen = events.len();
+            std::thread::sleep(std::time::Duration::from_secs(2));
+        }
     });
 }
 
@@ -65,5 +110,19 @@ mod tests {
             let result = tokio::spawn(async { 1 + 1 }).await.unwrap();
             assert_eq!(result, 2);
         });
+    }
+
+    #[test]
+    fn test_policy_governs_outside_the_gnostr_domain() {
+        global_rt(); // install the policy first
+
+        // Names outside the org.gnostr domain are rejected.
+        assert!(matches!(
+            arduous_rt::try_named_runtime("com.example.intruder"),
+            Err(arduous_rt::NameError::NotAllowed { .. })
+        ));
+
+        // Subtree names under the gnostr domain stay allowed.
+        assert!(arduous_rt::try_named_runtime("org.gnostr/test-guard").is_ok());
     }
 }

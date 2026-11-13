@@ -7,6 +7,10 @@
 # deny rules and no quotas (see src/lib/global_rt.rs). The policy is
 # process-wide: it governs every arduous_rt runtime name in the process,
 # including gnostr-chat's org.gnostr/chat.
+#
+# Worker pools and thread budgets are applied in code (see
+# apply_runtime_shaping in src/lib/global_rt.rs), not here — arduous_rt's
+# RuntimeConfig is imperative; this file covers allow/deny/quota only.
 
 deny = ["org.gnostr/experimental/**"]
 
