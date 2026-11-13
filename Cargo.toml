@@ -987,7 +987,7 @@ actix-web-actors = { path = "vendor/actix-web-actors" }
 #curve25519-dalek = { path = "vendor/curve25519-dalek" }
 #ed25519-dalek = { path = "vendor/ed25519-dalek" }
 lindera-dictionary = { path = "vendor/lindera-dictionary" }
-nostr-relay = { path = "vendor/nostr-relay" }
+nostr-relay = { path = "vendor/nostr-relay/relay" }
 gitui = { path = "vendor/gitui" }
 tui-textarea = { path = "vendor/tui-textarea" }
 
