@@ -34,55 +34,57 @@ on:
         required: false
         default: all
         type: string
-      # Group master switches: unchecking <os>_all disables the whole OS
-      # family regardless of the per-target toggles below it.
+      # Group master switches: checked, the whole OS family builds
+      # regardless of the per-target toggles below; unchecked, none of it
+      # builds. To select individual members, uncheck <os>_all and use the
+      # per-target toggles (or an explicit targets list).
       linux_all:
-        description: "Build all Linux targets"
+        description: "Build all Linux targets (master switch)"
         required: false
         default: true
         type: boolean
       linux_x64:
-        description: "Build linux-x64"
+        description: "Build linux-x64 (only when the Linux master switch is off)"
         required: false
         default: true
         type: boolean
       linux_x64_musl:
-        description: "Build linux-x64-musl"
+        description: "Build linux-x64-musl (only when the Linux master switch is off)"
         required: false
         default: true
         type: boolean
       linux_arm64:
-        description: "Build linux-arm64"
+        description: "Build linux-arm64 (only when the Linux master switch is off)"
         required: false
         default: true
         type: boolean
       linux_arm64_musl:
-        description: "Build linux-arm64-musl"
+        description: "Build linux-arm64-musl (only when the Linux master switch is off)"
         required: false
         default: true
         type: boolean
       windows_all:
-        description: "Build all Windows targets"
+        description: "Build all Windows targets (master switch)"
         required: false
         default: true
         type: boolean
       windows_x64:
-        description: "Build windows-x64"
+        description: "Build windows-x64 (only when the Windows master switch is off)"
         required: false
         default: true
         type: boolean
       macos_all:
-        description: "Build all macOS targets"
+        description: "Build all macOS targets (master switch)"
         required: false
         default: true
         type: boolean
       macos_x64:
-        description: "Build macos-x64"
+        description: "Build macos-x64 (only when the macOS master switch is off)"
         required: false
         default: true
         type: boolean
       macos_arm64:
-        description: "Build macos-arm64"
+        description: "Build macos-arm64 (only when the macOS master switch is off)"
         required: false
         default: true
         type: boolean
@@ -188,15 +190,21 @@ jobs:
               # Note: on push/tag events the toggle env vars are set to the
               # EMPTY STRING (inputs.* is unset outside workflow_dispatch),
               # and an empty toggle means the default: build the target.
-              # The <os>_all toggles gate their whole OS family; per-target
-              # toggles refine within a family that is switched on.
+              # The <os>_all toggles are master switches: "true" builds the
+              # whole family regardless of the per-target toggles, "false"
+              # builds none of it; per-target toggles are refinements for a
+              # family whose switch is off.
               def enabled(build):
-                  if os.environ.get(
-                      f"TOGGLE_{build.replace('-', '_').upper()}", "true"
-                  ) not in ("", "true"):
-                      return False
                   group = build.split("-", 1)[0].upper()
-                  return os.environ.get(f"TOGGLE_{group}_ALL", "true") in ("", "true")
+                  group_all = os.environ.get(f"TOGGLE_{group}_ALL", "true")
+                  if group_all == "true":
+                      return True
+                  if group_all == "false":
+                      return False
+                  # Push/tag event: fall back to the per-target toggle.
+                  return os.environ.get(
+                      f"TOGGLE_{build.replace('-', '_').upper()}", "true"
+                  ) in ("", "true")
 
               targets = [target for target in all_targets if enabled(target["build"])]
 
