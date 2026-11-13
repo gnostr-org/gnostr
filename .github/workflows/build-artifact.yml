@@ -16,24 +16,6 @@ on:
       - main
   workflow_dispatch:
     inputs:
-      ref:
-        description: >-
-          Tag or branch to build, "auto" to resolve the numerically
-          greatest <blockheight>/<weeble>/<wobble> branch (per
-          $(gnostr --blockheight)/$(gnostr --weeble)/$(gnostr --wobble)
-          naming), or empty for the default branch.
-        required: false
-        default: ''
-        type: string
-      targets:
-        description: >-
-          "all" (default) builds the targets enabled by the per-OS
-          toggles below; a comma/space-separated list (e.g.
-          "linux-x64,windows-x64") overrides the toggles and builds
-          exactly those targets.
-        required: false
-        default: all
-        type: string
       # Group master switches: checked, the whole OS family builds
       # regardless of the per-target toggles below; unchecked, none of it
       # builds. To select individual members, uncheck <os>_all and use the
