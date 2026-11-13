@@ -11,7 +11,9 @@ on:
     branches:
       # Cache-factory scope: caches created on the default branch are
       # readable by every other workflow/PR; tag-run caches are not.
+      # `main` is the default branch; `master` is kept for legacy pushes.
       - master
+      - main
   workflow_dispatch:
     inputs:
       ref:
@@ -488,12 +490,14 @@ jobs:
   # target/<triple>/release, but ci.yml, gnostr-test-matrix.yml and other
   # consumers build with cargo's default debug profile into ./target/debug,
   # which a release cache never helps. Build the workspace test binaries
-  # once per push to master (caches are only readable across workflows when
+  # once per push to main or master (caches are only readable across workflows when
   # created on the default branch) so ephemeral runners restore a warm
   # target/debug. Runs in parallel with build-artifacts and never gates
   # publishing.
   cache-debug:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: >-
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     permissions:
       contents: read
