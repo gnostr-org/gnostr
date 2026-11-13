@@ -173,17 +173,13 @@ jobs:
               # EMPTY STRING (inputs.* is unset outside workflow_dispatch),
               # and an empty toggle means the default: build the target.
               # The <os>_all toggles are master switches: "true" builds the
-              # whole family regardless of the per-target toggles, "false"
-              # builds none of it; per-target toggles are refinements for a
-              # family whose switch is off.
+              # whole family regardless of the per-target toggles; when it
+              # is "false" (or "" on push/tag events), the per-target
+              # toggle decides, defaulting to on.
               def enabled(build):
                   group = build.split("-", 1)[0].upper()
-                  group_all = os.environ.get(f"TOGGLE_{group}_ALL", "true")
-                  if group_all == "true":
+                  if os.environ.get(f"TOGGLE_{group}_ALL") == "true":
                       return True
-                  if group_all == "false":
-                      return False
-                  # Push/tag event: fall back to the per-target toggle.
                   return os.environ.get(
                       f"TOGGLE_{build.replace('-', '_').upper()}", "true"
                   ) in ("", "true")
