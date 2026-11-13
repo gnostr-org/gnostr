@@ -523,6 +523,8 @@ jobs:
       CARGO_INCREMENTAL: "0"
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: "Restore+save Cargo cache (factory: debug profile)"
         uses: ./.github/actions/cargo-cache
