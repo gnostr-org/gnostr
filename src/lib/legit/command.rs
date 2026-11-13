@@ -6,7 +6,6 @@ use gnostr_asyncgit::sync::{
     RepoPath,
 };
 use gnostr_legit::gitminer::{self, Gitminer};
-use once_cell::sync::OnceCell;
 use serde_json::json;
 use tokio::sync::mpsc;
 use tracing::{debug, error, info};
@@ -371,8 +370,7 @@ pub async fn create_event_with_mining(
 
 //async tasks
 pub fn global_rt() -> &'static tokio::runtime::Runtime {
-    static RT: OnceCell<tokio::runtime::Runtime> = OnceCell::new();
-    RT.get_or_init(|| tokio::runtime::Runtime::new().unwrap())
+    arduous_rt::named_runtime("org.gnostr/legit")
 }
 
 pub async fn gnostr_legit_event(

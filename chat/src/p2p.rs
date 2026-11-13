@@ -18,7 +18,6 @@ use libp2p::{
     swarm::{NetworkBehaviour, SwarmEvent},
     tcp, yamux, Multiaddr, PeerId, StreamProtocol,
 };
-use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use terminal_size::{terminal_size, Width};
 use textwrap::{self, Options};
@@ -239,8 +238,7 @@ async fn run_local_p2p_relay_service(
 
 /// Shared Tokio runtime for background chat tasks.
 pub fn global_rt() -> &'static tokio::runtime::Runtime {
-    static RT: OnceCell<tokio::runtime::Runtime> = OnceCell::new();
-    RT.get_or_init(|| tokio::runtime::Runtime::new().expect("failed to create chat runtime"))
+    arduous_rt::named_runtime("org.gnostr/chat")
 }
 
 /// Buffer and reassemble chunked chat messages by message ID.

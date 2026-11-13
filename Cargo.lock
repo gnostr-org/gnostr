@@ -653,6 +653,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "arduous_rt"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5db462943b36e5c9bffbc22601d2e7356806f54bc5cc70569092b684d6222587"
+dependencies = [
+ "tokio",
+ "tracing",
+]
+
+[[package]]
 name = "arg_enum_proc_macro"
 version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6870,6 +6880,7 @@ dependencies = [
  "anstream 0.6.21",
  "anyhow",
  "arc-swap",
+ "arduous_rt",
  "argparse",
  "ascii",
  "askama",
@@ -7347,6 +7358,7 @@ name = "gnostr-chat"
 version = "975693.1839.286748"
 dependencies = [
  "anyhow",
+ "arduous_rt",
  "clap 4.6.7",
  "crossterm 0.29.0",
  "futures",

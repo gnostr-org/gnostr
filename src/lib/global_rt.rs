@@ -1,14 +1,11 @@
-use once_cell::sync::OnceCell;
-
 // global_rt
+//
+// Delegates to arduous_rt's process-wide named registry: one shared,
+// governed runtime per name instead of a copy-pasted OnceCell static.
+// Note: this runtime used to be current-thread; arduous_rt runtimes are
+// multi-thread (the shared "gnostr.core" pool).
 pub fn global_rt() -> &'static tokio::runtime::Runtime {
-    static RT: OnceCell<tokio::runtime::Runtime> = OnceCell::new();
-    RT.get_or_init(|| {
-        tokio::runtime::Builder::new_current_thread()
-            .enable_all() // Make sure to enable all necessary features
-            .build()
-            .expect("Failed to build current-thread Tokio runtime")
-    })
+    arduous_rt::named_runtime("org.gnostr/core")
 }
 
 #[cfg(test)]
