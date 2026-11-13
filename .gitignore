@@ -104,6 +104,7 @@ relays.yaml**
 *.json
 !js/src/*.json
 !types/src/nostr/nip44/nip44.vectors.json
+!js/src/pwa/manifest.json
 !xcode/icons/Assets.xcassets/**/Contents.json
 !xcode/swift-universal/Universal App/Shared/Support/Assets.xcassets/**/Contents.json
 
