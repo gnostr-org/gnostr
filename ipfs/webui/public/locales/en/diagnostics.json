@@ -1,0 +1,186 @@
+{
+  "title": "Diagnostics",
+  "tabs": {
+    "logs": "Logs",
+    "retrieval-check": "Retrieval Check",
+    "dht-provide": "DHT Provide"
+  },
+  "logs": {
+    "title": "Node Logs",
+    "streaming": {
+      "statusActive": "Streaming Active",
+      "statusStopped": "Streaming Stopped",
+      "rate": "{rate} logs/sec",
+      "highRate": "High Rate",
+      "autoDisabled": "Auto-disabled"
+    },
+    "entries": {
+      "noEntries": "No log entries yet. Start streaming to see logs.",
+      "noEntriesStreaming": "Listening for logs... (tip: increase log levels to see more activity)",
+      "loading": "Loading log subsystems...",
+      "tooltipGoToLatest": "Scroll to latest logs",
+      "tooltipExpand": "Expand logs",
+      "tooltipCollapse": "Collapse logs",
+      "tooltipPlay": "Start streaming",
+      "tooltipPause": "Stop streaming",
+      "tooltipSettings": "Configure streaming"
+    },
+    "storage": {
+      "title": "Storage Statistics",
+      "totalEntries": "Total Entries",
+      "estimatedSize": "Estimated Size",
+      "memoryBuffer": "Memory Buffer",
+      "trashTooltip": "Clear all logs"
+    },
+    "config": {
+      "title": "Buffer Configuration",
+      "memoryBuffer": "Memory Buffer (entries)",
+      "persistentBuffer": "Persistent Buffer (entries)",
+      "warnThreshold": "Warning Threshold (logs/sec)",
+      "autoDisableThreshold": "Auto-disable Threshold (logs/sec)"
+    },
+    "gologLevel": {
+      "title": "Log Level Configuration",
+      "placeholder": "e.g. error,bitswap=info,nat=debug",
+      "description": "Choose what gets logged and how much detail to show. Start with a base level like 'error' to see only problems, or add specific components to track (like 'error,nat=debug' to debug UPnP issues). Same syntax as GOLOG_LOG_LEVEL. <0>Learn more</0>",
+      "invalidSubsystemLevel": "Subsystem \"{subsystem}\" must be followed by an equal sign and a log level."
+    },
+    "autocomplete": {
+      "globalLevel": "Global level",
+      "subsystem": "Subsystem",
+      "level": "Log level",
+      "invalidSubsystem": "Subsystem \"{subsystem}\" is not valid. Valid subsystems: {subsystems}",
+      "invalidLevel": "\"{level}\" is not a valid log level. Valid levels: debug, info, warn, error, dpanic, panic, fatal",
+      "invalidInput": "Input cannot be empty"
+    },
+    "warnings": {
+      "potentialIssues": "Potential Issues:",
+      "recommendations": "Recommendations:",
+      "cancel": "Cancel",
+      "debugGlobal": {
+        "title": "Enable Debug Logging Globally?",
+        "message": "You are about to enable DEBUG level logging for all subsystems. This will generate a very high volume of logs and may impact browser performance.",
+        "detail1": "Debug logs can generate 100+ messages per second",
+        "detail2": "High CPU usage and memory consumption",
+        "detail3": "Potential browser tab crashes or freezing",
+        "suggestion1": "Consider enabling debug logs for specific subsystems only",
+        "suggestion2": "Use for short debugging sessions (< 5 minutes)",
+        "suggestion3": "Monitor the log rate indicator and disable if needed",
+        "confirm": "Enable Debug Globally"
+      },
+      "highRate": {
+        "title": "High Log Rate Detected",
+        "message": "Current log rate is {rate} logs/second, which may cause performance issues.",
+        "detail1": "High log rates can slow down the browser",
+        "detail2": "Memory usage will increase rapidly",
+        "suggestion1": "Consider reducing log levels for busy subsystems",
+        "suggestion2": "Use buffer configuration to limit memory usage",
+        "confirm": "Continue"
+      },
+      "autoDisable": {
+        "title": "Log Streaming Auto-Disabled",
+        "message": "Log streaming was automatically disabled due to extremely high rate ({rate} logs/sec).",
+        "detail1": "This protects your browser from potential crashes",
+        "detail2": "Logs are still being cached in persistent storage",
+        "suggestion1": "Reduce log levels before re-enabling streaming",
+        "suggestion2": "Check subsystem log levels and disable debug mode",
+        "confirm": "Understood"
+      }
+    },
+    "unsupported": {
+      "title": "Unsupported Kubo Version",
+      "description": "Your current version of Kubo ({version}) does not support the log level management feature required for this diagnostics page.",
+      "upgradeTitle": "Upgrade Required",
+      "upgradeDescription": "To use the log level management features, you need to upgrade to a newer version of Kubo that supports getting log levels and tailing logs from the RPC API endpoint.",
+      "downloadKubo": "Download Kubo"
+    }
+  },
+  "dhtProvide": {
+    "title": "DHT Provide",
+    "node": "Node",
+    "unknown": "Unknown",
+    "cidLabel": "CID to provide",
+    "provideButton": "Trigger Provide",
+    "clear": "Clear",
+    "provideTriggered": "Provide triggered for {cid}",
+    "noCid": "Please enter a CID",
+    "description": "Trigger a background provide operation for a CID. This will announce the CID on the DHT so other peers can discover providers for it.",
+    "screen": {
+      "description": "Visual summary of the DHT provide sweep system. See <0>configuration guide</0> and <1>metric reference</1> for details.",
+      "loading": "Loading DHT provide stats…",
+      "notEnabled": "DHT Sweep provider is not enabled on this node.",
+      "failedToLoad": "Failed to load provide stats: {message}",
+      "refreshCountdown": "Refresh: {seconds}s",
+      "refreshOff": "Refresh: OFF",
+      "lastUpdated": "Last updated at {time}",
+      "workersWarning": "Workers at {percent}% capacity. If the queue grows, consider increasing Provide.DHT.MaxWorkers (current: {max})."
+    },
+    "connectivity": {
+      "title": "Connectivity",
+      "tooltip": "Overall health of the DHT provide subsystem: connectivity, uptime, and keyspace coverage.",
+      "status": "Status",
+      "online": "Online",
+      "offline": "Offline",
+      "sinceAgo": "{value}{unit} ago",
+      "justNow": "just now",
+      "uptime": "Uptime",
+      "keyspaceCoverage": "Keyspace",
+      "full": "Full",
+      "partial": "Partial",
+      "closedWarning": "Provider system is shutting down"
+    },
+    "schedule": {
+      "title": "Schedule",
+      "tooltip": "The reprovide cycle periodically re-announces groups of CIDs to the DHT.",
+      "reprovideInterval": "Reprovide interval",
+      "elapsed": "Elapsed",
+      "remaining": "Remaining",
+      "regions": "Regions",
+      "cidsScheduled": "CIDs this cycle",
+      "avgCidsPerRegion": "Avg CIDs/region",
+      "nextRegionPrefix": "Next region prefix",
+      "avgPrefixLength": "Avg prefix length",
+      "nextReprovide": "Next region start"
+    },
+    "queues": {
+      "title": "Queues",
+      "tooltip": "Pending items in the provide and reprovide queues.",
+      "pendingCids": "Pending CIDs (provide)",
+      "pendingRegionProvides": "Pending regions (provide)",
+      "pendingRegionReprovides": "Pending regions (reprovide)"
+    },
+    "operations": {
+      "title": "Operations",
+      "tooltip": "In-flight provide and reprovide operations, throughput rates, and cumulative statistics.",
+      "ongoingProvides": "Ongoing provides",
+      "ongoingReprovides": "Ongoing reprovides",
+      "provideRate": "Avg provide rate",
+      "reprovideRate": "Avg reprovide rate",
+      "totalCidsProvided": "Total CIDs provided",
+      "totalRecordsProvided": "Total records provided",
+      "totalProvideErrors": "Total provide errors",
+      "regionReprovideDuration": "Region reprovide duration",
+      "avgCidsPerReprovide": "Avg CIDs/reprovide"
+    },
+    "workers": {
+      "title": "Workers",
+      "tooltip": "Breakdown of worker status by type: periodic workers handle scheduled reprovides, burst workers handle initial provides.",
+      "active": "Active",
+      "periodic": "Periodic",
+      "burst": "Burst",
+      "queued": "Queued (periodic / burst)",
+      "maxConnsPerWorker": "Max connections/worker"
+    },
+    "network": {
+      "title": "Network",
+      "tooltip": "DHT network metrics: peer counts, reachability, and record holders.",
+      "peerSwept": "Peers swept",
+      "reachablePeers": "Reachable peers",
+      "avgRecordHolders": "Avg record holders",
+      "avgRegionSize": "Avg region size",
+      "replicationFactor": "Replication factor",
+      "fullKeyspaceCoverage": "Full keyspace coverage",
+      "fullRT": "Accelerated DHT client"
+    }
+  }
+}

@@ -1,0 +1,220 @@
+{
+  "title": "Paramètres",
+  "save": "Sauvegarder",
+  "saving": "Enregistrement...",
+  "reset": "Réinitialiser",
+  "learnMoreLink": "En savoir plus.",
+  "showOptions": "Montrer les options",
+  "pinningServices": {
+    "title": "Services d'épinglage",
+    "description": "Utilisez l'épinglage local quand vous voulez être sûr(e) qu'un élément sur votre nœud n'est jamais supprimé par le ramasse-miettes, même si vous le supprimez de Fichiers. Vous pouvez aussi lier vos comptes à d'autres services d'épinglage pour garder automatiquement ou sélectivement une copie chez ces fournisseurs de service, vous permettant de conserver des copies de vos fichiers et/ou de les rendre disponibles quand votre nœud est hors ligne.",
+    "noPinRemoteDescription": "Cette version ne supporte pas les services tiers d'épinglage distants. Mettez à jour votre nœud IPFS vers Kubo 0.8.0 ou plus récent, et vous pourrez les ajouter et les configurer ici. ",
+    "addAutoUpload": "Activer le téléversement automatique",
+    "removeAutoUpload": "Désactiver le Téléversement Automatique"
+  },
+  "language": "Langue",
+  "analytics": "Analyses",
+  "cliTutorMode": "Mode tutoriel pour l'invite de commande (CLI)",
+  "config": "Configuration de Kubo",
+  "languageModal": {
+    "title": "Changer la langue",
+    "description": "Choisir votre langue préférée",
+    "translationProjectIntro": "Ajoutez ou corrigez des traductions pour rendre IPFS meilleur pour tout le monde!",
+    "translationProjectLink": "Participez projet de traduction IPFS"
+  },
+  "apiDescription": "<0>Si votre nœud est configuré avec une <1>adresse d'API RPC pour Kubo personnalisée, y compris un port autre que le défaut 5001, entrez-la ici.</0>",
+  "localGatewayDescription": "<0>Si vous accédez à la WebUI via un reverse proxy, Docker, ou un hôte différent, entrez l'URL de la passerelle pour que votre navigateur puisse l'atteindre. Laissez vide pour utiliser la première <1>adresse de passerelle</1> de votre configuration de Kubo.</0>",
+  "shareLink": {
+    "title": "Partager des liens IPFS",
+    "intro": "Ce paramètre contrôle le lien que vous copiez avec Partager Lien ou Publier vers IPNS. Chaque option répond à un besoin spécifique, choisissez donc celle qui correspond à comment le lien sera ouvert.",
+    "pathVsSubdomain": "Les liens de passerelles peuvent prendre deux formes: <0>chemin</0> ou <1>sous-domaine</1>. Un lien de chemin place tout le contenu de cette passerelle sous une seule origine, qui est la limite qu'utilise votre navigateur pour le cache, les cookies, et les identifiants enregistrés. Une page peut donc voir ce qu'une autre a produit. Un lien de sous-domaine donne à chaque élément sa propre origine, et votre navigateur les isole donc les uns des autres. Utilisez un lien de sous-domaine pour ouvrir ou héberger des pages web, et un lien de chemin pour les applications hors des navigateurs.",
+    "recommendedBadge": "Recommandé",
+    "gatewayGroupTitle": "Liens de passerelle HTTP",
+    "gatewayGroupNote": "Ils s'ouvrent dans n'importe quel client HTTP, mais dépendent d'une URL spécifique pour être accessible.",
+    "usesGateway": "Produit des liens en tant que",
+    "subdomainNote": "Chaque élément obtient sa propre origine. Apprenez <0>comment les navigateurs gardent les sites web séparés</0>.",
+    "publicGatewayHelp": "Vous découvrez les passerelles publiques? Trouvez-en une avec le <0>Public Gateway Checker</0>, ou <1>opérez la vôtre</1>.",
+    "publicGatewayEmptyHint": "Pour l'utiliser, entrez une adresse de passerelle ci-dessous.",
+    "native": {
+      "label": "Natives  (ipfs:// and ipns:// adresses)",
+      "description": "Ces adresses ne dépendent pas d'un quelconque serveur HTTP, et fonctionnent donc même lorsque la passerelle publique est inaccessible. Meilleure option pour le pair-à-pair.",
+      "companionNote": "Pour les ouvrir, vous et ceux à qui vous les partagez peuvent installer l'extension de navigateur <0>IPFS Companion</0>. Chacun télécharge le contenu directement depuis les autres, au lieu de dépendre du serveur de quelqu'un d'autre."
+    },
+    "localPath": {
+      "label": "Passerelle locale, lien de chemin",
+      "description": "Ouvre le contenu directement depuis votre nœud sur cet ordinateur. Parfait pour les applications locales qui ne sont pas des navigateurs. Ne fonctionne pas pour partager avec d'autres personnes."
+    },
+    "localSubdomain": {
+      "label": "Passerelle locale, lien de sous-domaine",
+      "description": "Comme l'option précédente, mais pour les applications web sur cet ordinateur qui nécessitent une isolation des origines pour des raisons de sécurité. Nécessite une passerelle sur l'adresse localhost, pas une simple adresse IP."
+    },
+    "publicPath": {
+      "label": "Passerelle publique, lien de chemin",
+      "description": "Un lien que n'importe qui sur internet peut ouvrir via une passerelle publique. Pas d'isolation d'origine, ne pas utiliser pour des applications web sensibles."
+    },
+    "publicSubdomain": {
+      "label": "Passerelle publique, lien de sous-domaine",
+      "description": "Comme l'option précédente, mais le choix le plus sûr pour ouvrir et héberger des pages web ou des applications qui nécessitent une isolation de l'origine."
+    }
+  },
+  "retrievalDiagnosticService": {
+    "title": "Service de diagnostic de disponibilité",
+    "description": "Configure l'URL du service <0>ipfs-check</0> utilisé pour le <1>diagnostic de disponibilité</1>. Ce service vérifie que le contenu puisse être accessible avec succès depuis votre nœud et d'autres nœuds hébergeant un CID spécifique, vous aidant à régler des problèmes de partage."
+  },
+  "cliDescription": "<0>Activez cette option pour faire apparaître une icône \"Voir code\" <1></1> près des principales commandes IPFS. En cliquant dessus, vous ouvrez un pop-up avec le code pour cette commande, pour pouvoir le coller dans votre invite de lignes de commandes (CLI).</0>",
+  "cliModal": {
+    "extraNotesJsonConfig": "Si vous avez effectué des modifications à la configuration dans cette page d'édition du code que vous voulez conserver, cliquez sur l'icône de téléchargement à côté du bouton de copie pour le télécharger en tant que fichier JSON."
+  },
+  "pinningModal": {
+    "title": "Choisissez un fournisseur de service d'épinglage.",
+    "description": "Vous ne voyez pas le service d'épinglage que vous utilisez? <1>Ajoutez-en un personnalisé.<1>"
+  },
+  "pinningServiceModal": {
+    "title": "Configurer un service d'épinglage.",
+    "description": "Vous voulez que votre service d'épinglage soit accessible aux autres? <1>Découvrez comment.<1>",
+    "service": "Service",
+    "nickname": "Surnom",
+    "nicknamePlaceholder": "Nom de votre service",
+    "apiEndpoint": "Point d'entrée de l'API",
+    "apiEndpointPlaceholder": "URL de son point d'entrée d'API",
+    "secretApiKey": "Jeton d'accès secret",
+    "secretApiKeyHowToLink": "Comment générer un nouveau jeton",
+    "autoUpload": "Téléverser automatiquement",
+    "complianceLabel": "🔍 Rapport de conformance du service d'épinglage {nickname}"
+  },
+  "autoUploadModal": {
+    "title": "Changer la politique de téléversement pour {name}",
+    "description": "Quand il est activé, l'autoversement va périodiquement épingler la racine de votre dossier Fichiers, pour que tout soit épinglé à distance et disponible pour les autres pairs quand votre nœud IPFS local est hors ligne. Si vous le désactivez, vous pouvez toujours épingler chaque fichier manuellement en utilisant l'option \"Régler l'épinglage\" dans l'onglet Fichiers."
+  },
+  "errors": {
+    "nickname": "Un surnom est requis.",
+    "apiError": "Erreur d'API",
+    "apiEndpoint": "Doit être une URL valide",
+    "secretApiKey": "Le jeton d'accès secret est obligatoire",
+    "failedToFetch": "Impossible à obtenir ",
+    "failedToFetchTitle": "Impossible d'obtenir le décompte des éléments épinglés pour ce service distant. Vérifiez qu'il est en ligne et que vous avez entré correctement les identifiants. Si c'est un service que vous venez d'ajoutez, essayez de le supprimer et de l'ajouter à nouveau. "
+  },
+  "actions": {
+    "addService": "Ajouter un service",
+    "generateKey": "Générer une clé",
+    "edit": "Modifier",
+    "close": "Fermer",
+    "save": "Sauvegarder",
+    "cancel": "Annuler",
+    "enable": "Activer",
+    "disable": "Désactiver"
+  },
+  "edit": "Modifier",
+  "visitService": "Visiter le service",
+  "remove": "Supprimer",
+  "localPinning": "Épinglage local",
+  "service": "Service",
+  "size": "Taille",
+  "pins": "Éléments épinglés",
+  "autoUpload": "Téléversement automatique",
+  "autoUploadPolicy": {
+    "true": "Tous les fichiers",
+    "false": "Éteint"
+  },
+  "fetchingSettings": "Récupération des paramètres...",
+  "ipfsDaemonOffline": "Le démon Kubo est hors ligne. Essayer de l'éteindre puis de le rallumer.",
+  "settingsUnavailable": "Paramètres indisponibles. Vérifiez que le démon Kubo est allumé.",
+  "settingsHaveChanged": "Les paramètres ont changé. Cliquez sur <1>Réinitialiser</1> pour mettre à jour l'éditeur de contenu.",
+  "errorOccured": "Une erreur s'est produite pendant l'enregistrement de vos modifications",
+  "checkConsole": "Vérifier la console du navigateur pour plus d'informations.",
+  "changesSaved": "Vos modifications ont été enregistrées.",
+  "settingsWillBeUsedNextTime": "Les nouveaux paramètres seront appliqués la prochaine fois que vous redémarrerez le démon Kubo.",
+  "ipfsConfigDescription": "Le fichier de configuration de Kubo est un document JSON. Il est lu une seule fois quand le démon Kubo est lancé. Enregistrez vos changements, puis redémarrez le démon Kubo pour les appliquer.",
+  "ipfsConfigHelp": "Vérifier la documentation pour plus d'informations.",
+  "AnalyticsToggle": {
+    "label": "Aidez à améliorer cette application en envoyant des données d'utilisation anonymes",
+    "summary": "Configurer ce qui est collecté",
+    "paragraph1": "Aucun CID, nom de fichier ou autre information personnelle n'est collecté. Nous voulons des mesures pour nous indiquer les fonctionnalités utiles et nous aider à définir les priorités sur lesquelles travailler, ainsi que les informations sur la configuration du système pour guider nos tests.",
+    "paragraph2": "Protocol Labs héberge une instance <1>Countly</1>  pour enregistrer les données d'usage anonymisées de cette application.",
+    "basicInfo": "Les informations supplémentaires suivantes sont envoyées à countly.ipfs.io",
+    "optionalInfo": "Vous pouvez choisir d'envoyer les informations suivantes :",
+    "sessions": {
+      "label": "Sessions",
+      "summary": "Où et quand vous utilisez l'application, et les métriques du navigateur",
+      "details": "<0>Les métriques de navigateur suivantes sont envoyées:</0><1><0>Un device ID généré aléatoirement</0><1>Un timestamp du démarage de la session</1><2>Des timestamps réguliers pour mesurer sa durée</2><3>La version de l'application; par exemple 2.4.4</3><4>La localisation: par exemple; fr-FR</4><5>Le user agent; par exemple Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_2) …</5><6>La résolution d'écran; par exemple 800x600</6><7>La densité de l'écran en pixels; par exemple 1</7></1>"
+    },
+    "events": {
+      "label": "Événements",
+      "summary": "Des actions telles que l'ajout ou la suppression de fichiers, et combien de temps cela a pris",
+      "details": "Des actions spécifiques à l'application. Nous enregistrons seulement les actions qui se passent, combien de temps s'est déroulé entre son début et sa fin, et un décompte si l'évènement concerne plusieurs éléments."
+    },
+    "views": {
+      "label": "Pages consultées",
+      "summary": "Quelles sections de l'application vous visitez",
+      "details": "Enregistre quelles sections de l'application sont visitées. Les chemins enregistrés n'incluent que le motif utilisé pour le trouver et non l'URL complète."
+    },
+    "location": {
+      "label": "Emplacement",
+      "summary": "Le code Pays de l'adresse IP (l'adresse elle-même n'est pas enregistrée)",
+      "details": "Votre adresse IP est utilisée pour calculer son code Pays, comme \"FR\" pour la France. Quand nous n'avons pas de consentement pour enregistrer la localisation, une propriété de localisation vide est envoyé au serveur pour désactiver cette recherche de localisation. Cette information nous aide à orienter nos efforts de traduction et à déterminer où organiser des évènements."
+    },
+    "crashes": {
+      "label": "Erreurs de l'application",
+      "summary": "Messages d'erreur JavaScript et traces de piles d'appels de fonctions",
+      "details": "Enregistre les messages d'erreur JavaScript et les traces de pile d'appels de fonctions qui se produisent pendant l'utilisation de l'application, si possible. Il est très utile de savoir quand l'application ne fonctionne pas pour vous, mais <1>les messages d'erreur peuvent contenir des informations identifiantes</1> comme les CID ou les chemins d'accès aux fichiers, donc n'activez cette option que si vous êtes à l'aise pour partager ces informations avec nous."
+    }
+  },
+  "cliToggle": {
+    "label": "Activer le terminal de lignes de commandes (CLI) en mode tutoriel"
+  },
+  "tour": {
+    "step1": {
+      "title": "Page des paramètres",
+      "paragraph1": "Vous pouvez changer les paramètres de votre Interface Web ou de votre nœud Kubo ici.",
+      "paragraph2": "Si vous utilisez IPFS Desktop vous pourrez également régler quelques paramètres qui lui sont spécifiques."
+    },
+    "step2": {
+      "title": "Adresse de l'API RPC de Kubo personnalisée",
+      "paragraph1": "Si vous avez configuré votre nœud IPFS compatible avec Kubo avec une adresse API RPC personnalisée, vous pouvez modifier votre fichier config ici plutôt que de modifier le JSON à la main."
+    },
+    "step3": {
+      "title": "Services d'épinglage",
+      "paragraph1": "<0>Si vous avez des comptes sur des services d'épinglage à distance tiers, ajoutez-les ici pour épingler/désépingler des éléments sur ces services directement depuis la page Fichiers. Vous pouvez en apprendre plus sur les services d'épinglage tiers dans la <1>Documentation IPFS</1>.</0>"
+    },
+    "step4": {
+      "title": "Sélection de la langue",
+      "paragraph1": "<0>Vous pouvez changer la langue de l'interface web. Si votre langue préférée n'est pas disponible, jetez un œil sur notre <1>page sur Transifex</1> pour nous aider à traduire !</0>"
+    },
+    "step5": {
+      "title": "Statistiques anonymes d'utilisation",
+      "paragraph1": "En cochant ceci, vous pouvez nous aider à améliorer l'interface web en envoyant anonymement des statistiques d'utilisation.",
+      "paragraph2": "Vous pourrez choisir les données que vous enverrez et elles ne permettront pas de vous identifier, nous attachons une grande importance à votre vie privée."
+    },
+    "step6": {
+      "title": "Mode tuteur pour CLI",
+      "paragraph1": "Activer le Mode tuteur pour CLI pour voir les raccourcis vers la version \"ligne de commande\" des commandes courantes d'IPFS. Pratique si vous voulez apprendre à utiliser IPFS depuis un terminal, ou si vous voulez juste avoir un pense-bête."
+    },
+    "step7": {
+      "title": "Configuration de Kubo",
+      "paragraph1": "Vous pouvez changer la configuration de votre nœud Kubo directement depuis l'Interface Web !",
+      "paragraph2": "N'oubliez pas de redémarrer le daemon pour que les changements soient pris en compte."
+    }
+  },
+  "Experiments": {
+    "description": "Ici vous pouvez avoir un aperçu des nouvelles fonctionnalités de IPFS en activant les options ci-dessous. Nous testons de nouvelles idées, et comme elles peuvent ne pas être encore parfaites nous serions heureux d'avoir votre avis.",
+    "issueUrl": "Ouvrir une issue Github",
+    "feedbackUrl": "💌Laisser un commentaire",
+    "readMoreUrl": "En savoir plus"
+  },
+  "ipnsPublishingKeys": {
+    "title": "Clés de publication IPNS",
+    "description": "L'Interplanetary Name System (IPNS) fournit des adresses cryptographiques pour publier des mises-à-jours des contenus qui peuvent changer au cours du temps. Cette fonctionnalité nécessite que votre nœud soit en ligne au moins une fois par jour pour garantir que les enregistrements IPNS soient maintenus disponibles sur la DHT publique."
+  },
+  "generateKeyModal": {
+    "title": "Générer une nouvelle clé IPNS",
+    "description": "Entrez un surnom pour la clé à générer :"
+  },
+  "renameKeyModal": {
+    "title": "Renommer la clé",
+    "description": "Entrez un nouveau nom pour la clé IPNS <1>{name}</1>."
+  },
+  "removeKeyModal": {
+    "title": "Confirmez la suppression de la clé IPNS",
+    "description": "Êtes-vous sûr(e) de vouloir supprimer la clé IPNS <1>{name}</1>? Cette opération ne peut être annulée, et l'adresse IPNS associée à cette clé sera perdue DÉFINITIVEMENT. Pensez à l'archiver avant : ipfs export --help"
+  }
+}

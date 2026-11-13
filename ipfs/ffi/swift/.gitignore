@@ -1,0 +1,4 @@
+.build/
+libkubo_ffi.a
+libkubo_ffi.h
+.swiftpm/

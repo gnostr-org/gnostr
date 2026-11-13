@@ -1,0 +1,16 @@
+[package]
+name = "kubo-ffi"
+version = "0.3.0"
+edition = "2021"
+description = "Safe Rust bindings to the Kubo C FFI layer"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+# Core library has no heavy dependencies.
+
+[dev-dependencies]
+ratatui = "0.30"
+crossterm = "0.29"
+
+[build-dependencies]
+# build.rs invokes `go build` to produce libkubo_ffi.a

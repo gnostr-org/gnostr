@@ -1,0 +1,4 @@
+module CKubo {
+    header "kubo_ffi.h"
+    export *
+}
