@@ -84,6 +84,12 @@ jobs:
     steps:
       - name: Checkout main repository
         uses: actions/checkout@v4
+        with:
+          # The deployed site and IPFS mirror cover the whole repo:
+          # submodule contents flatten into repo-manifest.json / repo.car
+          # (an uninitialized submodule contributes zero entries instead
+          # of failing the build).
+          submodules: recursive
 
       - name: Fetch latest tag (release identity)
         run: |
