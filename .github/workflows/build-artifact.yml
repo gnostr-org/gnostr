@@ -7,13 +7,14 @@ concurrency:
 on:
   push:
     tags:
-      - 'gnostr/**'
+      - 'v**'
     branches:
       # Cache-factory scope: caches created on the default branch are
       # readable by every other workflow/PR; tag-run caches are not.
       # `main` is the default branch; `master` is kept for legacy pushes.
       - master
       - main
+      - release/**
   workflow_dispatch:
     inputs:
       # Group master switches: checked, the whole OS family builds
