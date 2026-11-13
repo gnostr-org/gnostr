@@ -34,6 +34,13 @@ on:
         required: false
         default: all
         type: string
+      # Group master switches: unchecking <os>_all disables the whole OS
+      # family regardless of the per-target toggles below it.
+      linux_all:
+        description: "Build all Linux targets"
+        required: false
+        default: true
+        type: boolean
       linux_x64:
         description: "Build linux-x64"
         required: false
@@ -54,8 +61,18 @@ on:
         required: false
         default: true
         type: boolean
+      windows_all:
+        description: "Build all Windows targets"
+        required: false
+        default: true
+        type: boolean
       windows_x64:
         description: "Build windows-x64"
+        required: false
+        default: true
+        type: boolean
+      macos_all:
+        description: "Build all macOS targets"
         required: false
         default: true
         type: boolean
@@ -128,11 +145,14 @@ jobs:
           SELECTED_TOOLCHAIN: ${{ inputs.toolchain || 'stable' }}
           # workflow_dispatch booleans arrive as INPUT_<NAME>; empty (push /
           # schedule) means every toggle defaults to on.
+          TOGGLE_LINUX_ALL: ${{ inputs.linux_all }}
           TOGGLE_LINUX_X64: ${{ inputs.linux_x64 }}
           TOGGLE_LINUX_X64_MUSL: ${{ inputs.linux_x64_musl }}
           TOGGLE_LINUX_ARM64: ${{ inputs.linux_arm64 }}
           TOGGLE_LINUX_ARM64_MUSL: ${{ inputs.linux_arm64_musl }}
+          TOGGLE_WINDOWS_ALL: ${{ inputs.windows_all }}
           TOGGLE_WINDOWS_X64: ${{ inputs.windows_x64 }}
+          TOGGLE_MACOS_ALL: ${{ inputs.macos_all }}
           TOGGLE_MACOS_X64: ${{ inputs.macos_x64 }}
           TOGGLE_MACOS_ARM64: ${{ inputs.macos_arm64 }}
         run: |
@@ -168,13 +188,17 @@ jobs:
               # Note: on push/tag events the toggle env vars are set to the
               # EMPTY STRING (inputs.* is unset outside workflow_dispatch),
               # and an empty toggle means the default: build the target.
-              targets = [
-                  target
-                  for target in all_targets
+              # The <os>_all toggles gate their whole OS family; per-target
+              # toggles refine within a family that is switched on.
+              def enabled(build):
                   if os.environ.get(
-                      f"TOGGLE_{target['build'].replace('-', '_').upper()}", "true"
-                  ) in ("", "true")
-              ]
+                      f"TOGGLE_{build.replace('-', '_').upper()}", "true"
+                  ) not in ("", "true"):
+                      return False
+                  group = build.split("-", 1)[0].upper()
+                  return os.environ.get(f"TOGGLE_{group}_ALL", "true") in ("", "true")
+
+              targets = [target for target in all_targets if enabled(target["build"])]
 
           if not targets:
               raise SystemExit("no targets selected: enable at least one target toggle or list targets explicitly")
