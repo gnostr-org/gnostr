@@ -35,4 +35,11 @@ vt100 = { workspace = true }
 [features]
 default = ["git"]
 git = ["dep:gnostr-asyncgit"]
-browser = ["dep:chrono", "dep:clap", "dep:html-escape", "dep:html2text", "dep:regex", "dep:reqwest"]
+browser = [
+  "dep:chrono",
+  "dep:clap",
+  "dep:html-escape",
+  "dep:html2text",
+  "dep:regex",
+  "dep:reqwest",
+]

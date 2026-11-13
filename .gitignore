@@ -94,6 +94,7 @@ gnostr-gnit-key.pub
 .gnostr
 executable
 test
+!ipfs/test
 gnostr.git
 .gnostr/*
 relays.yaml**
@@ -124,6 +125,7 @@ example
 !bins/example/**
 ext/
 ffi/
+!ipfs/ffi
 get-relays/
 !src/lib/git/
 gnostr-act

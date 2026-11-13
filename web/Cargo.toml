@@ -56,9 +56,12 @@ moka = { version = "0.12.0", features = ["future"] }
 path-clean = "1.0.1"
 rand = "0.8.5"
 regex = "1.11.1"
-reqwest = { workspace = true, features = ["json", "multipart", "stream"], optional = true }
+reqwest = { workspace = true, features = [
+    "json",
+    "multipart",
+    "stream",
+], optional = true }
 rkyv = "0.8"
-ureq = { workspace = true, optional = true }
 rocksdb = { workspace = true }
 serde = { version = "1.0.203", features = ["derive", "rc"] }
 serde_json = "1.0.117"
@@ -85,6 +88,7 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
 ] }
 tree-sitter-highlight = "0.23"
 unix_mode = "0.1"
+ureq = { workspace = true, optional = true }
 url = { workspace = true }
 uuid = { version = "1.7", features = ["v4"] }
 v_htmlescape = { version = "0.15", features = ["bytes-buf"] }
