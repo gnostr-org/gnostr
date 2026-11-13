@@ -27,10 +27,12 @@ on:
         type: string
       targets:
         description: >-
-          Comma- or space-separated targets to build (edit the default
-          list), or "all" to use the per-OS toggles below.
+          "all" (default) builds the targets enabled by the per-OS
+          toggles below; a comma/space-separated list (e.g.
+          "linux-x64,windows-x64") overrides the toggles and builds
+          exactly those targets.
         required: false
-        default: linux-x64,linux-x64-musl,linux-arm64,linux-arm64-musl,windows-x64,macos-x64,macos-arm64
+        default: all
         type: string
       linux_x64:
         description: "Build linux-x64"
