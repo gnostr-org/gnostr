@@ -236,8 +236,34 @@ async fn run_local_p2p_relay_service(
     Ok(())
 }
 
+/// Built-in fallback policy, kept in sync with the root crate's
+/// `src/lib/global_rt.rs`. Duplicated because gnostr-chat cannot depend
+/// on the root crate; arduous_rt policy is process-global, so whichever
+/// copy runs first installs equivalent content.
+const DEFAULT_POLICY: &str = r#"
+deny = []
+
+[[allow]]
+pattern = "org.gnostr/**"
+"#;
+
+static POLICY: std::sync::OnceLock<()> = std::sync::OnceLock::new();
+
+fn ensure_policy() {
+    POLICY.get_or_init(|| {
+        let toml = std::env::var("GNOSTR_RUNTIME_POLICY")
+            .ok()
+            .and_then(|path| std::fs::read_to_string(path).ok())
+            .unwrap_or_else(|| DEFAULT_POLICY.to_string());
+        if let Ok(policy) = arduous_rt::policy_from_toml(&toml) {
+            let _ = arduous_rt::set_policy(policy);
+        }
+    });
+}
+
 /// Shared Tokio runtime for background chat tasks.
 pub fn global_rt() -> &'static tokio::runtime::Runtime {
+    ensure_policy();
     arduous_rt::named_runtime("org.gnostr/chat")
 }
 

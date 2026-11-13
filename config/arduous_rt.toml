@@ -1,0 +1,15 @@
+# Example arduous_rt governance policy for gnostr.
+#
+# Activate with:
+#   GNOSTR_RUNTIME_POLICY=config/arduous_rt.toml
+#
+# Without the env var, a built-in default allows org.gnostr/** with no
+# deny rules and no quotas (see src/lib/global_rt.rs). The policy is
+# process-wide: it governs every arduous_rt runtime name in the process,
+# including gnostr-chat's org.gnostr/chat.
+
+deny = ["org.gnostr/experimental/**"]
+
+[[allow]]
+pattern = "org.gnostr/**"
+quota = 16

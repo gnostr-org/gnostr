@@ -370,6 +370,7 @@ pub async fn create_event_with_mining(
 
 //async tasks
 pub fn global_rt() -> &'static tokio::runtime::Runtime {
+    crate::global_rt::ensure_policy();
     arduous_rt::named_runtime("org.gnostr/legit")
 }
 
