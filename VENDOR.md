@@ -1,6 +1,6 @@
 # Vendored dependency notes
 
-## ed25519-dalek
+## [ed25519-dalek](https://github.com/gnostr-org/curve25519-dalek)
 
 `ed25519-dalek` is patched to the local copy in `vendor/ed25519-dalek`.
 This keeps the workspace building against the `pkarr`/`blossom-rs` chain
@@ -11,50 +11,50 @@ The local patch changes `src/signing.rs` so PKCS#8 validation uses
 `pkcs8::Error::KeyMalformed(KeyError::Invalid)` for malformed public-key
 material.
 
-## pkarr
+## [pkarr](https://github.com/gnostr-org/pkarr.git)
 
 `git-helpers` uses `pkarr` for `git-remote-pkarr` / PKARR DHT resolution.
 The current workspace keeps that dependency on the vendored path so the
 `ed25519-dalek` patch above is applied consistently during builds.
 
-## lindera-dictionary
+## [lindera/lindera-dictionary](https://github.com/gnostr-org/lindera.git)
 
 `lindera-dictionary` is vendored so the Lindera asset fetch path can retry
 truncated responses while building the `lindera-unidic` and `lindera-ko-dic`
 dictionary crates used through `nostr-db` / `nostr-relay`.
 
-## nostr-relay
+## [nostr-relay](https://github.com/gnostr-org/nostr-relay.git)
 
 `nostr-relay` is vendored so the workspace can disable `nostr-db` default
 features and avoid pulling the Lindera search dictionaries during install.
 
-## curve25519-dalek
+## [curve25519-dalek](https://github.com/gnostr-org/curve25519-dalek.git)
 
 `vendor/curve25519-dalek` is a local patch of the `5.0.0-pre.1` prerelease
 snapshot. It is needed because the workspace resolves both `pkarr` and
 `iroh-base` through that prerelease line, and the upstream snapshot still used
 the older `digest::crypto_common` path that fails on the current toolchain.
 
-## rpassword
+## [rpassword](https://github.com/gnostr-org/rpassword.git)
 
 `rpassword` is pinned to `=7.4.0` in the workspace so `cargo install --path .`
 stays on the macOS-compatible release instead of selecting `7.5.0`.
 
-## actix-web-actors
+## [actix-web-actors](https://github.com/gnostr-org/actix-web.git)
 
 `vendor/actix-web-actors` is a vendored snapshot of the registry package, not a
 local source fork. The tracked history shows it was added by
 `5dd417ba93 vendor/actix-web-actors:patch`, and the only difference from the
 registry copy is a normalized dependency constraint in `Cargo.toml`.
 
-## asn1-rs
+## [asn1-rs](https://github.com/gnostr-org/asn1-rs.git)
 
 `vendor/asn1-rs` is also a vendored snapshot, and the current worktree adds
 `src/tostatic.rs` plus `tests/to_static.rs`,
 `tests/toder_sequence_lifetime.rs`, and `tests/toder_sequence_simple.rs`.
 `.cargo-checksum.json` is the Cargo-generated vendor checksum for that crate.
 
-## actix test crates
+## [actix test crates](https://github.com/gnostr-org/actix-web.git)
 
 `vendor/actix-http-test`, `vendor/actix-test`, and `vendor/actix-http` carry
 local fixes so the vendored test suite builds cleanly. The `actix-http-test`

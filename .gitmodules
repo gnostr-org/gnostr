@@ -1,3 +1,6 @@
 [submodule "ipfs"]
 	path = ipfs
 	url = https://github.com/RandyMcMillan/kubo.git
+[submodule "vendor"]
+	path = vendor
+	url = https://github.com/gnostr-org/gnostr-vendor.git
