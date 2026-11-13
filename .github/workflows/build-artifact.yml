@@ -323,26 +323,11 @@ jobs:
         with:
           tool: cross
 
-      - name: Install sccache
-        uses: taiki-e/install-action@v2
-        with:
-          tool: sccache
-
-      - name: Enable sccache (native builds only)
-        if: matrix.native == true
-        shell: bash
-        run: |
-          # sccache's GHA backend stores each rustc invocation in the
-          # Actions cache AS THE BUILD RUNS, so every crate that compiles
-          # is cached even when the job later fails — no post-hoc snapshot
-          # loop needed. Native jobs only: RUSTC_WRAPPER must not leak
-          # into cross containers (no sccache binary inside them).
-          # CARGO_INCREMENTAL is incompatible with compiler caching.
-          {
-            echo "RUSTC_WRAPPER=sccache"
-            echo "SCCACHE_GHA_ENABLED=true"
-            echo "CARGO_INCREMENTAL=0"
-          } >> "$GITHUB_ENV"
+      # No sccache: its GHA backend reads ACTIONS_CACHE_URL/ACTIONS_RUNTIME_TOKEN,
+      # which the runner no longer exposes since the legacy Actions cache
+      # service was retired, so SCCACHE_GHA_ENABLED=true kills every native
+      # build at the first rustc call. The cargo-cache action above already
+      # snapshots target/ (with always()) even when the build fails.
 
       - name: Set Clang environment variables
         if: runner.os == 'Linux'
@@ -513,9 +498,9 @@ jobs:
     permissions:
       contents: read
     env:
+      # CARGO_INCREMENTAL=0 keeps the cached target/ dir lean; no sccache
+      # (its GHA backend is broken since the legacy cache service retirement).
       CARGO_INCREMENTAL: "0"
-      RUSTC_WRAPPER: sccache
-      SCCACHE_GHA_ENABLED: true
     steps:
       - uses: actions/checkout@v4
 
@@ -536,11 +521,6 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
         id: rust-toolchain
-
-      - name: Install sccache
-        uses: taiki-e/install-action@v2
-        with:
-          tool: sccache
 
       - name: Save Rust toolchain cache
         uses: actions/cache/save@v4
