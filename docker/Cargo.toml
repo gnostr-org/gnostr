@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-docker"
-version = "975725.1839.257025"
+version = "975730.1839.253815"
 edition = "2024"
 authors = ["gnostr <admin@gnostr.org>", "Jack Wills <email@mrjackwills.com>"]
 description = "mcp-agent with (oxker) tui"
