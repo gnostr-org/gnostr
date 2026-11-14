@@ -4,9 +4,9 @@ version.workspace = true
 edition = "2021"
 description = "gnostr:a git+nostr workflow utility"
 authors = [
-    "gnostr <admin@gnostr.org>",
-    "0xtr <oxtrr@protonmail.com>",
-    "TODO <add_more@gnostr.org>",
+  "gnostr <admin@gnostr.org>",
+  "0xtr <oxtrr@protonmail.com>",
+  "TODO <add_more@gnostr.org>",
 ]
 readme = "README.md"
 repository = "https://github.com/gnostr-org/gnostr.git"
@@ -16,36 +16,36 @@ categories = ["command-line-utilities"]
 build = "build.rs"
 default-run = "gnostr"
 exclude = [
-    "GEMINI.md",
-    "Cargo.toml.orig",
-    ".devcontainer/**",
-    ".gemini/**",
-    ".github/**",
-    "assets/**",
-    "coverage/**",
-    "dist-build/**",
-    "docker/**",
-    "docs/**",
-    "examples/**",
-    "helix/**",
-    "test_screenshots/**",
-    "tui",
-    "wix/**",
-    "xcode/**",
-    ## TODO "vendor/**",
-    ## archive for reference
-    "vendor/ngit-cli",
-    ## archive for reference
-    "vendor/nostui",
-    ## archive for reference
-    "vendor/rexpect",
-    ## archive for reference
-    "vendor/simple-websockets",
-    "CHANGELOG.md",
-    "CODECOV.md",
-    "Contrapuntal_Network_Topology.md",
-    "NOSTR-TOOL.md",
-    "build-artifact.uml",
+  "GEMINI.md",
+  "Cargo.toml.orig",
+  ".devcontainer/**",
+  ".gemini/**",
+  ".github/**",
+  "assets/**",
+  "coverage/**",
+  "dist-build/**",
+  "docker/**",
+  "docs/**",
+  "examples/**",
+  "helix/**",
+  "test_screenshots/**",
+  "tui",
+  "wix/**",
+  "xcode/**",
+  ## TODO "vendor/**",
+  ## archive for reference
+  "vendor/ngit-cli",
+  ## archive for reference
+  "vendor/nostui",
+  ## archive for reference
+  "vendor/rexpect",
+  ## archive for reference
+  "vendor/simple-websockets",
+  "CHANGELOG.md",
+  "CODECOV.md",
+  "Contrapuntal_Network_Topology.md",
+  "NOSTR-TOOL.md",
+  "build-artifact.uml",
 ]
 
 [package.metadata.wix]
@@ -56,58 +56,58 @@ eula = false
 
 [workspace]
 members = [
-    ".",
-    # Root crate
-    "asyncgit",
-    "bins",
-    "chat",
-    "crawler",
-    "docker",
-    "filetreelist",
-    "git2-hooks",
-    "git2-testing",
-    "grammar",
-    "invalidstring",
-    "js",
-    "legit",
-    "ngit",
-    "nips",
-    "p2p",
-    "qr",
-    "relay",
-    "relay/extensions",
-    "scopetime",
-    "tui",
-    "types",
-    "web",
+  ".",
+  # Root crate
+  "asyncgit",
+  "bins",
+  "chat",
+  "crawler",
+  "docker",
+  "filetreelist",
+  "git2-hooks",
+  "git2-testing",
+  "grammar",
+  "invalidstring",
+  "js",
+  "legit",
+  "ngit",
+  "nips",
+  "p2p",
+  "qr",
+  "relay",
+  "relay/extensions",
+  "scopetime",
+  "tui",
+  "types",
+  "web",
 ]
 exclude = ["vendor/**"]
 
 [workspace.package]
 # gnostr semver: blockheight is major, weeble is minor, wobble is patch.
-version = "975739.1839.242648"
+version = "975739.1839.244204"
 
 exclude = [
-    ".git/",
-    ".github/",
-    ".gnostr",
-    ".gnostr/.git",
-    "**.gif",
-    "**.md",
-    "*assets/",
-    "*benches/",
-    "*ci/",
-    "*docs/",
-    "*examples/",
-    "*target/",
-    #"config/",##for app
-    "git2-testing",
-    #"tests/",
-    "org",
-    "proxy",
-    "xcode",
-    "xq",
-    "GEMINI.md",
+  ".git/",
+  ".github/",
+  ".gnostr",
+  ".gnostr/.git",
+  "**.gif",
+  "**.md",
+  "*assets/",
+  "*benches/",
+  "*ci/",
+  "*docs/",
+  "*examples/",
+  "*target/",
+  #"config/",##for app
+  "git2-testing",
+  #"tests/",
+  "org",
+  "proxy",
+  "xcode",
+  "xq",
+  "GEMINI.md",
 ]
 
 [workspace.dependencies]
@@ -130,8 +130,8 @@ base64 = "0.22.1"
 bech32 = "0.11"
 bincode = "1.3.1"
 bip32 = { version = "0.5", default-features = false, features = [
-    "secp256k1",
-    "std",
+  "secp256k1",
+  "std",
 ] }
 bip39 = { package = "tiny-bip39", version = "2.0.0" }
 bitcoin_hashes = "0.14.0"
@@ -142,12 +142,12 @@ chacha20 = "0.9"
 chacha20poly1305 = { version = "0.10.1" }
 chrono = { version = "0.4" }
 clap = { version = "4.5.41", features = [
-    "std",
-    "cargo",
-    "derive",
-    "help",
-    "usage",
-    "env",
+  "std",
+  "cargo",
+  "derive",
+  "help",
+  "usage",
+  "env",
 ] }
 console = { version = "0.16.0" }
 const_format = "0.2"
@@ -159,32 +159,32 @@ dialoguer = { version = "0.12.0" }
 directories = { version = "6.0.0" }
 env_logger = "0.11"
 expectrl = "0.8.0"
-filetreelist = { path = "filetreelist", package = "gnostr-filetreelist", version = ">=975739.1839.242648" }
+filetreelist = { path = "filetreelist", package = "gnostr-filetreelist", version = ">=975739.1839.243975" }
 flate2 = "1.1.8"
 function_name = "0.3.0"
 futures = { version = "0.3.31" }
 futures-util = "0.3.31"
 git2 = { version = "^0.21", default-features = false, features = ["cred"] }
-git2-hooks = { path = "git2-hooks", package = "gnostr-git2-hooks", version = ">=975739.1839.242648" }
-git2-testing = { path = "git2-testing", package = "gnostr-git2-testing", version = ">=975739.1839.242648" }
+git2-hooks = { path = "git2-hooks", package = "gnostr-git2-hooks", version = ">=975739.1839.243975" }
+git2-testing = { path = "git2-testing", package = "gnostr-git2-testing", version = ">=975739.1839.243975" }
 # Keep the root workspace dependency on the current local asyncgit version during publish.
-gnostr-asyncgit = { path = "asyncgit", version = ">=975739.1839.242648", default-features = false, features = [
-    "vendor-openssl",
+gnostr-asyncgit = { path = "asyncgit", version = ">=975739.1839.243975", default-features = false, features = [
+  "vendor-openssl",
 ] }
-gnostr-chat = { path = "chat", version = ">=975739.1839.242648" }
+gnostr-chat = { path = "chat", version = ">=975739.1839.243975" }
 # Keep crawler aligned with the current workspace version here so the root package can package cleanly.
-gnostr-crawler = { path = "crawler", version = ">=975739.1839.242648" }
-gnostr-docker = { path = "./docker", version = ">=975739.1839.242648" }
+gnostr-crawler = { path = "crawler", version = ">=975739.1839.243975" }
+gnostr-docker = { path = "./docker", version = ">=975739.1839.243975" }
 
-gnostr-extensions = { path = "relay/extensions", version = ">=975739.1839.242648", default-features = false }
-gnostr-grammar = { path = "grammar", version = ">=975739.1839.242648" }
-gnostr-js = { path = "js", version = ">=975739.1839.242648", default-features = false }
+gnostr-extensions = { path = "relay/extensions", version = ">=975739.1839.243975", default-features = false }
+gnostr-grammar = { path = "grammar", version = ">=975739.1839.243975" }
+gnostr-js = { path = "js", version = ">=975739.1839.243975", default-features = false }
 #gnostr-grammar = { version = "1894.934224.276199", path = "grammar" }
-gnostr-legit = { path = "legit", version = ">=975739.1839.242648" }
-gnostr-p2p = { path = "p2p", version = ">=975739.1839.242648" }
-gnostr-relay = { path = "relay", version = ">=975739.1839.242648", default-features = false }
-gnostr-types = { path = "types", version = ">=975739.1839.242648" }
-gnostr_qr = { path = "qr", version = ">=975739.1839.242648" }
+gnostr-legit = { path = "legit", version = ">=975739.1839.243975" }
+gnostr-p2p = { path = "p2p", version = ">=975739.1839.243975" }
+gnostr-relay = { path = "relay", version = ">=975739.1839.243975", default-features = false }
+gnostr-types = { path = "types", version = ">=975739.1839.243975" }
+gnostr_qr = { path = "qr", version = ">=975739.1839.243975" }
 handlebars = { version = "6.3.2" }
 #zeroize = "1.6.0"
 
@@ -196,7 +196,7 @@ httparse = "1.10.1"
 humantime = "2.1.3"
 include_dir = { version = "0.7.4", features = ["glob", "metadata"] }
 indicatif = { version = "0.18.0" }
-invalidstring = { path = "invalidstring", package = "gnostr-invalidstring", version = ">=975739.1839.242648" }
+invalidstring = { path = "invalidstring", package = "gnostr-invalidstring", version = ">=975739.1839.243975" }
 itertools = "0.14.0"
 k256 = { version = "0.13", features = ["schnorr", "ecdh"] }
 kanal = "0.1.1"
@@ -204,43 +204,43 @@ lazy_static = "1.5.0"
 libc = "0.2"
 # libp2p = { version = "0.54.1", features = ["full"] }
 libp2p = { version = "0.54.1", features = [
-    "full",
-    "autonat",
-    "cbor",
-    "dcutr",
-    "dns",
-    "ecdsa",
-    "ed25519",
-    "floodsub",
-    "gossipsub",
-    "identify",
-    "json",
-    "kad",
-    "macros",
-    "mdns",
-    "memory-connection-limits",
-    "metrics",
-    "noise",
-    "ping",
-    "plaintext",
-    "pnet",
-    "quic",
-    "relay",
-    "rendezvous",
-    "request-response",
-    "rsa",
-    "secp256k1",
-    "serde",
-    "tcp",
-    "tls",
-    "tokio",
-    "uds",
-    "upnp",
-    "wasm-bindgen",
-    #"webrtc",
-    "websocket",
-    "webtransport-websys",
-    "yamux",
+  "full",
+  "autonat",
+  "cbor",
+  "dcutr",
+  "dns",
+  "ecdsa",
+  "ed25519",
+  "floodsub",
+  "gossipsub",
+  "identify",
+  "json",
+  "kad",
+  "macros",
+  "mdns",
+  "memory-connection-limits",
+  "metrics",
+  "noise",
+  "ping",
+  "plaintext",
+  "pnet",
+  "quic",
+  "relay",
+  "rendezvous",
+  "request-response",
+  "rsa",
+  "secp256k1",
+  "serde",
+  "tcp",
+  "tls",
+  "tokio",
+  "uds",
+  "upnp",
+  "wasm-bindgen",
+  #"webrtc",
+  "websocket",
+  "webtransport-websys",
+  "yamux",
 ] }
 libp2p-quic = { version = "^0.12", features = ["async-std"] }
 libp2p-tls = "^0.6"
@@ -269,9 +269,9 @@ once_cell = "1.21.3"
 parking_lot = "0.12.3"
 passwords = { version = "3.1.16" }
 pbkdf2 = { version = "0.12", default-features = false, features = [
-    "hmac",
-    "sha2",
-    "std",
+  "hmac",
+  "sha2",
+  "std",
 ] }
 predicates = "3.1.3"
 pretty_env_logger = { version = "0.5.0" }
@@ -282,7 +282,7 @@ quote = "1.0"
 rand = "0.8"
 rand_core = { version = "0.6", features = ["getrandom"] }
 ratatui = { version = "0.30.2", default-features = false, features = [
-    "macros",
+  "macros",
 ] }
 regex = "1.11"
 reqwest = { version = "0.12.22", features = ["json", "blocking"] }
@@ -293,23 +293,23 @@ rpassword = "=7.4.0"
 russh = { version = "0.37.1", features = ["openssl"] }
 russh-keys = "0.37.1"
 rust-embed = { version = "8.6.0", features = [
-    "axum",
-    "debug-embed",
-    "include-exclude",
+  "axum",
+  "debug-embed",
+  "include-exclude",
 ] }
 rust-ini = "0.21.3"
 rustls = { version = "0.23", default-features = false, features = [
-    "ring",
-    "std",
-    "tls12",
+  "ring",
+  "std",
+  "tls12",
 ] }
-scopetime = { path = "scopetime", package = "gnostr-scopetime", version = ">=975739.1839.242648" }
+scopetime = { path = "scopetime", package = "gnostr-scopetime", version = ">=975739.1839.243975" }
 scrypt = { version = "0.11.0" }
 secp256k1 = { version = "0.29.1", features = [
-    "hashes",
-    "global-context",
-    "rand-std",
-    "serde",
+  "hashes",
+  "global-context",
+  "rand-std",
+  "serde",
 ] }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = { version = "1.0.140" }
@@ -332,11 +332,11 @@ struct-patch = "0.4.1"
 structopt = "0.3.26"
 syn = "2.0"
 syntect = { version = "5.3.0", default-features = false, features = [
-    "parsing",
-    "default-syntaxes",
-    "default-themes",
-    "html",
-    "regex-fancy",
+  "parsing",
+  "default-syntaxes",
+  "default-themes",
+  "html",
+  "regex-fancy",
 ] }
 tar = { version = "0.4.44", default-features = false }
 tempfile = "3.24.0"
@@ -352,26 +352,26 @@ tiny_http = { version = "0.12" }
 tokio = { version = "1.46.1", features = ["full"] }
 tokio-stream = "0.1.18"
 tokio-tungstenite = { version = "0.26.2", features = [
-    "rustls-tls-webpki-roots",
+  "rustls-tls-webpki-roots",
 ] }
 tokio-util = { version = "0.7.18", features = ["io"] }
 toml = "0.8.20"
 tower = { version = "0.5.3" }
 tower-http = { version = "0.6.8", features = [
-    "cors",
-    "timeout",
-    "fs",
-    "trace",
+  "cors",
+  "timeout",
+  "fs",
+  "trace",
 ] }
 tower-layer = "0.3.3"
 tower-service = "0.3.3"
 tracing = "0.1.44"
 tracing-core = "0.1.36"
 tracing-subscriber = { version = "0.3.22", default-features = false, features = [
-    "env-filter",
-    "smallvec",
-    "parking_lot",
-    "fmt",
+  "env-filter",
+  "smallvec",
+  "parking_lot",
+  "fmt",
 ] }
 tree-sitter = "0.23.2"
 tree-sitter-highlight = "0.23.2"
@@ -533,7 +533,7 @@ doctest = false
 [features]
 default = ["ghemoji", "regex-fancy", "trace-libgit", "blossom"]
 long_tests = []
-expensive_tests = ["long_tests"] # Backward-compatible alias.
+expensive_tests = ["long_tests"]                                # Backward-compatible alias.
 blossom = []
 ipfs = []
 ghemoji = ["dep:gh-emoji"]
@@ -544,11 +544,11 @@ regex-onig = ["syntect/regex-onig", "two-face/syntect-onig"]
 timing = ["scopetime/enabled"]
 trace-libgit = ["gnostr-asyncgit/trace-libgit"]
 vendor-openssl = [
-    "gnostr-asyncgit/vendor-openssl",
-    "gnostr-legit/vendored-openssl",
-    "dep:git2",
-    "git2/vendored-openssl",
-    "openssl/vendored",
+  "gnostr-asyncgit/vendor-openssl",
+  "gnostr-legit/vendored-openssl",
+  "dep:git2",
+  "git2/vendored-openssl",
+  "openssl/vendored",
 ]
 vendored-openssl = ["vendor-openssl"]
 nightly = []
@@ -571,9 +571,9 @@ anyhow = { workspace = true }
 
 arc-swap = "1.7"
 arduous_rt = { workspace = true, features = [
-    "governance",
-    "policy-toml",
-    "admission",
+  "governance",
+  "policy-toml",
+  "admission",
 ] }
 argparse = "0.2.2"
 ascii = { workspace = true }
@@ -586,11 +586,11 @@ async-wsocket = { workspace = true }
 auth-git2 = { workspace = true }
 
 axum = { version = "0.7", features = [
-    "query",
-    "tokio",
-    "http1",
-    "macros",
-    "ws",
+  "query",
+  "tokio",
+  "http1",
+  "macros",
+  "ws",
 ] }
 axum-core = "0.4.5"
 axum-template = { version = "0.3.0", features = ["tera"] }
@@ -622,8 +622,8 @@ colored = "2.0.0"
 colorful = "0.2"
 comrak = "0.28.0"
 config = { version = "0.14.0", features = [
-    "toml",
-    "json",
+  "toml",
+  "json",
 ], default-features = false }
 console = { workspace = true }
 
@@ -665,27 +665,27 @@ git2-hooks = { workspace = true }
 gitui = "0.28.1"
 
 gix = { version = "0.66", default-features = false, features = [
-    "fast-sha1",
-    "tracing",
-    "parallel",
-    "blob-diff",
-    "revision",
+  "fast-sha1",
+  "tracing",
+  "parallel",
+  "blob-diff",
+  "revision",
 ] }
 globset = "0.4"
 
 ##gitui
 gnostr-asyncgit = { workspace = true, features = ["tui"] }
-gnostr-crawler = { version = ">=975739.1839.242648", path = "crawler" }
+gnostr-crawler = { version = ">=975739.1839.243975", path = "crawler" }
 
 gnostr-docker = { workspace = true }
-gnostr-git-helpers = { version = ">=975739.1839.242648", path = "git-helpers" }
+gnostr-git-helpers = { version = ">=975739.1839.243975", path = "git-helpers" }
 gnostr-grammar = { workspace = true }
 gnostr-js = { workspace = true, default-features = false, optional = true }
 gnostr-legit = { workspace = true }
 gnostr-relay = { workspace = true }
-gnostr-web = { path = "web", version = ">=975739.1839.242648", default-features = false }
-gnostr_chat = { package = "gnostr-chat", path = "chat", version = ">=975739.1839.242648" }
-gnostr_p2p = { package = "gnostr-p2p", path = "p2p", version = ">=975739.1839.242648" }
+gnostr-web = { path = "web", version = ">=975739.1839.243975", default-features = false }
+gnostr_chat = { package = "gnostr-chat", path = "chat", version = ">=975739.1839.243975" }
+gnostr_p2p = { package = "gnostr-p2p", path = "p2p", version = ">=975739.1839.243975" }
 gnostr_qr = { workspace = true }
 handlebars = { workspace = true, optional = true }
 hex = { workspace = true }
@@ -724,8 +724,8 @@ mailparse = { workspace = true }
 md5 = "0.7"
 metrics = "0.23.0"
 moka = { version = "0.12.0", features = ["future"], optional = true }
-ngit = { package = "gnostr-ngit", version = ">=975739.1839.242648", path = "ngit", features = [
-    "vendored-openssl",
+ngit = { package = "gnostr-ngit", version = ">=975739.1839.243975", path = "ngit", features = [
+  "vendored-openssl",
 ] }
 nostr = { workspace = true }
 nostr-connect = { workspace = true }
@@ -775,8 +775,8 @@ rand = { workspace = true }
 rand_core = { workspace = true }
 ##
 ratatui = { workspace = true, default-features = false, features = [
-    'crossterm',
-    'serde',
+  'crossterm',
+  'serde',
 ] }
 rayon-core = "1.12"
 rcgen = "^0.13"
@@ -787,7 +787,7 @@ rkyv = "0.8"
 rocket = { version = "0.5.1", optional = true }
 
 rocksdb = { version = "0.22", default-features = false, features = [
-    "snappy",
+  "snappy",
 ], optional = true }
 ron = "0.8"
 rpassword = "=7.4.0"
@@ -823,10 +823,10 @@ ssh-key = { version = "0.6.2", features = ["ed25519"] }
 strip-ansi-escapes = "0.2.0"
 struct-patch = "0.4"
 syntect = { version = "5.2", default-features = false, features = [
-    "parsing",
-    "default-syntaxes",
-    "default-themes",
-    "html",
+  "parsing",
+  "default-syntaxes",
+  "default-themes",
+  "html",
 ] }
 tar = { version = "0.4", default-features = false, optional = true }
 tempfile = "3.5.0"
@@ -906,10 +906,10 @@ sd-notify = "0.4.1"
 
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = [
-    "winnt",
-    "handleapi",
-    "processthreadsapi",
-    "errhandlingapi",
+  "winnt",
+  "handleapi",
+  "processthreadsapi",
+  "errhandlingapi",
 ] }
 # [target.'cfg(windows)'.dependencies.windows-sys]
 # version = "0.52" # or the version matching your error
@@ -920,16 +920,16 @@ winapi = { version = "0.3", features = [
 # ]
 
 windows-sys_048 = { package = "windows-sys", version = "0.48", features = [
-    "Win32_System_Threading",
-    "Win32_Foundation",
-    "Win32_Security",
+  "Win32_System_Threading",
+  "Win32_Foundation",
+  "Win32_Security",
 ] }
 
 # Patch for version 0.52
 windows-sys_052 = { package = "windows-sys", version = "0.52", features = [
-    "Win32_System_Threading",
-    "Win32_Foundation",
-    "Win32_Security",
+  "Win32_System_Threading",
+  "Win32_Foundation",
+  "Win32_Security",
 ] }
 
 [build-dependencies]

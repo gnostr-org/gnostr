@@ -324,8 +324,72 @@ if [ "$DRY_RUN" = true ]; then
     exit 0
 fi
 
+# The sync below bumps versions in vendor's nested fork submodules too
+# (e.g. ipfs/ffi/rust), and the rest of the sync computes dependency
+# versions FROM those manifests. So vendor goes first: bump the managed
+# vendor manifests, commit+push each affected fork, bump the gitlinks in
+# gnostr-vendor, push it, and stage the vendor pointer -- before any
+# other manifest is touched, tagged, or published.
+release_vendor_submodules() {
+    [ -d vendor ] || return 0
+    local submodules=() s
+    while read -r _ s; do
+        submodules+=("$s")
+    done < <(git -C vendor config --file .gitmodules --get-regexp 'submodule\..*\.path' 2>/dev/null || true)
+    [ "${#submodules[@]}" -gt 0 ] || return 0
+
+    # Manifests under vendor/ that managed manifests depend on by
+    # versioned path -- these are the ones the sync would bump.
+    local vendor_manifests=() manifest dep_name dep_path dep_manifest
+    while read -r manifest; do
+        while IFS=$'\t' read -r dep_name dep_path; do
+            [ -z "$dep_name" ] && continue
+            dep_manifest="$(resolve_dep_manifest "$manifest" "$dep_path" 2>/dev/null)" || continue
+            case "$dep_manifest" in
+                vendor/*)
+                    local in_list=false v
+                    for v in "${vendor_manifests[@]:-}"; do
+                        [ "$v" = "$dep_manifest" ] && in_list=true && break
+                    done
+                    [ "$in_list" = false ] && vendor_manifests+=("$dep_manifest")
+                    ;;
+            esac
+        done < <(versioned_path_dependencies "$manifest")
+    done < <(managed_manifests)
+    [ "${#vendor_manifests[@]}" -gt 0 ] || return 0
+
+    echo "Releasing vendor manifests first: ${vendor_manifests[*]}"
+    local vm
+    for vm in "${vendor_manifests[@]}"; do
+        SYNC_VERSION="$WORKSPACE_VERSION" sync_package_version "$vm" "$WORKSPACE_VERSION"
+    done
+
+    local dirty=() p
+    for p in "${submodules[@]}"; do
+        if [ -d "vendor/$p" ] && [ -n "$(git -C "vendor/$p" status --porcelain 2>/dev/null)" ]; then
+            dirty+=("$p")
+        fi
+    done
+    [ "${#dirty[@]}" -gt 0 ] || { git add vendor 2>/dev/null || true; return 0; }
+
+    for p in "${dirty[@]}"; do
+        echo "vendor/$p: committing version $WORKSPACE_VERSION"
+        git -C "vendor/$p" add -A
+        git -C "vendor/$p" commit -m "$p: version $WORKSPACE_VERSION (workspace sync)"
+        git -C "vendor/$p" push
+    done
+
+    echo "vendor: bumping gitlinks for ${dirty[*]}"
+    git -C vendor add "${dirty[@]}"
+    git -C vendor commit -m "vendor: bump ${dirty[*]} (workspace sync, $WORKSPACE_VERSION)"
+    git -C vendor push
+    git add vendor
+}
+
 if [[ "$SYNC" == true ]]; then
 ensure_taplo_installed
+
+release_vendor_submodules
 
 sync_root_package_to_workspace
 
@@ -430,10 +494,48 @@ done < <(
 git add -- "${manifest_paths[@]}"
 stage_cargo_files
 
+# Commit (and push) any changes inside vendor's nested fork submodules,
+# then bump the gitlinks in gnostr-vendor and push it, then stage the
+# vendor pointer. MUST run after every mutating step (sync, cargo sort,
+# cargo update) and immediately before gnostr legit: a submodule with
+# modified content cannot be staged from the parent, and legit refuses
+# to mine while any unstaged change exists.
+commit_vendor_submodules() {
+    [ -d vendor ] || return 0
+    local submodules=() s
+    while read -r _ s; do
+        submodules+=("$s")
+    done < <(git -C vendor config --file .gitmodules --get-regexp 'submodule\..*\.path' 2>/dev/null || true)
+    [ "${#submodules[@]}" -gt 0 ] || return 0
+
+    local dirty=() p
+    for p in "${submodules[@]}"; do
+        if [ -d "vendor/$p" ] && [ -n "$(git -C "vendor/$p" status --porcelain 2>/dev/null)" ]; then
+            dirty+=("$p")
+        fi
+    done
+    [ "${#dirty[@]}" -gt 0 ] || return 0
+
+    for p in "${dirty[@]}"; do
+        echo "vendor/$p: committing before legit"
+        git -C "vendor/$p" add -A
+        git -C "vendor/$p" commit -m "$p: version $WORKSPACE_VERSION (workspace sync)"
+        git -C "vendor/$p" push
+    done
+
+    echo "vendor: bumping gitlinks for ${dirty[*]}"
+    git -C vendor add "${dirty[@]}"
+    git -C vendor commit -m "vendor: bump ${dirty[*]} (workspace sync, $WORKSPACE_VERSION)"
+    git -C vendor push
+    git add vendor
+}
+
 if [ -n "${VERSION_TAG:-}" ]; then
     cargo update --workspace
     stage_cargo_files
     git add -- Cargo.lock
+
+    commit_vendor_submodules
 
     git checkout -b "release/$VERSION_TAG"
 
@@ -445,6 +547,8 @@ elif [ "${SKIP_VERSION_COMMIT:-0}" != "1" ]; then
     cargo update --workspace
     stage_cargo_files
     git add -- Cargo.lock
+
+    commit_vendor_submodules
 
     gnostr legit -m "v$WORKSPACE_VERSION" --prefix 000000
     tag_package_versions "$WORKSPACE_VERSION"

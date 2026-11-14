@@ -70,6 +70,7 @@ if [ "$DRY_RUN" = true ]; then
     printf '%s\n' \
         "  gnostr git tag create" \
         "  update workspace package versions" \
+        "  commit+push dirty vendor fork submodules, bump vendor gitlinks, push" \
         "  taplo format Cargo.toml and manifests" \
         "  cargo update --workspace" \
         "  gnostr legit -m \"v${WORKSPACE_VERSION}\" --prefix 000000" \

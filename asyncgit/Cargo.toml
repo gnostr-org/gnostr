@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-asyncgit"
-version = "975739.1839.242648"
+version = "975739.1839.243975"
 authors = [
     "gnostr <admin@gnostr.org>",
     "extrawurst <mail@rusticorn.com>",
