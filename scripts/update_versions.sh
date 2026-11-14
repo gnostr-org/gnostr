@@ -270,7 +270,7 @@ refresh_cargo_files
 
 PUBLISH_CRATES=(
     filetreelist git-helpers git2-hooks grammar invalidstring relay scopetime
-    types qr relay/extensions asyncgit crawler legit js ngit p2p web chat . nips bins
+    types qr relay/extensions asyncgit crawler legit js ngit p2p web chat docker . nips bins
 )
 if [[ "$INTERACTIVE" == true && "$DRY_RUN" != true ]]; then
     # shellcheck source=scripts/lib/script-ui.sh

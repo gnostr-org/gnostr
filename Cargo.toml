@@ -174,7 +174,7 @@ gnostr-asyncgit = { path = "asyncgit", version = ">=975732.1839.251407", default
 gnostr-chat = { path = "chat", version = ">=975732.1839.251407" }
 # Keep crawler aligned with the current workspace version here so the root package can package cleanly.
 gnostr-crawler = { path = "crawler", version = ">=975732.1839.251407" }
-gnostr-docker = { path = "./docker" }
+gnostr-docker = { path = "./docker", version = ">=975732.1839.251407" }
 
 gnostr-extensions = { path = "relay/extensions", version = ">=975732.1839.251407", default-features = false }
 gnostr-grammar = { path = "grammar", version = ">=975732.1839.251407" }
