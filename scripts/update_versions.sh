@@ -269,7 +269,7 @@ echo "Workspace version found: $WORKSPACE_VERSION"
 refresh_cargo_files
 
 PUBLISH_CRATES=(
-    filetreelist git-helpers git2-hooks grammar invalidstring relay scopetime
+    ipfs/ffi/rust filetreelist git-helpers git2-hooks grammar invalidstring relay scopetime
     types qr relay/extensions asyncgit crawler legit js ngit p2p web chat docker . nips bins
 )
 if [[ "$INTERACTIVE" == true && "$DRY_RUN" != true ]]; then
