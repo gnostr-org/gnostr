@@ -602,7 +602,9 @@ for crate in "${PUBLISH_CRATES[@]}"; do
     # Earlier verify builds regenerate files (js/hashes.json et al);
     # stage before each publish so the batch never stalls on generated dirt.
     git add -A 2>/dev/null || true
-    publish_args=(-j"$(cargo_jobs)")
+    # Batch flow: the per-iteration staging above keeps the tree honest;
+    # allow-dirty so an ephemeral generated file can never stall the chain.
+    publish_args=(--allow-dirty -j"$(cargo_jobs)")
     if should_skip_verify "$crate"; then
         publish_args=(--no-verify "${publish_args[@]}")
     fi
