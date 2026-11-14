@@ -1,6 +1,6 @@
 [alias]
-chk = "check --target-dir ./target/check"
-tst = "test --target-dir ./target/test"
+chk = "check --target-dir target/check"
+tst = "test --target-dir target/test"
 xtask = "run --package xtask --"
 br = "build --release"
 c = "check"
@@ -12,7 +12,11 @@ clippy-ws-all = "clippy --workspace --all-targets --all-features -- -D warnings"
 run-help = "run --bin gnostr -- -h"
 
 [build]
-target-dir = "./target"
+# Relative, WITHOUT the leading "./": a literal "./" leaks into cc-rs
+# OUT_DIR on Windows, and the VS18/MSVC 14.51 cl.exe rejects writing
+# objects through a "/./" component (C1083 "Invalid argument" in
+# aws-lc-sys). "target" resolves identically but normalizes cleanly.
+target-dir = "target"
 
 [target.aarch64-unknown-linux-gnu]
 linker = "aarch64-linux-gnu-gcc"
