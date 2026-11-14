@@ -1,12 +1,14 @@
 //! Admission-control demo for the arduous_rt integration.
 //!
-//! Two phases run the same workload — 50 "core" units (priority High)
-//! and 50 "crawler" units (priority Low, sheddable) — through
-//! `arduous_rt::try_run`:
+//! Two phases run the same workload — 50 "core" units (priority High),
+//! 50 "crawler" units (priority Low, sheddable), and 50 "batch" units
+//! (priority Medium) — through `arduous_rt::try_run`:
 //!
-//!   phase 1, Load::Normal: everything completes
-//!   phase 2, Load::High:   core completes, crawler sheds with
-//!                          `AdmissionError::Shed`
+//!   phase 1, Load::Normal:   everything completes
+//!   phase 2, Load::High:     core completes, crawler sheds with
+//!                            `AdmissionError::Shed`; batch survives
+//!   phase 3, Load::Critical: core still completes; crawler and batch
+//!                            shed — priority order in action
 //!
 //! Every shed decision lands in arduous_rt's audit ring; the demo
 //! prints the trail at the end and exits non-zero if the outcome
@@ -55,31 +57,46 @@ async fn drain(set: &mut tokio::task::JoinSet<Result<u64, AdmissionError>>) -> C
     counts
 }
 
-async fn phase(load: Load) -> (Counts, Counts) {
+#[derive(Default)]
+struct PhaseCounts {
+    core: Counts,
+    crawler: Counts,
+    batch: Counts,
+}
+
+async fn phase(load: Load) -> PhaseCounts {
     report_load(load);
     let core = named_runtime("org.gnostr/core");
     let crawler = named_runtime("org.gnostr/crawler");
+    let batch = named_runtime("org.gnostr/batch");
 
     let mut core_set = tokio::task::JoinSet::new();
     let mut crawler_set = tokio::task::JoinSet::new();
+    let mut batch_set = tokio::task::JoinSet::new();
     for _ in 0..TASKS_PER_DOMAIN {
         core_set.spawn(try_run(core, work()));
         crawler_set.spawn(try_run(crawler, work()));
+        batch_set.spawn(try_run(batch, work()));
     }
-    let core_counts = drain(&mut core_set).await;
-    let crawler_counts = drain(&mut crawler_set).await;
-    (core_counts, crawler_counts)
+    PhaseCounts {
+        core: drain(&mut core_set).await,
+        crawler: drain(&mut crawler_set).await,
+        batch: drain(&mut batch_set).await,
+    }
 }
 
-fn report(label: &str, core: &Counts, crawler: &Counts) {
+fn report(label: &str, counts: &PhaseCounts) {
     println!(
-        "{label}: core {}/{} completed ({} shed), crawler {}/{} completed ({} shed)",
-        core.completed,
+        "{label}: core {}/{} ({} shed), crawler {}/{} ({} shed), batch {}/{} ({} shed)",
+        counts.core.completed,
         TASKS_PER_DOMAIN,
-        core.shed,
-        crawler.completed,
+        counts.core.shed,
+        counts.crawler.completed,
         TASKS_PER_DOMAIN,
-        crawler.shed,
+        counts.crawler.shed,
+        counts.batch.completed,
+        TASKS_PER_DOMAIN,
+        counts.batch.shed,
     );
 }
 
@@ -94,12 +111,19 @@ async fn main() -> anyhow::Result<()> {
         "org.gnostr/crawler",
         AdmissionConfig::default().with_priority(Priority::Low),
     )?;
+    set_admission(
+        "org.gnostr/batch",
+        AdmissionConfig::default().with_priority(Priority::Medium),
+    )?;
 
-    let (core_normal, crawler_normal) = phase(Load::Normal).await;
-    report("normal load", &core_normal, &crawler_normal);
+    let normal = phase(Load::Normal).await;
+    report("normal load  ", &normal);
 
-    let (core_high, crawler_high) = phase(Load::High).await;
-    report("high load  ", &core_high, &crawler_high);
+    let high = phase(Load::High).await;
+    report("high load    ", &high);
+
+    let critical = phase(Load::Critical).await;
+    report("critical load", &critical);
 
     report_load(Load::Normal);
 
@@ -109,18 +133,27 @@ async fn main() -> anyhow::Result<()> {
         if matches!(event.kind, AuditKind::Shed | AuditKind::ShedCollapsed) {
             println!("  {event:?}");
             printed += 1;
+            if printed >= 6 {
+                println!("  ... ({} more)", audit_events().len() - 6);
+                break;
+            }
         }
     }
     if printed == 0 {
         println!("  (none)");
     }
 
-    let ok = core_normal.completed == TASKS_PER_DOMAIN
-        && crawler_normal.completed == TASKS_PER_DOMAIN
-        && core_high.completed == TASKS_PER_DOMAIN
-        && core_high.shed == 0
-        && crawler_high.shed == TASKS_PER_DOMAIN
-        && crawler_high.completed == 0;
+    let ok = normal.core.completed == TASKS_PER_DOMAIN
+        && normal.crawler.completed == TASKS_PER_DOMAIN
+        && normal.batch.completed == TASKS_PER_DOMAIN
+        && high.core.completed == TASKS_PER_DOMAIN
+        && high.core.shed == 0
+        && high.crawler.shed == TASKS_PER_DOMAIN
+        && high.crawler.completed == 0
+        && high.batch.completed == TASKS_PER_DOMAIN
+        && critical.core.completed == TASKS_PER_DOMAIN
+        && critical.crawler.shed == TASKS_PER_DOMAIN
+        && critical.batch.shed == TASKS_PER_DOMAIN;
     if !ok {
         eprintln!("admission demo FAILED: outcome differs from expectation");
         std::process::exit(1);

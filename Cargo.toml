@@ -118,9 +118,9 @@ aes = "0.8"
 anyhow = { version = "1.0.98" }
 arc-swap = "1.8.0"
 # PoC: depends on the in-development arduous_rt checkout (admission
-# feature, pre-0.9.0). Flip back to a version-only dependency once
-# arduous_rt 0.9.0 is published.
-arduous_rt = { version = "0.8.2", path = "../arduous_rt" }
+# feature). Flip to a version-only dependency now that arduous_rt 0.9.0
+# is tagged.
+arduous_rt = { version = "0.9.0", path = "../arduous_rt" }
 ascii = "1.1.0"
 askama = { version = "0.12.1", default-features = false }
 assert_cmd = "2.0.17"
