@@ -64,14 +64,14 @@ env_logger = { workspace = true }
 futures = "0.3.31"
 futures-util = "0.3.31"
 getrandom = { version = "0.1.16", features = ["dummy"] }
-gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version = ">=975742.1839.241928", default-features = false, features = [
+gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version = ">=975830.1839.132068", default-features = false, features = [
     "nostr",
     "vendor-openssl",
 ] }
-gnostr-crawler = { path = "../crawler", package = "gnostr-crawler", version = ">=975742.1839.241928" }
-gnostr-js = { path = "../js", package = "gnostr-js", version = ">=975742.1839.241928", optional = true }
-gnostr-types = { path = "../types", package = "gnostr-types", version = ">=975742.1839.241928" }
-kubo-ffi = { version = ">=975742.1839.241928", path = "../vendor/ipfs/ffi/rust", optional = true }
+gnostr-crawler = { path = "../crawler", package = "gnostr-crawler", version = ">=975830.1839.132068" }
+gnostr-js = { path = "../js", package = "gnostr-js", version = ">=975830.1839.132068", optional = true }
+gnostr-types = { path = "../types", package = "gnostr-types", version = ">=975830.1839.132068" }
+kubo-ffi = { version = ">=975830.1839.132068", path = "../vendor/ipfs/ffi/rust", optional = true }
 libp2p = { version = "0.54.1", features = [
     "full",
     "autonat",
