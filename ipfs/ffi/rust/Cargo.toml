@@ -1,6 +1,6 @@
 [package]
 name = "kubo-ffi"
-version = "975732.1839.251407"
+version = "975732.1839.252422"
 edition = "2021"
 description = "Safe Rust bindings to the Kubo C FFI layer"
 license = "MIT OR Apache-2.0"

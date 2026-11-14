@@ -2,7 +2,7 @@
 
 [package]
 name = "rust-ffi-test"
-version = "975732.1839.251407"
+version = "975732.1839.252422"
 edition = "2021"
 
 [dependencies]

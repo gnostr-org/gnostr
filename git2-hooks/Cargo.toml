@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-git2-hooks"
-version = "975732.1839.251407"
+version = "975732.1839.252422"
 authors = ["extrawurst <mail@rusticorn.com>"]
 edition = "2021"
 description = "adds git hooks support based on git2-rs"
