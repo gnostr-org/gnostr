@@ -654,9 +654,7 @@ dependencies = [
 
 [[package]]
 name = "arduous_rt"
-version = "0.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5db462943b36e5c9bffbc22601d2e7356806f54bc5cc70569092b684d6222587"
+version = "0.8.2"
 dependencies = [
  "globset",
  "serde",
@@ -7281,6 +7279,7 @@ version = "975725.1839.257025"
 dependencies = [
  "actix-web",
  "anyhow",
+ "arduous_rt",
  "async-std",
  "axum 0.7.9",
  "base64 0.22.1",

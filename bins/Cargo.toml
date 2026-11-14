@@ -365,6 +365,7 @@ vendored-openssl = ["vendor-openssl"]
 [dependencies]
 actix-web = { workspace = true }
 anyhow = { workspace = true }
+arduous_rt = { workspace = true, features = ["governance", "policy-toml", "admission"] }
 async-std = { version = "1.12", features = ["attributes"] }
 axum = { workspace = true }
 base64 = { workspace = true }
@@ -445,6 +446,10 @@ walkdir = { workspace = true }
 warp = "0.3"
 webbrowser = "0.8"
 zeroize = { workspace = true }
+
+[[example]]
+name = "admission_demo"
+path = "examples/admission_demo.rs"
 
 [[example]]
 name = "git_tui"
