@@ -157,6 +157,13 @@ jobs:
           # secret in the repo's Settings → Secrets and variables → Actions
           # (a Pinata JWT from app.pinata.cloud → Keys). Missing/empty = skipped.
           pinata-jwt: ${{ secrets.PINATA_JWT }}
+          # Optional: pin the release CAR to Filebase IPFS. Create three
+          # secrets in the repo's Settings → Secrets and variables → Actions
+          # (Filebase dashboard → Access Keys: accessKeyId + secretAccessKey;
+          # the bucket is the bucket you pin into). Missing/empty = skipped.
+          filebase-access-key-id: ${{ secrets.FILEBASE_ACCESS_KEY_ID }}
+          filebase-secret-access-key: ${{ secrets.FILEBASE_SECRET_ACCESS_KEY }}
+          filebase-bucket: ${{ secrets.FILEBASE_BUCKET }}
 
       - name: Record deployment marker (daily gate)
         id: marker
