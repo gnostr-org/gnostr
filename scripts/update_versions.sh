@@ -565,7 +565,27 @@ elif [ "${SKIP_VERSION_COMMIT:-0}" != "1" ]; then
 fi
 fi
 
+# The whole sequence must be COMPLETE before anything publishes.
+# Batch order: commit+push every vendor fork, commit+push gnostr-vendor,
+# stage the vendor pointer, then refuse to publish if anything is still
+# uncommitted.
+complete_sequence_before_publish() {
+    commit_vendor_submodules
+    local p
+    for p in $(git -C vendor config --file .gitmodules --get-regexp 'submodule\..*\.path' 2>/dev/null | awk '{print $2}'); do
+        [ -d "vendor/$p" ] && git -C "vendor/$p" push 2>/dev/null
+    done
+    git -C vendor push 2>/dev/null
+    git add vendor 2>/dev/null
+    if [ -n "$(git status --porcelain | grep -v '^??')" ]; then
+        echo "Error: sequence incomplete -- uncommitted changes remain; refusing to publish."
+        git status --short
+        exit 1
+    fi
+}
+
 if [[ "$PUBLISH" == true ]]; then
+complete_sequence_before_publish
 if [ -z "${CARGO_REGISTRY_TOKEN:-}" ]; then
     echo "Error: CARGO_REGISTRY_TOKEN is not set."
     echo "Please set the CARGO_REGISTRY_TOKEN environment variable before running this script."
