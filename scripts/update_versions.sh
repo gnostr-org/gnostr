@@ -576,7 +576,10 @@ complete_sequence_before_publish() {
         [ -d "vendor/$p" ] && git -C "vendor/$p" push 2>/dev/null || true
     done
     git -C vendor push 2>/dev/null || true
-    git add vendor 2>/dev/null
+    git add vendor 2>/dev/null || true
+    # Builds regenerate files (e.g. js/hashes.json); stage everything so
+    # no publish step trips over an uncommitted generated file.
+    git add -A
     if [ -n "$(git status --porcelain | grep -v '^??')" ]; then
         echo "Error: sequence incomplete -- uncommitted changes remain; refusing to publish."
         git status --short
@@ -596,6 +599,9 @@ fi
 export CARGO_REGISTRY_TOKEN
 
 for crate in "${PUBLISH_CRATES[@]}"; do
+    # Earlier verify builds regenerate files (js/hashes.json et al);
+    # stage before each publish so the batch never stalls on generated dirt.
+    git add -A 2>/dev/null || true
     publish_args=(-j"$(cargo_jobs)")
     if should_skip_verify "$crate"; then
         publish_args=(--no-verify "${publish_args[@]}")
