@@ -573,9 +573,9 @@ complete_sequence_before_publish() {
     commit_vendor_submodules
     local p
     for p in $(git -C vendor config --file .gitmodules --get-regexp 'submodule\..*\.path' 2>/dev/null | awk '{print $2}'); do
-        [ -d "vendor/$p" ] && git -C "vendor/$p" push 2>/dev/null
+        [ -d "vendor/$p" ] && git -C "vendor/$p" push 2>/dev/null || true
     done
-    git -C vendor push 2>/dev/null
+    git -C vendor push 2>/dev/null || true
     git add vendor 2>/dev/null
     if [ -n "$(git status --porcelain | grep -v '^??')" ]; then
         echo "Error: sequence incomplete -- uncommitted changes remain; refusing to publish."
