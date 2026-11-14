@@ -41,7 +41,7 @@ gix = { version = "0.66", default-features = false, features = [
 gnostr-asyncgit = { workspace = true, features = ["vendor-openssl"] }
 gnostr-grammar = { workspace = true }
 gnostr-js = { workspace = true }
-gnostr-p2p = { version = ">=975739.1839.243975", path = "../p2p", optional = true }
+gnostr-p2p = { version = ">=975739.1839.244619", path = "../p2p", optional = true }
 handlebars = { workspace = true }
 httparse = "1.7"
 humantime = "2.1"
