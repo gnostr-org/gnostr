@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-relay"
-version = "975732.1839.252422"
+version = "975739.1839.242648"
 edition = "2021"
 authors = ["Arron zhang <arronzhang@me.com>", "gnostr <admin@gnostr.org>"]
 description = "gnostr:git+nostr protocol relay"
@@ -24,7 +24,7 @@ actix-web = { workspace = true }
 anyhow = { workspace = true }
 clap = { workspace = true }
 directories = { workspace = true }
-kubo-ffi = { version = "0.3", path = "../vendor/ipfs/ffi/rust", optional = true }
+kubo-ffi = { version = ">=0.3.0", path = "../vendor/ipfs/ffi/rust", optional = true }
 nostr-relay = { version = "0.4.8", default-features = false }
 num_cpus = { workspace = true }
 tokio = { workspace = true }
