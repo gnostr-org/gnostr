@@ -78,7 +78,7 @@ pub fn get_js_assets() -> HashMap<String, &'static [u8]> {
     );
     assets.insert(
         "hashes.json".to_string(),
-        include_bytes!(concat!(env!("OUT_DIR"), "/hashes.json")) as &'static [u8],
+        include_bytes!("hashes.json") as &'static [u8],
     );
     assets.insert(
         "postbox.js".to_string(),

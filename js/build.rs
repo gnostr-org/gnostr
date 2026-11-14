@@ -42,7 +42,10 @@ fn main() {
         app_metadata.to_string()
     );
     write_nip89_app_asset(&build_name);
-    write_js_hashes_asset();
+    // Bypassed: the asset map embeds the tracked src/js/hashes.json
+    // directly, so builds must not regenerate files in the source tree
+    // (it dirties the worktree and stalls the publish batch).
+    // write_js_hashes_asset();
     watch_sources(Path::new("src/js"), &["js"]);
     watch_sources(Path::new("src/css"), &["css"]);
     watch_sources(Path::new("src"), &["html"]);
