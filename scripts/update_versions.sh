@@ -339,8 +339,10 @@ release_vendor_submodules() {
     [ "${#submodules[@]}" -gt 0 ] || return 0
 
     # Manifests under vendor/ that managed manifests depend on by
-    # versioned path -- these are the ones the sync would bump.
-    local vendor_manifests=() manifest dep_name dep_path dep_manifest
+    # versioned path -- these are the ones the sync would bump. Union
+    # with PUBLISH_CRATES entries that live under vendor/ so crates like
+    # kubo-ffi are bumped even when dependency resolution misses them.
+    local vendor_manifests=() manifest dep_name dep_path dep_manifest crate
     while read -r manifest; do
         while IFS=$'\t' read -r dep_name dep_path; do
             [ -z "$dep_name" ] && continue
@@ -356,6 +358,13 @@ release_vendor_submodules() {
             esac
         done < <(versioned_path_dependencies "$manifest")
     done < <(managed_manifests)
+    for crate in "${PUBLISH_CRATES[@]}"; do
+        case "$crate" in
+            vendor/*)
+                [ -f "$crate/Cargo.toml" ] && vendor_manifests+=("$crate/Cargo.toml")
+                ;;
+        esac
+    done
     [ "${#vendor_manifests[@]}" -gt 0 ] || return 0
 
     echo "Releasing vendor manifests first: ${vendor_manifests[*]}"
@@ -447,6 +456,7 @@ fi
 PUBLISH_NO_VERIFY_CRATES=(
     asyncgit
     types
+    vendor/ipfs/ffi/rust # kubo-ffi: build.rs needs kubo Go sources outside the tarball
 )
 
 should_skip_verify() {

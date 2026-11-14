@@ -71,7 +71,7 @@ gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version =
 gnostr-crawler = { path = "../crawler", package = "gnostr-crawler", version = ">=975739.1839.244796" }
 gnostr-js = { path = "../js", package = "gnostr-js", version = ">=975739.1839.244796", optional = true }
 gnostr-types = { path = "../types", package = "gnostr-types", version = ">=975739.1839.244796" }
-kubo-ffi = { version = ">=0.3.0", path = "../vendor/ipfs/ffi/rust", optional = true }
+kubo-ffi = { version = ">=975739.1839.244796", path = "../vendor/ipfs/ffi/rust", optional = true }
 libp2p = { version = "0.54.1", features = [
     "full",
     "autonat",
