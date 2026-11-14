@@ -407,7 +407,7 @@ gnostr_ngit = { package = "gnostr-ngit", path = "../ngit", version = ">=975732.1
 gnostr_qr = { path = "../qr", version = ">=975732.1839.252422" }
 hex = { workspace = true }
 k256 = { workspace = true }
-kubo-ffi = { version = ">=975732.1839.252422", path = "../ipfs/ffi/rust", optional = true }
+kubo-ffi = { version = "0.3", path = "../vendor/ipfs/ffi/rust", optional = true }
 libp2p = { workspace = true }
 log = { workspace = true }
 nips = { path = "../nips", version = ">=975732.1839.252422" }

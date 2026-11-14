@@ -1,3 +1,0 @@
-[submodule "webui"]
-	path = webui
-	url = https://github.com/RandyMcMillan/ipfs-webui.git
