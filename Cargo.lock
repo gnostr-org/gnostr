@@ -6870,7 +6870,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr"
-version = "975693.1839.286748"
+version = "975725.1839.257025"
 dependencies = [
  "actix-cors",
  "actix-http",
@@ -7125,7 +7125,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-asyncgit"
-version = "975693.1839.286748"
+version = "975725.1839.257025"
 dependencies = [
  "actix-test",
  "aes",
@@ -7277,7 +7277,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-bins"
-version = "975693.1839.286748"
+version = "975725.1839.257025"
 dependencies = [
  "actix-web",
  "anyhow",
@@ -7358,7 +7358,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-chat"
-version = "975693.1839.286748"
+version = "975725.1839.257025"
 dependencies = [
  "anyhow",
  "arduous_rt",
@@ -7395,7 +7395,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-crawler"
-version = "975693.1839.286748"
+version = "975725.1839.257025"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -7440,7 +7440,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-docker"
-version = "975693.1839.286748"
+version = "975725.1839.257025"
 dependencies = [
  "anyhow",
  "bollard",
@@ -7468,7 +7468,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-extensions"
-version = "975693.1839.286748"
+version = "975725.1839.257025"
 dependencies = [
  "actix-web",
  "gnostr-relay",
@@ -7479,7 +7479,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-filetreelist"
-version = "975693.1839.286748"
+version = "975725.1839.257025"
 dependencies = [
  "pretty_assertions",
  "thiserror 1.0.69",
@@ -7487,7 +7487,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-git-helpers"
-version = "975693.1839.286748"
+version = "975725.1839.257025"
 dependencies = [
  "anyhow",
  "bech32 0.11.1",
@@ -7509,7 +7509,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-git2-hooks"
-version = "975693.1839.286748"
+version = "975725.1839.257025"
 dependencies = [
  "git2 0.21.0",
  "gix-path 0.11.3",
@@ -7523,7 +7523,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-git2-testing"
-version = "975693.1839.286748"
+version = "975725.1839.257025"
 dependencies = [
  "env_logger 0.11.11",
  "git2 0.21.0",
@@ -7534,7 +7534,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-grammar"
-version = "975693.1839.286748"
+version = "975725.1839.257025"
 dependencies = [
  "anyhow",
  "cc",
@@ -7554,11 +7554,11 @@ dependencies = [
 
 [[package]]
 name = "gnostr-invalidstring"
-version = "975693.1839.286748"
+version = "975725.1839.257025"
 
 [[package]]
 name = "gnostr-js"
-version = "975693.1839.286748"
+version = "975725.1839.257025"
 dependencies = [
  "actix-web",
  "anyhow",
@@ -7589,7 +7589,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-legit"
-version = "975693.1839.286748"
+version = "975725.1839.257025"
 dependencies = [
  "anyhow",
  "chrono",
@@ -7607,7 +7607,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-ngit"
-version = "975693.1839.286748"
+version = "975725.1839.257025"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -7657,7 +7657,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-p2p"
-version = "975693.1839.286748"
+version = "975725.1839.257025"
 dependencies = [
  "ansi_term",
  "anyhow",
@@ -7705,7 +7705,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-relay"
-version = "975693.1839.286748"
+version = "975725.1839.257025"
 dependencies = [
  "actix-http",
  "actix-web",
@@ -7722,7 +7722,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-scopetime"
-version = "975693.1839.286748"
+version = "975725.1839.257025"
 dependencies = [
  "log",
  "scopetime",
@@ -7730,7 +7730,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-tui"
-version = "975693.1839.286748"
+version = "975725.1839.257025"
 dependencies = [
  "anyhow",
  "chrono",
@@ -7758,7 +7758,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-types"
-version = "975693.1839.286748"
+version = "975725.1839.257025"
 dependencies = [
  "actix-test",
  "aes",
@@ -7878,7 +7878,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-web"
-version = "975693.1839.286748"
+version = "975725.1839.257025"
 dependencies = [
  "actix-http",
  "anyhow",
@@ -7952,7 +7952,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr_qr"
-version = "975693.1839.286748"
+version = "975725.1839.257025"
 dependencies = [
  "hex",
  "image",
@@ -9683,7 +9683,7 @@ dependencies = [
 
 [[package]]
 name = "kubo-ffi"
-version = "975693.1839.286748"
+version = "975725.1839.257025"
 dependencies = [
  "crossterm 0.29.0",
  "ratatui",
@@ -11622,7 +11622,7 @@ dependencies = [
 
 [[package]]
 name = "nips"
-version = "975693.1839.286748"
+version = "975725.1839.257025"
 dependencies = [
  "axum 0.7.9",
  "bytes",
@@ -17120,7 +17120,7 @@ dependencies = [
 
 [[package]]
 name = "test_utils"
-version = "975693.1839.286748"
+version = "975725.1839.257025"
 dependencies = [
  "anyhow",
  "assert_cmd",
