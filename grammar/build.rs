@@ -253,7 +253,10 @@ static MACOS_BLACKLISTED: &[&str] = &[
 static MUSL_BLACKLISTED: &[&str] = &[];
 
 /// Grammars that fail to compile on Windows targets.
-static WINDOWS_BLACKLISTED: &[&str] = &[];
+static WINDOWS_BLACKLISTED: &[&str] = &[
+    // Fails to link on MSVC (unresolved external symbol tree_sitter_hcl).
+    "hcl",
+];
 
 /// Returns true if the grammar should be skipped for the current build target.
 fn is_blacklisted(name: &str) -> bool {
