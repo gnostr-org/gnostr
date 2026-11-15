@@ -81,7 +81,7 @@ members = [
     "types",
     "web",
 ]
-exclude = ["vendor/**"]
+exclude = ["vendor/**", "vendor/ipfs/ffi/rust"]
 
 [workspace.package]
 # gnostr semver: blockheight is major, weeble is minor, wobble is patch.
