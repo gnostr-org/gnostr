@@ -304,9 +304,8 @@ fn main() -> anyhow::Result<()> {
             println!("cargo::rustc-link-lib=stdc++");
         }
         Ok("windows") => {
-            // Windows MSVC targets need the C++ runtime for generated scanner code.
-            println!("cargo::rustc-link-lib=dylib=msvcp140");
-            println!("cargo::rustc-link-lib=dylib=vcruntime140");
+            // MSVC C++ objects pull in msvcprt/vcruntime via default-lib pragmas;
+            // msvcp140.lib does not exist in the VS 2026 (14.51) toolset.
         }
         _ => {}
     }
