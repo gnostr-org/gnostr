@@ -60,6 +60,9 @@ jobs:
         with:
           persist-credentials: false
           submodules: recursive
+      - name: Align vendored crate repository URL
+        # dist requires every workspace crate to agree on `repository`
+        run: sed -i 's|^repository = .*|repository = "https://github.com/gnostr-org/gnostr.git"|' vendor/ipfs/ffi/rust/Cargo.toml
       - name: Install dist
         # we specify bash to get pipefail; it guards against the `curl` command
         # failing. otherwise `sh` won't catch that `curl` returned non-0
