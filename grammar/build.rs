@@ -253,7 +253,10 @@ static MACOS_BLACKLISTED: &[&str] = &[
 static MUSL_BLACKLISTED: &[&str] = &[];
 
 /// Grammars that fail to compile on Windows targets.
-static WINDOWS_BLACKLISTED: &[&str] = &[];
+static WINDOWS_BLACKLISTED: &[&str] = &[
+    // Fails to link on MSVC (unresolved external symbol tree_sitter_hcl).
+    "hcl",
+];
 
 /// Returns true if the grammar should be skipped for the current build target.
 fn is_blacklisted(name: &str) -> bool {
@@ -304,9 +307,8 @@ fn main() -> anyhow::Result<()> {
             println!("cargo::rustc-link-lib=stdc++");
         }
         Ok("windows") => {
-            // Windows MSVC targets need the C++ runtime for generated scanner code.
-            println!("cargo::rustc-link-lib=dylib=msvcp140");
-            println!("cargo::rustc-link-lib=dylib=vcruntime140");
+            // MSVC C++ objects pull in msvcprt/vcruntime via default-lib pragmas;
+            // msvcp140.lib does not exist in the VS 2026 (14.51) toolset.
         }
         _ => {}
     }
