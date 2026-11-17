@@ -249,24 +249,23 @@ impl FileTree {
         let mut index = current_index;
 
         loop {
-            index = {
-                let new_index = if up {
-                    index.saturating_sub(1)
-                } else {
-                    index.saturating_add(1)
-                };
-
-                // when reaching usize bounds
-                if new_index == index {
-                    break;
-                }
-
-                if new_index >= self.items.len() {
-                    break;
-                }
-
-                new_index
+            let next = if up {
+                index.saturating_sub(1)
+            } else {
+                index.saturating_add(1)
             };
+
+            // No further movement possible: either the boundary item is
+            // invisible (skip loop would spin forever) or we never moved.
+            if next == index || next >= self.items.len() {
+                return if index != current_index && self.is_visible_index(index) {
+                    Some(index)
+                } else {
+                    None
+                };
+            }
+
+            index = next;
 
             if self.is_visible_index(index) {
                 break;
