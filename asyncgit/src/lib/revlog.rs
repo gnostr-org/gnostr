@@ -233,8 +233,7 @@ impl AsyncLog {
     }
 
     fn notify(sender: &Sender<AsyncGitNotification>) {
-        sender
-            .send(AsyncGitNotification::Log)
-            .expect("error sending");
+        // Best-effort: the receiver may be gone (shutdown, tests).
+        let _ = sender.send(AsyncGitNotification::Log);
     }
 }

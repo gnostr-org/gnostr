@@ -131,9 +131,8 @@ impl AsyncStatus {
 
             arc_pending.fetch_sub(1, Ordering::Relaxed);
 
-            sender
-                .send(AsyncGitNotification::Status)
-                .expect("error sending status");
+            // Best-effort: the receiver may be gone (shutdown, tests).
+            let _ = sender.send(AsyncGitNotification::Status);
         });
 
         Ok(None)

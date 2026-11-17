@@ -108,9 +108,8 @@ impl AsyncPushTags {
 
             Self::clear_request(&arc_state).expect("clear error");
 
-            sender
-                .send(AsyncGitNotification::PushTags)
-                .expect("error sending push");
+            // Best-effort: the receiver may be gone (shutdown, tests).
+            let _ = sender.send(AsyncGitNotification::PushTags);
         });
 
         Ok(())

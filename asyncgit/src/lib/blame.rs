@@ -114,13 +114,12 @@ impl AsyncBlame {
 
             arc_pending.fetch_sub(1, Ordering::Relaxed);
 
-            sender
-                .send(if notify {
-                    AsyncGitNotification::Blame
-                } else {
-                    AsyncGitNotification::FinishUnchanged
-                })
-                .expect("error sending blame");
+            // Best-effort: the receiver may be gone (shutdown, tests).
+            let _ = sender.send(if notify {
+                AsyncGitNotification::Blame
+            } else {
+                AsyncGitNotification::FinishUnchanged
+            });
         });
 
         Ok(None)

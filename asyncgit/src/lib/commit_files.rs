@@ -108,9 +108,8 @@ impl AsyncCommitFiles {
 
             arc_pending.fetch_sub(1, Ordering::Relaxed);
 
-            sender
-                .send(AsyncGitNotification::CommitFiles)
-                .expect("error sending");
+            // Best-effort: the receiver may be gone (shutdown, tests).
+            let _ = sender.send(AsyncGitNotification::CommitFiles);
         });
 
         Ok(())
