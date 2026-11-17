@@ -1074,14 +1074,20 @@ mod tests {
         let wobble_shift_rounds: Vec<Vec<Estimation>> = (0..10)
             .map(|step| {
                 let target = 0.050 + (step as f64 * 0.050);
+                // Accuracy bounds must make the intervals overlap: with
+                // a=0.010 the five intervals are pairwise disjoint, so the
+                // Marzullo window is empty and the sync correctly reports
+                // Byzantine Partition (see BFT_TIME.md §3.2: sync proceeds
+                // only when m_min <= m_max). a=0.025 gives a window covered
+                // by n - f intervals while keeping the +-40ms spread.
                 vec![
                     Estimation {
                         d: target - 0.040,
-                        a: 0.010,
+                        a: 0.025,
                     },
                     Estimation {
                         d: target - 0.020,
-                        a: 0.010,
+                        a: 0.025,
                     },
                     Estimation {
                         d: target,
@@ -1089,11 +1095,11 @@ mod tests {
                     },
                     Estimation {
                         d: target + 0.020,
-                        a: 0.010,
+                        a: 0.025,
                     },
                     Estimation {
                         d: target + 0.040,
-                        a: 0.010,
+                        a: 0.025,
                     },
                 ]
             })
